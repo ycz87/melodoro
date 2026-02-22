@@ -37,7 +37,6 @@ import { CollectionPage } from './CollectionPage';
 import { GeneLabPage } from './GeneLabPage';
 import { FarmEnvironment } from './farm/FarmEnvironment';
 import { IsometricFarmGrid } from './farm/IsometricFarmGrid';
-import { FarmDecorations } from './farm/FarmDecorations';
 
 interface FarmPageProps {
   farm: FarmStorage;
@@ -367,7 +366,7 @@ export function FarmPage({
       {/* 农场场景 */}
       <div className="farm-page relative isolate overflow-hidden min-h-[520px] sm:min-h-[620px] md:min-h-[720px] rounded-[var(--radius-panel)]">
         <FarmEnvironment weather={weather} />
-        <FarmDecorations />
+        {/* <FarmDecorations /> */}
         <div className="relative z-[20] pt-[136px] sm:pt-[196px] md:pt-[240px]">
           <IsometricFarmGrid
             plots={farm.plots}

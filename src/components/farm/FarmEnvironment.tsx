@@ -1,8 +1,8 @@
 /**
  * FarmEnvironment - Full-screen farm background.
  *
- * Recreates a warm cartoon farm scene with fixed sky/ground colors,
- * smiling sun, rounded clouds, distant hills and grass details.
+ * Recreates a simple cartoon farm scene with a clear sky/grass split,
+ * smiling sun, rounded clouds and weather overlays.
  */
 import type { Weather } from '../../types/farm';
 
@@ -16,13 +16,6 @@ interface CloudPosition {
   scale: number;
 }
 
-interface GrassDecoration {
-  left: string;
-  top: string;
-  kind: 'v' | 'clover';
-  scale: number;
-}
-
 const SUN_RAY_ANGLES = [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320] as const;
 
 const CLOUD_POSITIONS: CloudPosition[] = [
@@ -30,20 +23,6 @@ const CLOUD_POSITIONS: CloudPosition[] = [
   { left: '44%', top: '10%', scale: 0.9 },
   { left: '70%', top: '14%', scale: 1.02 },
   { left: '86%', top: '21%', scale: 0.84 },
-];
-
-const GRASS_DECORATIONS: GrassDecoration[] = [
-  { left: '16%', top: '62%', kind: 'v', scale: 1 },
-  { left: '30%', top: '59%', kind: 'clover', scale: 0.95 },
-  { left: '46%', top: '64%', kind: 'v', scale: 1.1 },
-  { left: '58%', top: '60%', kind: 'clover', scale: 0.9 },
-  { left: '72%', top: '65%', kind: 'v', scale: 1 },
-  { left: '84%', top: '61%', kind: 'clover', scale: 1 },
-  { left: '22%', top: '77%', kind: 'v', scale: 1.05 },
-  { left: '37%', top: '80%', kind: 'clover', scale: 0.95 },
-  { left: '54%', top: '82%', kind: 'v', scale: 1.15 },
-  { left: '68%', top: '78%', kind: 'clover', scale: 1.02 },
-  { left: '80%', top: '83%', kind: 'v', scale: 0.92 },
 ];
 
 function getWeatherOverlay(weather: Weather | null | undefined): string | null {
@@ -98,27 +77,6 @@ function Cloud({ left, top, scale }: CloudPosition) {
   );
 }
 
-function GrassDecorationIcon({ kind }: { kind: GrassDecoration['kind'] }) {
-  if (kind === 'clover') {
-    return (
-      <svg viewBox="0 0 20 20" className="h-5 w-5">
-        <circle cx="7" cy="8" r="3.2" fill="#9DC76E" />
-        <circle cx="13" cy="8" r="3.2" fill="#9DC76E" />
-        <circle cx="10" cy="5.5" r="3.2" fill="#9DC76E" />
-        <path d="M10 11 C9 13 9 15 10 18" stroke="#77A94E" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 18 22" className="h-5 w-4">
-      <path d="M2 20 L8 6 L9 20 Z" fill="#9DC76E" />
-      <path d="M9 20 L10 6 L16 20 Z" fill="#8FBA63" />
-      <path d="M8.8 20 L9.4 3.5" stroke="#6D9D45" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function FarmEnvironment({ weather = null }: FarmEnvironmentProps) {
   const weatherOverlay = getWeatherOverlay(weather);
 
@@ -127,20 +85,9 @@ export function FarmEnvironment({ weather = null }: FarmEnvironmentProps) {
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 32%, #C8DC8F 32%, #C8DC8F 100%)',
+          background: 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #C8E6A0 50%, #C8E6A0 100%)',
         }}
       />
-
-      <svg className="absolute inset-x-0 top-[28%] h-[22%] w-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
-        <path
-          d="M0 140 C160 88 296 84 438 120 C592 162 754 168 898 130 C1058 88 1202 92 1440 152 L1440 220 L0 220 Z"
-          fill="#B8D98A"
-        />
-        <path
-          d="M0 170 C220 126 390 118 560 144 C726 170 926 174 1082 146 C1236 118 1336 126 1440 152 L1440 220 L0 220 Z"
-          fill="#C8DC8F"
-        />
-      </svg>
 
       <svg
         className="absolute left-[8%] top-[8%] h-[96px] w-[96px] sm:h-[114px] sm:w-[114px]"
@@ -175,20 +122,6 @@ export function FarmEnvironment({ weather = null }: FarmEnvironmentProps) {
 
       {CLOUD_POSITIONS.map((cloud) => (
         <Cloud key={`${cloud.left}-${cloud.top}`} left={cloud.left} top={cloud.top} scale={cloud.scale} />
-      ))}
-
-      {GRASS_DECORATIONS.map((decoration) => (
-        <div
-          key={`${decoration.left}-${decoration.top}`}
-          className="absolute"
-          style={{
-            left: decoration.left,
-            top: decoration.top,
-            transform: `scale(${decoration.scale})`,
-          }}
-        >
-          <GrassDecorationIcon kind={decoration.kind} />
-        </div>
       ))}
 
       {weatherOverlay && (

@@ -95,11 +95,6 @@ function getPlotPositions(layout: FarmLayoutMetrics): PlotPosition[] {
   }));
 }
 
-function getDepthScale(positionY: number, sceneHeight: number): number {
-  const normalizedDepth = sceneHeight === 0 ? 0 : positionY / sceneHeight;
-  return 0.84 + (normalizedDepth * 0.24);
-}
-
 export function IsometricFarmGrid({
   plots,
   weather,
@@ -146,7 +141,7 @@ export function IsometricFarmGrid({
   );
 
   return (
-    <div className="farm-grid-perspective relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
+    <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
       <div
         className="relative mx-auto origin-top"
         style={{
@@ -156,13 +151,12 @@ export function IsometricFarmGrid({
       >
         {plotPositions.map((position, index) => {
           const plot = plots[index];
-          const depthScale = getDepthScale(position.y, layout.sceneSize.height);
           const plotShellStyle = {
             left: position.x,
             top: position.y,
             width: layout.plotIslandSize,
             height: layout.plotIslandSize,
-            transform: `translate(-50%, -50%) scale(${depthScale})`,
+            transform: 'translate(-50%, -50%)',
             zIndex: Math.round(position.y * 10),
           };
 
@@ -170,12 +164,9 @@ export function IsometricFarmGrid({
             return (
               <div
                 key={`missing-plot-${index}`}
-                className="farm-iso-plot-shell absolute"
+                className="absolute rounded-xl border-[3px] border-[#A0643D] bg-[#C4956A]"
                 style={plotShellStyle}
               >
-                <div className="farm-iso-plot-shadow pointer-events-none" />
-                <div className="farm-iso-plot-side pointer-events-none" />
-                <div className="farm-iso-plot-top pointer-events-none" />
                 <div
                   className="absolute z-20 flex items-center justify-center rounded-xl border-2 border-dashed"
                   style={{
@@ -195,12 +186,9 @@ export function IsometricFarmGrid({
           return (
             <div
               key={`plot-isometric-${plot.id}`}
-              className="farm-iso-plot-shell absolute"
+              className="absolute rounded-xl border-[3px] border-[#A0643D] bg-[#C4956A]"
               style={plotShellStyle}
             >
-              <div className="farm-iso-plot-shadow pointer-events-none" />
-              <div className="farm-iso-plot-side pointer-events-none" />
-              <div className="farm-iso-plot-top pointer-events-none" />
               <div className="absolute z-20" style={{ inset: plotCardInset }}>
                 <PlotCard
                   plot={plot}
