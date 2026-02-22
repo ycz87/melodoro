@@ -1,8 +1,8 @@
 /**
- * SimpleFarmGrid - 7-plot cartoon farm layout in a 2-3-2 diamond.
+ * SimpleFarmGrid - 7-plot cartoon farm layout in a straightforward grid.
  *
- * Uses a lightweight flexbox layout and keeps card behavior centralized
- * by reusing the existing PlotCard component from FarmPage.
+ * Keeps card behavior centralized by reusing the existing PlotCard
+ * component from FarmPage.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
@@ -55,12 +55,6 @@ const DESKTOP_LAYOUT: GridLayout = {
   gapClass: 'gap-5',
   plotSize: 160,
 };
-
-const PLOT_ROWS = [
-  [0, 1],
-  [2, 3, 4],
-  [5, 6],
-] as const;
 
 function getViewportWidth(): number {
   if (typeof window === 'undefined') {
@@ -118,57 +112,56 @@ export function SimpleFarmGrid({
   }, []);
 
   const layout = useMemo(() => getGridLayout(viewportWidth), [viewportWidth]);
+  const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
-      <div className={`mx-auto flex w-full flex-col items-center ${layout.gapClass}`}>
-        {PLOT_ROWS.map((row, rowIndex) => (
-          <div key={`plot-row-${rowIndex}`} className={`flex items-center justify-center ${layout.gapClass}`}>
-            {row.map((plotIndex) => {
-              const plot = plots[plotIndex];
+      <div className={`mx-auto grid w-full grid-cols-2 justify-center sm:grid-cols-3 md:grid-cols-4 ${layout.gapClass}`}>
+        {plots.map((plot, plotIndex) => {
+          const isLastMobilePlot = isMobile && plotIndex === plots.length - 1;
 
-              return (
-                <div
-                  key={plot ? `plot-simple-${plot.id}` : `plot-locked-${plotIndex}`}
-                  className="relative rounded-xl border-[3px] border-[#8B6914] bg-[#C4956A] shadow-md"
-                  style={{ width: layout.plotSize, height: layout.plotSize }}
-                >
-                  <div className="absolute inset-[12px]">
-                    {plot ? (
-                      <PlotCard
-                        plot={plot}
-                        weather={weather}
-                        stolenRecord={stolenRecordByPlotId?.get(plot.id)}
-                        nowTimestamp={nowTimestamp}
-                        theme={theme}
-                        t={t}
-                        isTooltipOpen={activeTooltipPlotId === plot.id}
-                        onTooltipToggle={() => onActiveTooltipChange(activeTooltipPlotId === plot.id ? null : plot.id)}
-                        onPlantClick={() => onPlant(plot.id)}
-                        onHarvestClick={() => onHarvest(plot.id)}
-                        onClearClick={() => onClear(plot.id)}
-                        mutationGunCount={mutationGunCount}
-                        onUseMutationGun={() => onUseMutationGun(plot.id)}
-                        moonDewCount={moonDewCount}
-                        onUseMoonDew={() => onUseMoonDew(plot.id)}
-                        nectarCount={nectarCount}
-                        onUseNectar={() => onUseNectar(plot.id)}
-                        starTrackerCount={starTrackerCount}
-                        onUseStarTracker={() => onUseStarTracker(plot.id)}
-                        trapNetCount={trapNetCount}
-                        onUseTrapNet={() => onUseTrapNet(plot.id)}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-[#8B6914] bg-[#C4956A]/40">
-                        <span className="text-2xl leading-none">🔒</span>
-                      </div>
-                    )}
+          return (
+            <div
+              key={plot ? `plot-simple-${plot.id}` : `plot-locked-${plotIndex}`}
+              className={`relative rounded-xl border-[3px] border-[#8B6914] bg-[#C4956A] shadow-md ${
+                isLastMobilePlot ? 'col-span-2 justify-self-center' : ''
+              }`}
+              style={{ width: layout.plotSize, height: layout.plotSize }}
+            >
+              <div className="absolute inset-[12px]">
+                {plot ? (
+                  <PlotCard
+                    plot={plot}
+                    weather={weather}
+                    stolenRecord={stolenRecordByPlotId?.get(plot.id)}
+                    nowTimestamp={nowTimestamp}
+                    theme={theme}
+                    t={t}
+                    isTooltipOpen={activeTooltipPlotId === plot.id}
+                    onTooltipToggle={() => onActiveTooltipChange(activeTooltipPlotId === plot.id ? null : plot.id)}
+                    onPlantClick={() => onPlant(plot.id)}
+                    onHarvestClick={() => onHarvest(plot.id)}
+                    onClearClick={() => onClear(plot.id)}
+                    mutationGunCount={mutationGunCount}
+                    onUseMutationGun={() => onUseMutationGun(plot.id)}
+                    moonDewCount={moonDewCount}
+                    onUseMoonDew={() => onUseMoonDew(plot.id)}
+                    nectarCount={nectarCount}
+                    onUseNectar={() => onUseNectar(plot.id)}
+                    starTrackerCount={starTrackerCount}
+                    onUseStarTracker={() => onUseStarTracker(plot.id)}
+                    trapNetCount={trapNetCount}
+                    onUseTrapNet={() => onUseTrapNet(plot.id)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed border-[#8B6914] bg-[#C4956A]/40">
+                    <span className="text-2xl leading-none">🔒</span>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

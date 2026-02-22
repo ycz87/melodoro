@@ -29,8 +29,8 @@
 - [x] 移除所有装饰元素（FarmDecorations.tsx 暂时不渲染）(20:55 北京时间)
 - [x] 响应式适配：移动端/桌面端 (20:55 北京时间 - 保留原有响应式逻辑)
 - [x] 本地验证效果 (20:55 北京时间 - npm run build 通过)
-- [ ] 部署到 Cloudflare Pages (⚠️ 阻塞：缺少 CLOUDFLARE_API_TOKEN，已上报西瓜粥)
-- [ ] 截图给小西验收 (等部署完成后截图)
+- [x] 部署到 Cloudflare Pages (21:41 北京时间 - https://e8d55d82.watermelon-clock.pages.dev)
+- [x] 截图给小西验收 (21:41 北京时间 - 已通知小西)
 
 ## 强制验收标准
 - [x] 天空：浅蓝色渐变，干净简洁
