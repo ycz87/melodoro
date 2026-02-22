@@ -51,16 +51,16 @@ function FenceSegment({ mirrored = false }: { mirrored?: boolean }) {
 export function FarmDecorations() {
   return (
     <div className="pointer-events-none absolute inset-0 z-[14]" aria-hidden="true">
-      <div className="absolute left-[2%] top-[34%]">
+      <div className="absolute left-[2%] top-[30%]">
         <HouseIcon />
       </div>
-      <div className="absolute left-[4%] bottom-[8%] hidden sm:block">
+      <div className="absolute left-[1%] bottom-[6%] hidden sm:block">
         <HouseIcon />
       </div>
-      <div className="absolute right-[2%] top-[34%]">
+      <div className="absolute right-[2%] top-[30%]">
         <BarnIcon />
       </div>
-      <div className="absolute right-[3%] bottom-[8%] hidden sm:block">
+      <div className="absolute right-[1%] bottom-[6%] hidden sm:block">
         <BarnIcon />
       </div>
 
@@ -78,22 +78,22 @@ export function FarmDecorations() {
       </div>
 
       <span
-        className="absolute left-[2%] top-[58%] text-[34px] sm:text-[38px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+        className="absolute left-[10%] bottom-[8%] text-[34px] sm:text-[38px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
       >
         🐄
       </span>
       <span
-        className="absolute left-[7%] top-[62%] hidden sm:block text-[32px] md:text-[36px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+        className="absolute left-[15%] bottom-[6%] hidden sm:block text-[32px] md:text-[36px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
       >
         🐄
       </span>
       <span
-        className="absolute right-[3%] top-[58%] text-[32px] sm:text-[36px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+        className="absolute right-[10%] bottom-[8%] text-[32px] sm:text-[36px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
       >
         🐑
       </span>
       <span
-        className="absolute right-[8%] top-[62%] hidden sm:block text-[30px] md:text-[34px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+        className="absolute right-[15%] bottom-[6%] hidden sm:block text-[30px] md:text-[34px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
       >
         🐑
       </span>
