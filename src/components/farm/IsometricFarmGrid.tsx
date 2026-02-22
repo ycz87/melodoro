@@ -95,6 +95,11 @@ function getPlotPositions(layout: FarmLayoutMetrics): PlotPosition[] {
   }));
 }
 
+function getDepthScale(positionY: number, sceneHeight: number): number {
+  const normalizedDepth = sceneHeight === 0 ? 0 : positionY / sceneHeight;
+  return 0.84 + (normalizedDepth * 0.24);
+}
+
 export function IsometricFarmGrid({
   plots,
   weather,
@@ -135,6 +140,10 @@ export function IsometricFarmGrid({
 
   const layout = useMemo(() => getLayoutMetrics(viewportWidth), [viewportWidth]);
   const plotPositions = useMemo(() => getPlotPositions(layout), [layout]);
+  const plotCardInset = useMemo(
+    () => Math.max(12, Math.round(layout.plotIslandSize * 0.14)),
+    [layout.plotIslandSize],
+  );
 
   return (
     <div className="farm-grid-perspective relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
@@ -147,29 +156,34 @@ export function IsometricFarmGrid({
       >
         {plotPositions.map((position, index) => {
           const plot = plots[index];
+          const depthScale = getDepthScale(position.y, layout.sceneSize.height);
+          const plotShellStyle = {
+            left: position.x,
+            top: position.y,
+            width: layout.plotIslandSize,
+            height: layout.plotIslandSize,
+            transform: `translate(-50%, -50%) scale(${depthScale})`,
+            zIndex: Math.round(position.y * 10),
+          };
 
           if (!plot) {
             return (
               <div
                 key={`missing-plot-${index}`}
-                className="absolute"
-                style={{
-                  left: position.x,
-                  top: position.y,
-                  width: layout.plotIslandSize,
-                  height: layout.plotIslandSize,
-                  transform: 'translate(-50%, -50%)',
-                }}
+                className="farm-iso-plot-shell absolute"
+                style={plotShellStyle}
               >
+                <div className="farm-iso-plot-shadow pointer-events-none" />
+                <div className="farm-iso-plot-side pointer-events-none" />
+                <div className="farm-iso-plot-top pointer-events-none" />
                 <div
-                  className="pointer-events-none absolute inset-[16px] rounded-[24px]"
+                  className="absolute z-20 flex items-center justify-center rounded-xl border-2 border-dashed"
                   style={{
-                    background: 'linear-gradient(180deg, #E1B888 0%, #D4A574 100%)',
-                    border: '4px solid #8B6F47',
-                    boxShadow: '0 8px 0 #65472D, 0 14px 20px rgba(80,52,30,0.28)',
+                    inset: plotCardInset,
+                    borderColor: `${theme.border}cc`,
+                    backgroundColor: `${theme.surface}dd`,
                   }}
-                />
-                <div className="absolute inset-[24px] z-10 flex items-center justify-center rounded-xl border-2 border-dashed" style={{ borderColor: `${theme.border}cc`, backgroundColor: `${theme.surface}dd` }}>
+                >
                   <span className="text-xs font-medium" style={{ color: theme.textMuted }}>
                     {t.collectionLocked}
                   </span>
@@ -181,16 +195,13 @@ export function IsometricFarmGrid({
           return (
             <div
               key={`plot-isometric-${plot.id}`}
-              className="absolute"
-              style={{
-                left: position.x,
-                top: position.y,
-                width: layout.plotIslandSize,
-                height: layout.plotIslandSize,
-                transform: 'translate(-50%, -50%)',
-              }}
+              className="farm-iso-plot-shell absolute"
+              style={plotShellStyle}
             >
-              <div className="absolute inset-[14px] z-10">
+              <div className="farm-iso-plot-shadow pointer-events-none" />
+              <div className="farm-iso-plot-side pointer-events-none" />
+              <div className="farm-iso-plot-top pointer-events-none" />
+              <div className="absolute z-20" style={{ inset: plotCardInset }}>
                 <PlotCard
                   plot={plot}
                   weather={weather}
