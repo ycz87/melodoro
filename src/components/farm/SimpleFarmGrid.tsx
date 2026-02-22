@@ -40,6 +40,7 @@ interface GridLayout {
 const MOBILE_BREAKPOINT = 640;
 const TABLET_BREAKPOINT = 768;
 const DESKTOP_VIEWPORT_WIDTH = 1024;
+const TOTAL_SLOTS = 7;
 
 const MOBILE_LAYOUT: GridLayout = {
   gapClass: 'gap-3',
@@ -117,12 +118,13 @@ export function SimpleFarmGrid({
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
       <div className={`mx-auto grid w-full grid-cols-2 justify-center sm:grid-cols-3 md:grid-cols-4 ${layout.gapClass}`}>
-        {plots.map((plot, plotIndex) => {
-          const isLastMobilePlot = isMobile && plotIndex === plots.length - 1;
+        {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
+          const plot = slotIndex < plots.length ? plots[slotIndex] : null;
+          const isLastMobilePlot = isMobile && TOTAL_SLOTS % 2 === 1 && slotIndex === TOTAL_SLOTS - 1;
 
           return (
             <div
-              key={plot ? `plot-simple-${plot.id}` : `plot-locked-${plotIndex}`}
+              key={plot ? `plot-simple-${plot.id}` : `plot-locked-${slotIndex}`}
               className={`relative rounded-xl border-[3px] border-[#8B6914] bg-[#C4956A] shadow-md ${
                 isLastMobilePlot ? 'col-span-2 justify-self-center' : ''
               }`}
