@@ -368,7 +368,7 @@ export function FarmPage({
       <div className="farm-page relative isolate overflow-hidden min-h-[520px] sm:min-h-[620px] md:min-h-[720px] rounded-[var(--radius-panel)]">
         <FarmEnvironment weather={weather} />
         <FarmDecorations />
-        <div className="relative z-[20] pt-3 sm:pt-4">
+        <div className="relative z-[20] pt-[136px] sm:pt-[196px] md:pt-[240px]">
           <IsometricFarmGrid
             plots={farm.plots}
             weather={weather}

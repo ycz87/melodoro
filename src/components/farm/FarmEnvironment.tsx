@@ -26,10 +26,10 @@ interface GrassDecoration {
 const SUN_RAY_ANGLES = [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320] as const;
 
 const CLOUD_POSITIONS: CloudPosition[] = [
-  { left: '14%', top: '14%', scale: 1.06 },
-  { left: '42%', top: '11%', scale: 0.92 },
-  { left: '72%', top: '13%', scale: 1.04 },
-  { left: '85%', top: '22%', scale: 0.86 },
+  { left: '20%', top: '15%', scale: 1.02 },
+  { left: '44%', top: '10%', scale: 0.9 },
+  { left: '70%', top: '14%', scale: 1.02 },
+  { left: '86%', top: '21%', scale: 0.84 },
 ];
 
 const GRASS_DECORATIONS: GrassDecoration[] = [
@@ -127,11 +127,11 @@ export function FarmEnvironment({ weather = null }: FarmEnvironmentProps) {
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 56%, #C8DC8F 56%, #C8DC8F 100%)',
+          background: 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 32%, #C8DC8F 32%, #C8DC8F 100%)',
         }}
       />
 
-      <svg className="absolute inset-x-0 top-[40%] h-[22%] w-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
+      <svg className="absolute inset-x-0 top-[28%] h-[22%] w-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
         <path
           d="M0 140 C160 88 296 84 438 120 C592 162 754 168 898 130 C1058 88 1202 92 1440 152 L1440 220 L0 220 Z"
           fill="#B8D98A"
@@ -143,7 +143,7 @@ export function FarmEnvironment({ weather = null }: FarmEnvironmentProps) {
       </svg>
 
       <svg
-        className="absolute left-[5%] top-[5%] h-[96px] w-[96px] sm:h-[114px] sm:w-[114px]"
+        className="absolute left-[8%] top-[8%] h-[96px] w-[96px] sm:h-[114px] sm:w-[114px]"
         viewBox="0 0 120 120"
       >
         <circle cx="60" cy="60" r="30" fill="#FFD767" stroke="#E5AB33" strokeWidth="4" />
