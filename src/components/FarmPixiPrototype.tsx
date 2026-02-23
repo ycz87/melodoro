@@ -22,7 +22,6 @@ interface PlotPalette {
   right: number;
   edge: number;
   label: string;
-  labelColor: number;
 }
 
 interface PixiScaleLike {
@@ -115,7 +114,6 @@ interface SceneLayout {
   shadowOffsetY: number;
   stageY: number;
   hoverLift: number;
-  labelFontSize: number;
   iconFontSize: number;
 }
 
@@ -126,7 +124,6 @@ interface RenderPlot {
   container: PixiContainerLike;
   shape: PixiGraphicsLike;
   overlay: PixiGraphicsLike;
-  statusText: PixiTextLike;
   lockIcon: PixiTextLike;
 }
 
@@ -162,7 +159,6 @@ const PLOT_PALETTES: Record<PlotVisualState, PlotPalette> = {
     right: 0x966239,
     edge: 0x6a4427,
     label: 'EMPTY',
-    labelColor: 0x422b1a,
   },
   growing: {
     top: 0xd6b67e,
@@ -170,7 +166,6 @@ const PLOT_PALETTES: Record<PlotVisualState, PlotPalette> = {
     right: 0x8f6837,
     edge: 0x674726,
     label: 'GROWING',
-    labelColor: 0x2b3a1d,
   },
   mature: {
     top: 0xd7ac73,
@@ -178,7 +173,6 @@ const PLOT_PALETTES: Record<PlotVisualState, PlotPalette> = {
     right: 0x7f582f,
     edge: 0x5c3e24,
     label: 'MATURE',
-    labelColor: 0x3b2b14,
   },
   withered: {
     top: 0xac9a83,
@@ -186,7 +180,6 @@ const PLOT_PALETTES: Record<PlotVisualState, PlotPalette> = {
     right: 0x675849,
     edge: 0x43372e,
     label: 'WITHERED',
-    labelColor: 0x2f2a25,
   },
   locked: {
     top: 0xa8a4a1,
@@ -194,7 +187,6 @@ const PLOT_PALETTES: Record<PlotVisualState, PlotPalette> = {
     right: 0x7b7875,
     edge: 0x5a5856,
     label: 'LOCKED',
-    labelColor: 0x2b2b2b,
   },
 };
 
@@ -341,9 +333,10 @@ function mixColor(from: number, to: number, ratio: number): number {
 }
 
 function resolveBackdropLayout(viewportWidth: number, viewportHeight: number): SceneBackdropLayout {
-  const horizonY = Math.round(viewportHeight * (viewportWidth < 560 ? 0.45 : 0.42));
-  const decorationScale = clamp(Math.min(viewportWidth / 920, viewportHeight / 560), 0.62, 1.24);
-  const groundTopY = Math.round(horizonY + 20 * decorationScale);
+  const horizonRatio = viewportWidth < 560 ? 0.37 : viewportWidth < 980 ? 0.35 : 0.33;
+  const horizonY = Math.round(viewportHeight * horizonRatio);
+  const decorationScale = clamp(Math.min(viewportWidth / 980, viewportHeight / 620), 0.62, 1.2);
+  const groundTopY = Math.round(horizonY + 18 * decorationScale);
   return {
     horizonY,
     groundTopY,
@@ -351,34 +344,43 @@ function resolveBackdropLayout(viewportWidth: number, viewportHeight: number): S
   };
 }
 
-function drawBackdropLayer(
-  backgroundLayer: PixiGraphicsLike,
+function drawSkyLayer(
+  skyLayer: PixiGraphicsLike,
   viewportWidth: number,
-  viewportHeight: number,
   backdropLayout: SceneBackdropLayout,
 ): void {
-  backgroundLayer.clear();
-  backgroundLayer.lineStyle(0, 0x000000, 0);
+  skyLayer.clear();
+  skyLayer.lineStyle(0, 0x000000, 0);
 
-  const skyBandCount = 22;
+  const skyBandCount = 24;
   for (let index = 0; index < skyBandCount; index += 1) {
     const startY = Math.round((backdropLayout.horizonY * index) / skyBandCount);
     const endY = Math.round((backdropLayout.horizonY * (index + 1)) / skyBandCount);
     const bandHeight = Math.max(2, endY - startY + 1);
-    const color = mixColor(0x82d4ff, 0xeafcff, index / (skyBandCount - 1));
-    backgroundLayer.beginFill(color, 1);
-    backgroundLayer.drawRect(0, startY, viewportWidth, bandHeight);
-    backgroundLayer.endFill();
+    const color = mixColor(0x7bccff, 0xecfbff, index / (skyBandCount - 1));
+    skyLayer.beginFill(color, 1);
+    skyLayer.drawRect(0, startY, viewportWidth, bandHeight);
+    skyLayer.endFill();
   }
 
-  backgroundLayer.beginFill(0xd7f3ff, 0.5);
-  backgroundLayer.drawRect(0, backdropLayout.horizonY - 4, viewportWidth, 10);
-  backgroundLayer.endFill();
+  skyLayer.beginFill(0xd8f5ff, 0.52);
+  skyLayer.drawRect(0, backdropLayout.horizonY - 3, viewportWidth, 8);
+  skyLayer.endFill();
+}
+
+function drawFarMidLayer(
+  farLayer: PixiGraphicsLike,
+  viewportWidth: number,
+  viewportHeight: number,
+  backdropLayout: SceneBackdropLayout,
+): void {
+  farLayer.clear();
+  farLayer.lineStyle(0, 0x000000, 0);
 
   const hillBaseY = backdropLayout.horizonY + Math.round(30 * backdropLayout.decorationScale);
-  backgroundLayer.lineStyle(2, 0x94bc71, 0.62);
-  backgroundLayer.beginFill(0xcde8a0, 1);
-  backgroundLayer.drawPolygon([
+  farLayer.lineStyle(2, 0x94bc71, 0.62);
+  farLayer.beginFill(0xcde8a0, 1);
+  farLayer.drawPolygon([
     0, hillBaseY + 16,
     viewportWidth * 0.08, hillBaseY + 2,
     viewportWidth * 0.25, hillBaseY + 14,
@@ -390,25 +392,55 @@ function drawBackdropLayer(
     viewportWidth, viewportHeight,
     0, viewportHeight,
   ]);
-  backgroundLayer.endFill();
+  farLayer.endFill();
 
-  const grassBandCount = 24;
+  const grassBandCount = 22;
   const grassHeight = Math.max(16, viewportHeight - backdropLayout.groundTopY);
-  backgroundLayer.lineStyle(0, 0x000000, 0);
+  farLayer.lineStyle(0, 0x000000, 0);
   for (let index = 0; index < grassBandCount; index += 1) {
     const startY = backdropLayout.groundTopY + Math.round((grassHeight * index) / grassBandCount);
     const endY = backdropLayout.groundTopY + Math.round((grassHeight * (index + 1)) / grassBandCount);
     const bandHeight = Math.max(2, endY - startY + 1);
-    const color = mixColor(0xc2e786, 0x98cc57, index / (grassBandCount - 1));
-    backgroundLayer.beginFill(color, 1);
-    backgroundLayer.drawRect(0, startY, viewportWidth, bandHeight);
-    backgroundLayer.endFill();
+    const color = mixColor(0xc6e98c, 0x96c953, index / (grassBandCount - 1));
+    farLayer.beginFill(color, 1);
+    farLayer.drawRect(0, startY, viewportWidth, bandHeight);
+    farLayer.endFill();
   }
 
-  backgroundLayer.beginFill(0xddf4ae, 0.28);
-  backgroundLayer.drawEllipse(viewportWidth * 0.22, viewportHeight * 0.83, viewportWidth * 0.32, viewportHeight * 0.11);
-  backgroundLayer.drawEllipse(viewportWidth * 0.76, viewportHeight * 0.74, viewportWidth * 0.31, viewportHeight * 0.1);
-  backgroundLayer.endFill();
+  farLayer.beginFill(0xddf4ae, 0.26);
+  farLayer.drawEllipse(viewportWidth * 0.23, viewportHeight * 0.84, viewportWidth * 0.33, viewportHeight * 0.11);
+  farLayer.drawEllipse(viewportWidth * 0.77, viewportHeight * 0.75, viewportWidth * 0.3, viewportHeight * 0.1);
+  farLayer.endFill();
+
+  const scale = backdropLayout.decorationScale;
+  const farGroundY = backdropLayout.groundTopY + grassHeight * 0.47;
+  const leftBuildingX = Math.max(56 * scale, viewportWidth * 0.12);
+  const rightBuildingX = Math.min(viewportWidth - 56 * scale, viewportWidth * 0.88);
+  const farFenceOffset = Math.max(6, 14 * scale);
+  const farSegmentWidth = Math.max(8, 14 * scale);
+  const farFenceSpan = 5 * farSegmentWidth;
+
+  drawSun(
+    farLayer,
+    viewportWidth * 0.15,
+    Math.max(50 * scale, viewportHeight * 0.1),
+    Math.max(20, 28 * scale),
+  );
+  drawCloud(farLayer, viewportWidth * 0.14, viewportHeight * 0.2, 0.68 * scale);
+  drawCloud(farLayer, viewportWidth * 0.56, viewportHeight * 0.13, 0.76 * scale);
+  drawCloud(farLayer, viewportWidth * 0.9, viewportHeight * 0.18, 0.86 * scale);
+
+  drawCottage(farLayer, leftBuildingX, farGroundY + 2 * scale, 0.64 * scale);
+  drawBarn(farLayer, rightBuildingX, farGroundY + 3 * scale, 0.67 * scale);
+  drawFence(farLayer, farFenceOffset, farGroundY + 5 * scale, 5, farSegmentWidth, 0.74 * scale);
+  drawFence(
+    farLayer,
+    viewportWidth - farFenceSpan - farFenceOffset,
+    farGroundY + 5 * scale,
+    5,
+    farSegmentWidth,
+    0.74 * scale,
+  );
 }
 
 function drawCloud(
@@ -689,40 +721,42 @@ function drawSheep(layer: PixiGraphicsLike, originX: number, hoofY: number, scal
   layer.lineTo(faceX + direction * 2 * scale, faceY + 4 * scale);
 }
 
-function drawDecorationLayers(
-  backLayer: PixiGraphicsLike,
+function drawFrontDecorationLayer(
   frontLayer: PixiGraphicsLike,
   viewportWidth: number,
   viewportHeight: number,
   backdropLayout: SceneBackdropLayout,
+  sceneLayout: SceneLayout,
 ): void {
-  backLayer.clear();
   frontLayer.clear();
 
   const scale = backdropLayout.decorationScale;
+  const frontSegmentWidth = Math.max(9, 15 * scale);
+  const frontFenceSpan = 5 * frontSegmentWidth;
+  const edgeOffset = Math.max(10, 14 * scale);
+  const plotBottomY =
+    sceneLayout.stageY +
+    sceneLayout.stepY * 4 +
+    sceneLayout.halfHeight +
+    sceneLayout.thickness +
+    sceneLayout.shadowOffsetY;
+  const frontGroundY = clamp(plotBottomY + 20 * scale, viewportHeight * 0.78, viewportHeight - 10);
 
-  drawSun(
-    backLayer,
-    viewportWidth * 0.16,
-    Math.max(50 * scale, viewportHeight * 0.11),
-    Math.max(20, 29 * scale),
+  drawBarn(frontLayer, -20 * scale, viewportHeight * 0.987, 0.76 * scale);
+  drawCottage(frontLayer, viewportWidth + 20 * scale, viewportHeight * 0.987, 0.72 * scale);
+
+  drawFence(frontLayer, edgeOffset, frontGroundY + 2 * scale, 5, frontSegmentWidth, 0.82 * scale);
+  drawFence(
+    frontLayer,
+    viewportWidth - frontFenceSpan - edgeOffset,
+    frontGroundY + 2 * scale,
+    5,
+    frontSegmentWidth,
+    0.82 * scale,
   );
-  drawCloud(backLayer, viewportWidth * 0.14, viewportHeight * 0.22, 0.7 * scale);
-  drawCloud(backLayer, viewportWidth * 0.58, viewportHeight * 0.14, 0.8 * scale);
-  drawCloud(backLayer, viewportWidth * 0.92, viewportHeight * 0.18, 0.92 * scale);
 
-  drawCottage(backLayer, viewportWidth * 0.17, backdropLayout.horizonY + 128 * scale, 0.8 * scale);
-  drawBarn(backLayer, viewportWidth * 0.84, backdropLayout.horizonY + 124 * scale, 0.82 * scale);
-  drawFence(backLayer, viewportWidth * 0.1, backdropLayout.horizonY + 132 * scale, 4, 16 * scale, 0.85 * scale);
-  drawFence(backLayer, viewportWidth * 0.72, backdropLayout.horizonY + 131 * scale, 4, 16 * scale, 0.85 * scale);
-
-  drawBarn(frontLayer, viewportWidth * 0.05, viewportHeight * 0.97, 0.94 * scale);
-  drawCottage(frontLayer, viewportWidth * 0.84, viewportHeight * 0.97, 0.88 * scale);
-  drawFence(frontLayer, viewportWidth * 0.69, viewportHeight * 0.93, 5, 16 * scale, 0.88 * scale);
-  drawCow(frontLayer, viewportWidth * 0.05, viewportHeight * 0.77, 0.84 * scale, false);
-  drawCow(frontLayer, viewportWidth * 0.2, viewportHeight * 0.91, 0.78 * scale, false);
-  drawSheep(frontLayer, viewportWidth * 0.92, viewportHeight * 0.7, 0.74 * scale, true);
-  drawSheep(frontLayer, viewportWidth * 0.78, viewportHeight * 0.93, 0.72 * scale, false);
+  drawCow(frontLayer, Math.max(20 * scale, viewportWidth * 0.09), frontGroundY - 18 * scale, 0.68 * scale, false);
+  drawSheep(frontLayer, viewportWidth - Math.max(22 * scale, viewportWidth * 0.1), frontGroundY - 20 * scale, 0.64 * scale, true);
 }
 
 function getCoarsePointerMode(): boolean {
@@ -732,27 +766,31 @@ function getCoarsePointerMode(): boolean {
   return window.matchMedia('(pointer: coarse)').matches;
 }
 
-function resolveSceneLayout(viewportWidth: number, viewportHeight: number): SceneLayout {
-  const safeWidth = Math.max(280, viewportWidth - 36);
-  const safeHeight = Math.max(260, viewportHeight - 24);
-  const maxByWidth = safeWidth / 6.2;
-  const maxByHeight = safeHeight / 3.7;
-  const halfWidth = Math.round(clamp(Math.min(maxByWidth, maxByHeight), 34, 82));
+function resolveSceneLayout(
+  viewportWidth: number,
+  viewportHeight: number,
+  backdropLayout: SceneBackdropLayout,
+): SceneLayout {
+  const horizontalPadding = viewportWidth < 560 ? 20 : 30;
+  const safeWidth = Math.max(220, viewportWidth - horizontalPadding * 2);
+  const maxByWidth = safeWidth / 6.05;
+  const groundHeight = Math.max(150, viewportHeight - backdropLayout.groundTopY - 10);
+  const maxByGround = (groundHeight - 26) / 4.35;
+  const halfWidth = Math.round(clamp(Math.min(maxByWidth, maxByGround), 32, 70));
   const halfHeight = Math.round(halfWidth * 0.54);
-  const thickness = Math.round(clamp(halfHeight * 0.48, 12, 34));
-  const stepX = Math.round(halfWidth * 1.02);
-  const stepY = Math.round(halfHeight * 1.02);
-  const shadowWidth = Math.round(halfWidth * 0.78);
-  const shadowHeight = Math.max(8, Math.round(halfHeight * 0.35));
-  const shadowOffsetY = Math.round(thickness + shadowHeight * 0.6 + 4);
-  const sceneBottom = 4 * stepY + halfHeight + shadowOffsetY + shadowHeight + 8;
-  const preferredStageY = Math.round(viewportHeight * (viewportWidth < 640 ? 0.18 : 0.2));
-  const minStageY = halfHeight + 18;
-  const maxStageY = Math.max(minStageY, viewportHeight - sceneBottom);
+  const thickness = Math.round(clamp(halfHeight * 0.46, 11, 28));
+  const stepX = Math.round(halfWidth * 1.0);
+  const stepY = Math.round(halfHeight * 0.98);
+  const shadowWidth = Math.round(halfWidth * 0.86);
+  const shadowHeight = Math.max(8, Math.round(halfHeight * 0.38));
+  const shadowOffsetY = Math.round(thickness + shadowHeight * 0.34 + 1);
+  const sceneBottom = 4 * stepY + halfHeight + thickness + shadowOffsetY + shadowHeight;
+  const preferredStageY = Math.round(backdropLayout.groundTopY + halfHeight + Math.max(10, halfHeight * 0.45));
+  const minStageY = Math.max(halfHeight + 12, backdropLayout.groundTopY + Math.round(halfHeight * 0.72));
+  const maxStageY = Math.max(minStageY, viewportHeight - sceneBottom - 12);
   const stageY = clamp(preferredStageY, minStageY, maxStageY);
-  const labelFontSize = Math.max(10, Math.round(halfWidth * 0.23));
   const iconFontSize = Math.max(14, Math.round(halfWidth * 0.34));
-  const hoverLift = Math.max(4, Math.round(thickness * 0.25));
+  const hoverLift = Math.max(4, Math.round(thickness * 0.22));
 
   return {
     halfWidth,
@@ -765,7 +803,6 @@ function resolveSceneLayout(viewportWidth: number, viewportHeight: number): Scen
     shadowOffsetY,
     stageY,
     hoverLift,
-    labelFontSize,
     iconFontSize,
   };
 }
@@ -867,6 +904,9 @@ function drawPlot(
   const hoverActive = hoverEnabled && hovered && canInteract;
   const borderColor = hoverActive ? 0x7a4d2a : palette.edge;
   const topColor = hoverActive ? lightenColor(palette.top, 0.14) : palette.top;
+  const halfWidth = layout.halfWidth;
+  const halfHeight = layout.halfHeight;
+  const thickness = layout.thickness;
 
   plot.shape.cursor = canInteract ? 'pointer' : 'default';
   plot.container.y = plot.baseY + (hoverActive ? -layout.hoverLift : 0);
@@ -878,58 +918,120 @@ function drawPlot(
   overlay.clear();
 
   shape.hitArea = new pixi.Polygon([
-    0, -layout.halfHeight,
-    layout.halfWidth, 0,
-    0, layout.halfHeight,
-    -layout.halfWidth, 0,
+    0, -halfHeight,
+    halfWidth, 0,
+    0, halfHeight,
+    -halfWidth, 0,
   ]);
 
-  shape.beginFill(0x1f1611, state === 'locked' ? 0.16 : 0.23);
-  shape.drawEllipse(0, layout.halfHeight + layout.shadowOffsetY, layout.shadowWidth, layout.shadowHeight);
+  const shadowAlpha = state === 'locked' ? 0.12 : 0.21;
+  shape.beginFill(0x201610, shadowAlpha * 0.7);
+  shape.drawEllipse(
+    0,
+    halfHeight + layout.shadowOffsetY + layout.shadowHeight * 0.2,
+    layout.shadowWidth * 1.05,
+    layout.shadowHeight * 1.08,
+  );
+  shape.endFill();
+
+  shape.beginFill(0x120b07, shadowAlpha);
+  shape.drawEllipse(0, halfHeight + layout.shadowOffsetY, layout.shadowWidth * 0.78, layout.shadowHeight * 0.66);
   shape.endFill();
 
   shape.lineStyle(2, borderColor, state === 'locked' ? 0.82 : 1);
   shape.beginFill(palette.left, 1);
   shape.drawPolygon([
-    -layout.halfWidth, 0,
-    0, layout.halfHeight,
-    0, layout.halfHeight + layout.thickness,
-    -layout.halfWidth, layout.thickness,
+    -halfWidth, 0,
+    0, halfHeight,
+    0, halfHeight + thickness,
+    -halfWidth, thickness,
+  ]);
+  shape.endFill();
+
+  shape.lineStyle(0, 0x000000, 0);
+  shape.beginFill(lightenColor(palette.left, 0.17), state === 'locked' ? 0.18 : 0.3);
+  shape.drawPolygon([
+    -halfWidth, 0,
+    0, halfHeight,
+    0, halfHeight + thickness * 0.34,
+    -halfWidth, thickness * 0.34,
+  ]);
+  shape.endFill();
+
+  shape.beginFill(mixColor(palette.left, 0x26170f, 0.42), state === 'locked' ? 0.22 : 0.38);
+  shape.drawPolygon([
+    -halfWidth, thickness * 0.58,
+    0, halfHeight + thickness * 0.58,
+    0, halfHeight + thickness,
+    -halfWidth, thickness,
   ]);
   shape.endFill();
 
   shape.lineStyle(2, borderColor, state === 'locked' ? 0.82 : 1);
   shape.beginFill(palette.right, 1);
   shape.drawPolygon([
-    0, layout.halfHeight,
-    layout.halfWidth, 0,
-    layout.halfWidth, layout.thickness,
-    0, layout.halfHeight + layout.thickness,
+    0, halfHeight,
+    halfWidth, 0,
+    halfWidth, thickness,
+    0, halfHeight + thickness,
+  ]);
+  shape.endFill();
+
+  shape.lineStyle(0, 0x000000, 0);
+  shape.beginFill(lightenColor(palette.right, 0.11), state === 'locked' ? 0.14 : 0.24);
+  shape.drawPolygon([
+    0, halfHeight,
+    halfWidth, 0,
+    halfWidth, thickness * 0.3,
+    0, halfHeight + thickness * 0.3,
+  ]);
+  shape.endFill();
+
+  shape.beginFill(mixColor(palette.right, 0x21150e, 0.46), state === 'locked' ? 0.24 : 0.4);
+  shape.drawPolygon([
+    0, halfHeight + thickness * 0.54,
+    halfWidth, thickness * 0.54,
+    halfWidth, thickness,
+    0, halfHeight + thickness,
   ]);
   shape.endFill();
 
   shape.lineStyle(hoverActive ? 3 : 2, borderColor, 1);
   shape.beginFill(topColor, 1);
   shape.drawPolygon([
-    0, -layout.halfHeight,
-    layout.halfWidth, 0,
-    0, layout.halfHeight,
-    -layout.halfWidth, 0,
+    0, -halfHeight,
+    halfWidth, 0,
+    0, halfHeight,
+    -halfWidth, 0,
   ]);
   shape.endFill();
 
   shape.beginFill(0xffffff, state === 'locked' ? 0.12 : hoverActive ? 0.24 : 0.18);
   shape.drawPolygon([
-    -layout.halfWidth * 0.4, -layout.halfHeight * 0.02,
-    0, -layout.halfHeight * 0.48,
-    layout.halfWidth * 0.4, -layout.halfHeight * 0.02,
-    0, layout.halfHeight * 0.22,
+    -halfWidth * 0.45, -halfHeight * 0.01,
+    0, -halfHeight * 0.52,
+    halfWidth * 0.45, -halfHeight * 0.01,
+    0, halfHeight * 0.18,
   ]);
   shape.endFill();
 
-  shape.lineStyle(1, 0x4b2e1a, 0.22);
-  shape.moveTo(0, layout.halfHeight);
-  shape.lineTo(0, layout.halfHeight + layout.thickness);
+  shape.beginFill(mixColor(topColor, palette.edge, 0.42), state === 'locked' ? 0.08 : 0.16);
+  shape.drawPolygon([
+    -halfWidth * 0.36, halfHeight * 0.06,
+    0, halfHeight * 0.3,
+    halfWidth * 0.36, halfHeight * 0.06,
+    0, -halfHeight * 0.08,
+  ]);
+  shape.endFill();
+
+  shape.lineStyle(1, lightenColor(palette.edge, 0.45), state === 'locked' ? 0.2 : 0.38);
+  shape.moveTo(-halfWidth * 0.8, -halfHeight * 0.02);
+  shape.lineTo(0, -halfHeight * 0.66);
+  shape.lineTo(halfWidth * 0.8, -halfHeight * 0.02);
+
+  shape.lineStyle(1, 0x4b2e1a, 0.2);
+  shape.moveTo(0, halfHeight);
+  shape.lineTo(0, halfHeight + thickness);
 
   overlay.alpha = state === 'locked' ? 0 : 1;
   if (state === 'empty') drawEmptyOverlay(overlay, layout);
@@ -938,17 +1040,9 @@ function drawPlot(
   if (state === 'withered') drawWitheredOverlay(overlay, layout);
 
   plot.lockIcon.alpha = state === 'locked' ? 0.95 : 0;
-  plot.lockIcon.y = 2;
+  plot.lockIcon.y = Math.round(halfHeight * 0.08);
   if (plot.lockIcon.style) {
     plot.lockIcon.style.fontSize = layout.iconFontSize;
-  }
-
-  plot.statusText.text = palette.label;
-  plot.statusText.y = layout.halfHeight + Math.round(layout.thickness * 0.42);
-  plot.statusText.alpha = state === 'locked' ? 0.92 : 0.94;
-  if (plot.statusText.style) {
-    plot.statusText.style.fill = palette.labelColor;
-    plot.statusText.style.fontSize = layout.labelFontSize;
   }
 }
 
@@ -1054,11 +1148,11 @@ export function FarmPixiPrototype() {
       host.appendChild(canvas);
 
       const sceneRoot = new pixi.Container();
-      const backgroundLayer = new pixi.Graphics();
-      const decorationBackLayer = new pixi.Graphics();
+      const skyLayer = new pixi.Graphics();
+      const farDecorationLayer = new pixi.Graphics();
       const plotLayer = new pixi.Container();
-      const decorationFrontLayer = new pixi.Graphics();
-      sceneRoot.addChild(backgroundLayer, decorationBackLayer, plotLayer, decorationFrontLayer);
+      const foregroundDecorationLayer = new pixi.Graphics();
+      sceneRoot.addChild(skyLayer, farDecorationLayer, plotLayer, foregroundDecorationLayer);
       stageRef.current = plotLayer;
       app.stage.addChild(sceneRoot);
 
@@ -1090,19 +1184,6 @@ export function FarmPixiPrototype() {
         const container = new pixi.Container();
         const shape = new pixi.Graphics();
         const overlay = new pixi.Graphics();
-        const statusText = new pixi.Text('', {
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
-          fontSize: 12,
-          fill: 0xffffff,
-          fontWeight: 700,
-          align: 'center',
-          dropShadow: true,
-          dropShadowColor: '#0f172a',
-          dropShadowDistance: 1,
-          dropShadowBlur: 1,
-        });
-        statusText.anchor.set(0.5, 0.5);
-
         const lockIcon = new pixi.Text('🔒', {
           fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif',
           fontSize: 20,
@@ -1134,7 +1215,7 @@ export function FarmPixiPrototype() {
           });
         }
 
-        container.addChild(shape, overlay, statusText, lockIcon);
+        container.addChild(shape, overlay, lockIcon);
         plotLayer.addChild(container);
 
         return {
@@ -1144,7 +1225,6 @@ export function FarmPixiPrototype() {
           container,
           shape,
           overlay,
-          statusText,
           lockIcon,
         } satisfies RenderPlot;
       });
@@ -1158,11 +1238,18 @@ export function FarmPixiPrototype() {
         app.renderer.resize(nextWidth, nextHeight);
 
         const nextBackdropLayout = resolveBackdropLayout(nextWidth, nextHeight);
-        drawBackdropLayer(backgroundLayer, nextWidth, nextHeight, nextBackdropLayout);
-        drawDecorationLayers(decorationBackLayer, decorationFrontLayer, nextWidth, nextHeight, nextBackdropLayout);
-
-        const nextLayout = resolveSceneLayout(nextWidth, nextHeight);
+        const nextLayout = resolveSceneLayout(nextWidth, nextHeight, nextBackdropLayout);
         layoutRef.current = nextLayout;
+
+        drawSkyLayer(skyLayer, nextWidth, nextBackdropLayout);
+        drawFarMidLayer(farDecorationLayer, nextWidth, nextHeight, nextBackdropLayout);
+        drawFrontDecorationLayer(
+          foregroundDecorationLayer,
+          nextWidth,
+          nextHeight,
+          nextBackdropLayout,
+          nextLayout,
+        );
 
         plotLayer.x = Math.round(nextWidth / 2);
         plotLayer.y = nextLayout.stageY;
