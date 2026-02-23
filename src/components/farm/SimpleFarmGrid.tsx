@@ -1,14 +1,14 @@
 /**
- * SimpleFarmGrid - 7-plot cartoon farm layout in a straightforward grid.
+ * SimpleFarmGrid - 7-plot farm layout with an isometric shell per slot.
  *
- * Keeps card behavior centralized by reusing the existing PlotCard
- * component from FarmPage.
+ * Reuses PlotCard to keep all plot interactions and state logic unchanged.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import { useI18n } from '../../i18n';
 import type { Plot, StolenRecord, Weather } from '../../types/farm';
 import { PlotCard } from '../FarmPage';
+import { IsometricPlotShell } from './IsometricPlotShell';
 
 interface SimpleFarmGridProps {
   plots: Plot[];
@@ -117,7 +117,7 @@ export function SimpleFarmGrid({
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
-      <div className={`mx-auto grid w-full grid-cols-2 justify-center sm:grid-cols-3 md:grid-cols-4 ${layout.gapClass}`}>
+      <div className={`farm-grid-perspective mx-auto grid w-full grid-cols-2 items-start justify-center sm:grid-cols-3 md:grid-cols-4 ${layout.gapClass}`}>
         {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
           const plot = slotIndex < plots.length ? plots[slotIndex] : null;
           const isLastMobilePlot = isMobile && TOTAL_SLOTS % 2 === 1 && slotIndex === TOTAL_SLOTS - 1;
@@ -125,12 +125,12 @@ export function SimpleFarmGrid({
           return (
             <div
               key={plot ? `plot-simple-${plot.id}` : `plot-locked-${slotIndex}`}
-              className={`relative border-[3px] border-[#8B6914] bg-[#C4956A] ${
+              className={`relative ${
                 isLastMobilePlot ? 'col-span-2 justify-self-center' : ''
               }`}
-              style={{ width: layout.plotSize, height: layout.plotSize }}
+              style={{ width: layout.plotSize }}
             >
-              <div className="absolute inset-[12px]">
+              <IsometricPlotShell size={layout.plotSize} state={plot ? plot.state : 'locked'}>
                 {plot ? (
                   <PlotCard
                     plot={plot}
@@ -156,11 +156,20 @@ export function SimpleFarmGrid({
                     onUseTrapNet={() => onUseTrapNet(plot.id)}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center border-2 border-dashed border-[#8B6914] bg-[#C4956A]/40">
-                    <span className="text-2xl leading-none">🔒</span>
+                  <div
+                    className="flex aspect-square w-full flex-col items-center justify-center gap-1 border-2 border-dashed"
+                    style={{
+                      borderColor: `${theme.textMuted}88`,
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.16) 0%, rgba(0,0,0,0.12) 100%)',
+                    }}
+                  >
+                    <span className="text-2xl leading-none" style={{ color: theme.textMuted }}>🔒</span>
+                    <span className="text-[9px] font-medium leading-none" style={{ color: theme.textFaint }}>
+                      {t.marketPlotName(slotIndex)}
+                    </span>
                   </div>
                 )}
-              </div>
+              </IsometricPlotShell>
             </div>
           );
         })}

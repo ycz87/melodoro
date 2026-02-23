@@ -657,6 +657,8 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
   const progressHue = Math.round(120 - (plot.progress * 75));
   const progressRingColor = `hsl(${progressHue} 84% 52%)`;
   const progressRing = `conic-gradient(${progressRingColor} ${progressPercent}%, rgba(255,255,255,0.16) ${progressPercent}% 100%)`;
+  const plotFaceClipPath = 'polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%)';
+  const isEarlyGrowthStage = stage === 'seed' || stage === 'sprout';
   const wetSoil = weather === 'rainy' || weather === 'stormy';
   const soilBaseColor = '#D4A574';
   const soilDeepColor = '#B98554';
@@ -686,7 +688,7 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
   };
 
   const tileBackground = plot.state === 'empty'
-    ? buildSoilTexture(variedSoilTop, variedSoilBottom)
+    ? `repeating-radial-gradient(circle at 50% 55%, rgba(110,70,40,0.15) 0px, rgba(110,70,40,0.15) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 7px), ${buildSoilTexture(variedSoilTop, variedSoilBottom)}`
     : plot.state === 'growing'
       ? buildSoilTexture(variedSoilTop, growingSoilBottom)
       : plot.state === 'mature'
@@ -718,6 +720,7 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
           style={{
             background: tileBackground,
             border: `4px solid ${tileBorderColor}`,
+            clipPath: plotFaceClipPath,
             opacity: plot.state === 'withered' ? 0.74 : plot.state === 'stolen' ? 0.96 : 1,
             animation: isPlantFxActive ? 'farmSoilShake 260ms ease-in-out' : 'none',
           }}
@@ -728,6 +731,14 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
             background: wetSoil
               ? `${plotLightOverlay}, linear-gradient(160deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 24%, rgba(255,255,255,0) 56%)`
               : `${plotLightOverlay}, linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 48%)`,
+            clipPath: plotFaceClipPath,
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-[2px]"
+          style={{
+            clipPath: plotFaceClipPath,
+            border: '1px solid rgba(255,255,255,0.2)',
           }}
         />
         {isPlantFxActive && (
@@ -768,6 +779,13 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
             onClick={onPlantClick}
             className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center transition-all duration-200 ease-out hover:-translate-y-0.5"
           >
+            <span
+              className="pointer-events-none absolute left-1/2 top-[56%] h-3.5 w-11 -translate-x-1/2"
+              style={{
+                background: 'linear-gradient(180deg, rgba(104,70,43,0.5) 0%, rgba(104,70,43,0) 100%)',
+                borderRadius: '999px',
+              }}
+            />
             <span className="text-[clamp(1.7rem,5vw,2.4rem)] font-light leading-none" style={{ color: '#f8eddc' }}>+</span>
             <span className="text-[10px] font-medium tracking-wide leading-none" style={{ color: '#f8eddc' }}>
               {t.farmPlant}
@@ -786,13 +804,19 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
               <span
-                className="absolute inset-0 transition-all duration-300 ease-out"
+                className="pointer-events-none absolute bottom-[6px] h-3.5 w-9 rounded-[999px]"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(71,46,27,0.55) 0%, rgba(71,46,27,0) 100%)',
+                }}
+              />
+              <span
+                className="absolute inset-0 rounded-full transition-all duration-300 ease-out"
                 style={{
                   background: progressRing,
                 }}
               />
               <span
-                className="absolute inset-[5px]"
+                className="absolute inset-[5px] rounded-full"
                 style={{
                   backgroundColor: 'rgba(0,0,0,0.22)',
                   border: `1px solid ${theme.border}99`,
@@ -807,6 +831,17 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
                     animation: 'progressShine 1.7s linear infinite',
                   }}
                 />
+              )}
+              {isEarlyGrowthStage && (
+                <span
+                  className="absolute -right-1 top-0 text-[0.9rem]"
+                  style={{
+                    filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.25))',
+                    animation: 'plantSwaySm 3.1s ease-in-out infinite',
+                  }}
+                >
+                  🍃
+                </span>
               )}
               <span
                 className="relative inline-flex items-center justify-center"
@@ -947,11 +982,35 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
             }}
             className="absolute inset-0 flex flex-col items-center justify-center px-3 py-3 text-center transition-all duration-200 ease-out hover:-translate-y-0.5"
           >
-            <span className="text-[clamp(2.2rem,6.8vw,3.1rem)]" style={{
-              animation: 'farmMaturePulse 1.5s ease-in-out infinite',
-            }}>
-              {variety.emoji}
-            </span>
+            <div className="relative h-[3.15rem] w-[4.1rem]">
+              <span
+                className="absolute left-[8%] top-[18%] text-[clamp(1.7rem,5.2vw,2.25rem)]"
+                style={{
+                  animation: 'farmMaturePulse 1.7s ease-in-out infinite',
+                  filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.28))',
+                }}
+              >
+                {variety.emoji}
+              </span>
+              <span
+                className="absolute right-[8%] top-[18%] text-[clamp(1.7rem,5.2vw,2.25rem)]"
+                style={{
+                  animation: 'farmMaturePulse 1.7s ease-in-out 140ms infinite',
+                  filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.28))',
+                }}
+              >
+                {variety.emoji}
+              </span>
+              <span
+                className="absolute left-1/2 top-[3%] -translate-x-1/2 text-[clamp(2.1rem,6.5vw,2.95rem)]"
+                style={{
+                  animation: 'farmMaturePulse 1.45s ease-in-out infinite',
+                  filter: 'drop-shadow(0 3px 1px rgba(0,0,0,0.33))',
+                }}
+              >
+                {variety.emoji}
+              </span>
+            </div>
             <span className="text-[11px] font-semibold leading-tight" style={{ color: theme.text }}>
               {varietyLabel}
             </span>
