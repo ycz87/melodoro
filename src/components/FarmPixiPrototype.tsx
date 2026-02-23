@@ -221,6 +221,30 @@ const HOVER_STATE_LABELS: Record<PlotState, string> = {
   withered: 'WITHERED',
 };
 
+const SOIL_MICRO_POINTS: ReadonlyArray<{ x: number; y: number; size: number }> = [
+  { x: -0.58, y: -0.02, size: 0.76 },
+  { x: -0.48, y: -0.14, size: 0.62 },
+  { x: -0.41, y: 0.1, size: 0.82 },
+  { x: -0.31, y: -0.2, size: 0.58 },
+  { x: -0.24, y: 0.02, size: 0.9 },
+  { x: -0.17, y: 0.17, size: 0.7 },
+  { x: -0.07, y: -0.11, size: 0.86 },
+  { x: 0.02, y: 0.06, size: 0.78 },
+  { x: 0.09, y: -0.2, size: 0.66 },
+  { x: 0.18, y: -0.03, size: 0.84 },
+  { x: 0.24, y: 0.15, size: 0.7 },
+  { x: 0.32, y: -0.16, size: 0.64 },
+  { x: 0.41, y: 0.05, size: 0.82 },
+  { x: 0.53, y: -0.02, size: 0.72 },
+];
+
+const SOIL_MICRO_CRACKS: ReadonlyArray<[number, number, number, number, number, number]> = [
+  [-0.44, -0.08, -0.24, 0.02, -0.08, -0.03],
+  [-0.14, 0.06, 0.02, 0.12, 0.17, 0.06],
+  [0.16, -0.1, 0.31, -0.04, 0.44, -0.1],
+  [-0.02, -0.2, 0.12, -0.14, 0.21, -0.21],
+];
+
 let pixiLegacyLoadPromise: Promise<PixiModuleLike> | null = null;
 
 function isPixiModule(value: unknown): value is PixiModuleLike {
@@ -489,12 +513,16 @@ function drawFarMidLayer(
   farLayer.endFill();
 
   const scale = backdropLayout.decorationScale;
-  const farGroundY = backdropLayout.groundTopY + grassHeight * 0.47;
-  const leftBuildingX = Math.max(56 * scale, viewportWidth * 0.12);
-  const rightBuildingX = Math.min(viewportWidth - 56 * scale, viewportWidth * 0.88);
+  const farGroundY = backdropLayout.groundTopY + grassHeight * 0.44;
+  const leftBuildingX = Math.max(54 * scale, viewportWidth * 0.11);
+  const rightBuildingX = Math.min(viewportWidth - 54 * scale, viewportWidth * 0.89);
   const farFenceOffset = Math.max(6, 14 * scale);
   const farSegmentWidth = Math.max(8, 14 * scale);
   const farFenceSpan = 5 * farSegmentWidth;
+
+  farLayer.beginFill(0xeaf8c9, 0.18);
+  farLayer.drawRect(0, backdropLayout.groundTopY - 2, viewportWidth, Math.max(10, 17 * scale));
+  farLayer.endFill();
 
   drawSun(
     farLayer,
@@ -506,16 +534,16 @@ function drawFarMidLayer(
   drawCloud(farLayer, viewportWidth * 0.56, viewportHeight * 0.13, 0.76 * scale);
   drawCloud(farLayer, viewportWidth * 0.9, viewportHeight * 0.18, 0.86 * scale);
 
-  drawCottage(farLayer, leftBuildingX, farGroundY + 2 * scale, 0.64 * scale);
-  drawBarn(farLayer, rightBuildingX, farGroundY + 3 * scale, 0.67 * scale);
-  drawFence(farLayer, farFenceOffset, farGroundY + 5 * scale, 5, farSegmentWidth, 0.74 * scale);
+  drawCottage(farLayer, leftBuildingX, farGroundY + 2 * scale, 0.6 * scale);
+  drawBarn(farLayer, rightBuildingX, farGroundY + 3 * scale, 0.63 * scale);
+  drawFence(farLayer, farFenceOffset, farGroundY + 5 * scale, 5, farSegmentWidth, 0.7 * scale);
   drawFence(
     farLayer,
     viewportWidth - farFenceSpan - farFenceOffset,
     farGroundY + 5 * scale,
     5,
     farSegmentWidth,
-    0.74 * scale,
+    0.7 * scale,
   );
 }
 
@@ -594,45 +622,120 @@ function drawFence(
   segmentWidth: number,
   scale: number,
 ): void {
-  const postWidth = Math.max(3, Math.round(7 * scale));
-  const postHeight = Math.max(9, Math.round(24 * scale));
-  const railHeight = Math.max(2, Math.round(4 * scale));
+  const postWidth = Math.max(4, 7 * scale);
+  const postHeight = Math.max(10, 24 * scale);
+  const railHeight = Math.max(2, 3.8 * scale);
   const spanWidth = segmentCount * segmentWidth;
+  const lineWidth = Math.max(1, Math.round(1.8 * scale));
+  const topRailY = groundY - postHeight + 6 * scale;
+  const lowerRailY = groundY - postHeight * 0.46;
 
-  layer.lineStyle(2, 0x8b5e33, 0.82);
-  layer.beginFill(0xc88f5d, 0.96);
-  layer.drawRect(startX - postWidth * 0.5, groundY - postHeight + 6 * scale, spanWidth + postWidth, railHeight);
-  layer.drawRect(startX - postWidth * 0.5, groundY - postHeight * 0.45, spanWidth + postWidth, railHeight);
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x425b39, 0.2);
+  layer.drawEllipse(startX + spanWidth * 0.5, groundY + 4 * scale, spanWidth * 0.64, 7.5 * scale);
+  layer.endFill();
+
+  layer.beginFill(0x86562e, 0.34);
+  layer.drawRect(startX - postWidth * 0.5, topRailY + railHeight * 0.58, spanWidth + postWidth, railHeight * 0.72);
+  layer.drawRect(startX - postWidth * 0.5, lowerRailY + railHeight * 0.58, spanWidth + postWidth, railHeight * 0.72);
+  layer.endFill();
+
+  layer.lineStyle(lineWidth, 0x7d502a, 0.9);
+  layer.beginFill(0xce9b67, 0.98);
+  layer.drawRect(startX - postWidth * 0.5, topRailY, spanWidth + postWidth, railHeight);
+  layer.drawRect(startX - postWidth * 0.5, lowerRailY, spanWidth + postWidth, railHeight);
+  layer.endFill();
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xf4c999, 0.28);
+  layer.drawRect(startX - postWidth * 0.44, topRailY + railHeight * 0.16, spanWidth + postWidth * 0.88, railHeight * 0.24);
+  layer.drawRect(startX - postWidth * 0.44, lowerRailY + railHeight * 0.16, spanWidth + postWidth * 0.88, railHeight * 0.24);
   layer.endFill();
 
   for (let index = 0; index <= segmentCount; index += 1) {
     const postX = startX + index * segmentWidth;
-    layer.lineStyle(2, 0x8b5e33, 0.9);
-    layer.beginFill(0xcf9d69, 1);
-    layer.drawRect(postX - postWidth * 0.5, groundY - postHeight, postWidth, postHeight);
+    const postLeft = postX - postWidth * 0.5;
+
+    layer.lineStyle(lineWidth, 0x7d502a, 0.92);
+    layer.beginFill(0xd7a875, 1);
+    layer.drawRect(postLeft, groundY - postHeight, postWidth, postHeight);
     layer.endFill();
+
+    layer.lineStyle(0, 0x000000, 0);
+    layer.beginFill(0xf7d3aa, 0.28);
+    layer.drawRect(postLeft + postWidth * 0.12, groundY - postHeight + 1 * scale, postWidth * 0.22, postHeight - 1 * scale);
+    layer.endFill();
+
+    layer.beginFill(0x8f5d33, 0.24);
+    layer.drawRect(postLeft + postWidth * 0.66, groundY - postHeight + 1 * scale, postWidth * 0.2, postHeight - 1 * scale);
+    layer.endFill();
+
+    layer.beginFill(0xb57949, 0.68);
+    layer.drawPolygon([
+      postX - postWidth * 0.62, groundY - postHeight + 1 * scale,
+      postX, groundY - postHeight - 2 * scale,
+      postX + postWidth * 0.62, groundY - postHeight + 1 * scale,
+      postX + postWidth * 0.42, groundY - postHeight + 3 * scale,
+      postX - postWidth * 0.42, groundY - postHeight + 3 * scale,
+    ]);
+    layer.endFill();
+
+    layer.beginFill(0x794b2b, 0.78);
+    layer.drawCircle(postX, groundY - postHeight * 0.36, Math.max(0.7, scale * 0.85));
+    layer.endFill();
+  }
+
+  layer.lineStyle(1, 0x85552f, 0.34);
+  for (let index = 0; index < segmentCount; index += 1) {
+    const seamX = startX + index * segmentWidth + segmentWidth * 0.5;
+    layer.moveTo(seamX, topRailY + railHeight * 0.18);
+    layer.lineTo(seamX, topRailY + railHeight * 0.84);
+    layer.moveTo(seamX, lowerRailY + railHeight * 0.18);
+    layer.lineTo(seamX, lowerRailY + railHeight * 0.84);
   }
 }
 
 function drawCottage(layer: PixiGraphicsLike, centerX: number, groundY: number, scale: number): void {
-  const bodyWidth = 96 * scale;
-  const bodyHeight = 70 * scale;
-  const roofHeight = 45 * scale;
+  const bodyWidth = 98 * scale;
+  const bodyHeight = 72 * scale;
+  const roofHeight = 47 * scale;
   const leftX = centerX - bodyWidth * 0.5;
   const topY = groundY - bodyHeight;
+  const lineWidth = Math.max(1, Math.round(1.9 * scale));
+  const windowWidth = bodyWidth * 0.2;
+  const windowHeight = bodyHeight * 0.29;
+  const doorWidth = bodyWidth * 0.23;
+  const doorHeight = bodyHeight * 0.55;
 
   layer.lineStyle(0, 0x000000, 0);
-  layer.beginFill(0x5d6a57, 0.22);
-  layer.drawEllipse(centerX, groundY + 5 * scale, bodyWidth * 0.54, 12 * scale);
+  layer.beginFill(0x5a704f, 0.24);
+  layer.drawEllipse(centerX, groundY + 6 * scale, bodyWidth * 0.6, 12 * scale);
+  layer.drawEllipse(centerX + bodyWidth * 0.15, groundY + 7 * scale, bodyWidth * 0.22, 5 * scale);
   layer.endFill();
 
-  layer.lineStyle(2, 0x8a6548, 0.92);
-  layer.beginFill(0xf9e2c0, 1);
+  layer.lineStyle(lineWidth, 0x855f43, 0.92);
+  layer.beginFill(0xf7ddbc, 1);
   layer.drawRect(leftX, topY, bodyWidth, bodyHeight);
   layer.endFill();
 
-  layer.lineStyle(2, 0x8a5537, 0.95);
-  layer.beginFill(0xbe6c46, 1);
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xfff2e0, 0.28);
+  layer.drawRect(leftX + bodyWidth * 0.06, topY + bodyHeight * 0.08, bodyWidth * 0.28, bodyHeight * 0.84);
+  layer.endFill();
+
+  layer.beginFill(0xdab995, 0.23);
+  layer.drawRect(leftX + bodyWidth * 0.68, topY + bodyHeight * 0.08, bodyWidth * 0.24, bodyHeight * 0.84);
+  layer.endFill();
+
+  layer.lineStyle(1, 0xd0ab86, 0.35);
+  for (let index = 1; index < 5; index += 1) {
+    const x = leftX + (bodyWidth * index) / 5;
+    layer.moveTo(x, topY + bodyHeight * 0.08);
+    layer.lineTo(x, topY + bodyHeight * 0.92);
+  }
+
+  layer.lineStyle(lineWidth, 0x885639, 0.94);
+  layer.beginFill(0xc7764f, 1);
   layer.drawPolygon([
     centerX, topY - roofHeight,
     leftX - 6 * scale, topY + 8 * scale,
@@ -640,15 +743,97 @@ function drawCottage(layer: PixiGraphicsLike, centerX: number, groundY: number, 
   ]);
   layer.endFill();
 
-  layer.lineStyle(2, 0x8a6548, 0.92);
-  layer.beginFill(0xe8f2ff, 1);
-  layer.drawRect(leftX + bodyWidth * 0.12, topY + bodyHeight * 0.22, bodyWidth * 0.2, bodyHeight * 0.28);
-  layer.drawRect(leftX + bodyWidth * 0.68, topY + bodyHeight * 0.22, bodyWidth * 0.2, bodyHeight * 0.28);
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x8e563b, 0.62);
+  layer.drawPolygon([
+    leftX - 6 * scale, topY + 8 * scale,
+    leftX + bodyWidth + 6 * scale, topY + 8 * scale,
+    leftX + bodyWidth + 2 * scale, topY + 14 * scale,
+    leftX - 2 * scale, topY + 14 * scale,
+  ]);
   layer.endFill();
 
-  layer.lineStyle(2, 0x855530, 0.95);
-  layer.beginFill(0xc99264, 1);
-  layer.drawRect(leftX + bodyWidth * 0.39, topY + bodyHeight * 0.46, bodyWidth * 0.22, bodyHeight * 0.54);
+  layer.beginFill(0xf0a985, 0.28);
+  layer.drawPolygon([
+    centerX - bodyWidth * 0.36, topY + 6 * scale,
+    centerX, topY - roofHeight + 6 * scale,
+    centerX + bodyWidth * 0.08, topY + 7 * scale,
+    centerX - bodyWidth * 0.17, topY + 10 * scale,
+  ]);
+  layer.endFill();
+
+  layer.lineStyle(1, 0x8f5437, 0.36);
+  for (let index = 0; index < 3; index += 1) {
+    const y = topY - roofHeight * 0.2 + index * roofHeight * 0.24;
+    layer.moveTo(centerX - bodyWidth * 0.36 + index * 1.5 * scale, y + roofHeight * 0.2);
+    layer.lineTo(centerX + bodyWidth * 0.36 - index * 1.5 * scale, y + roofHeight * 0.24);
+  }
+
+  layer.lineStyle(Math.max(1, lineWidth - 0.5), 0x84553e, 0.92);
+  layer.beginFill(0xbf7f58, 1);
+  layer.drawRect(centerX + bodyWidth * 0.2, topY - roofHeight * 0.46, bodyWidth * 0.12, roofHeight * 0.5);
+  layer.endFill();
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xe9b691, 0.46);
+  layer.drawRect(centerX + bodyWidth * 0.22, topY - roofHeight * 0.42, bodyWidth * 0.03, roofHeight * 0.46);
+  layer.endFill();
+
+  layer.beginFill(0x8f5f41, 1);
+  layer.drawRect(centerX + bodyWidth * 0.19, topY - roofHeight * 0.5, bodyWidth * 0.14, roofHeight * 0.08);
+  layer.endFill();
+
+  for (const offset of [0.12, 0.68]) {
+    const windowX = leftX + bodyWidth * offset;
+    const windowY = topY + bodyHeight * 0.22;
+
+    layer.lineStyle(lineWidth, 0x7f5a41, 0.92);
+    layer.beginFill(0xe7f2ff, 1);
+    layer.drawRect(windowX, windowY, windowWidth, windowHeight);
+    layer.endFill();
+
+    layer.lineStyle(1, 0xb6d3ee, 0.64);
+    layer.moveTo(windowX + windowWidth * 0.08, windowY + windowHeight * 0.28);
+    layer.lineTo(windowX + windowWidth * 0.92, windowY + windowHeight * 0.28);
+    layer.moveTo(windowX + windowWidth * 0.08, windowY + windowHeight * 0.54);
+    layer.lineTo(windowX + windowWidth * 0.92, windowY + windowHeight * 0.54);
+
+    layer.lineStyle(1.1, 0x896246, 0.8);
+    layer.moveTo(windowX + windowWidth * 0.5, windowY + windowHeight * 0.06);
+    layer.lineTo(windowX + windowWidth * 0.5, windowY + windowHeight * 0.94);
+    layer.moveTo(windowX + windowWidth * 0.08, windowY + windowHeight * 0.5);
+    layer.lineTo(windowX + windowWidth * 0.92, windowY + windowHeight * 0.5);
+  }
+
+  const doorLeft = leftX + bodyWidth * 0.39;
+  const doorTop = topY + bodyHeight * 0.45;
+  layer.lineStyle(lineWidth, 0x7d4f2e, 0.94);
+  layer.beginFill(0xce9b6c, 1);
+  layer.drawRect(doorLeft, doorTop, doorWidth, doorHeight);
+  layer.endFill();
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xeec69c, 0.32);
+  layer.drawRect(doorLeft + doorWidth * 0.12, doorTop + 1 * scale, doorWidth * 0.22, doorHeight - 2 * scale);
+  layer.endFill();
+
+  layer.beginFill(0x8c5832, 0.2);
+  layer.drawRect(doorLeft + doorWidth * 0.64, doorTop + 1 * scale, doorWidth * 0.2, doorHeight - 2 * scale);
+  layer.endFill();
+
+  layer.lineStyle(1, 0x7b4f2d, 0.52);
+  layer.moveTo(doorLeft + doorWidth * 0.5, doorTop + doorHeight * 0.08);
+  layer.lineTo(doorLeft + doorWidth * 0.5, doorTop + doorHeight * 0.92);
+  layer.moveTo(doorLeft + doorWidth * 0.2, doorTop + doorHeight * 0.35);
+  layer.lineTo(doorLeft + doorWidth * 0.8, doorTop + doorHeight * 0.35);
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x724626, 0.92);
+  layer.drawCircle(doorLeft + doorWidth * 0.78, doorTop + doorHeight * 0.58, Math.max(0.8, scale * 1.1));
+  layer.endFill();
+
+  layer.beginFill(0x4f6a42, 0.5);
+  layer.drawRect(doorLeft - 2 * scale, doorTop + doorHeight - 2 * scale, doorWidth + 4 * scale, 3 * scale);
   layer.endFill();
 }
 
@@ -658,19 +843,37 @@ function drawBarn(layer: PixiGraphicsLike, centerX: number, groundY: number, sca
   const roofRise = 34 * scale;
   const leftX = centerX - bodyWidth * 0.5;
   const topY = groundY - bodyHeight;
+  const lineWidth = Math.max(1, Math.round(1.9 * scale));
 
   layer.lineStyle(0, 0x000000, 0);
-  layer.beginFill(0x5d6a57, 0.22);
-  layer.drawEllipse(centerX, groundY + 6 * scale, bodyWidth * 0.56, 13 * scale);
+  layer.beginFill(0x5a6e4d, 0.24);
+  layer.drawEllipse(centerX, groundY + 6 * scale, bodyWidth * 0.58, 13 * scale);
+  layer.drawEllipse(centerX - bodyWidth * 0.18, groundY + 7 * scale, bodyWidth * 0.24, 5 * scale);
   layer.endFill();
 
-  layer.lineStyle(2, 0x86493b, 0.94);
-  layer.beginFill(0xde5c4e, 1);
+  layer.lineStyle(lineWidth, 0x7f4639, 0.94);
+  layer.beginFill(0xdf5e50, 1);
   layer.drawRect(leftX, topY, bodyWidth, bodyHeight);
   layer.endFill();
 
-  layer.lineStyle(2, 0x6e4f4c, 0.94);
-  layer.beginFill(0x927579, 1);
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xf08f82, 0.22);
+  layer.drawRect(leftX + bodyWidth * 0.08, topY + bodyHeight * 0.07, bodyWidth * 0.24, bodyHeight * 0.86);
+  layer.endFill();
+
+  layer.beginFill(0x9e4339, 0.2);
+  layer.drawRect(leftX + bodyWidth * 0.68, topY + bodyHeight * 0.07, bodyWidth * 0.24, bodyHeight * 0.86);
+  layer.endFill();
+
+  layer.lineStyle(1, 0xb74f43, 0.42);
+  for (let index = 1; index < 7; index += 1) {
+    const x = leftX + (bodyWidth * index) / 7;
+    layer.moveTo(x, topY + bodyHeight * 0.08);
+    layer.lineTo(x, topY + bodyHeight * 0.92);
+  }
+
+  layer.lineStyle(lineWidth, 0x654948, 0.94);
+  layer.beginFill(0x988083, 1);
   layer.drawPolygon([
     leftX - 6 * scale, topY + 3 * scale,
     centerX, topY - roofRise,
@@ -680,12 +883,37 @@ function drawBarn(layer: PixiGraphicsLike, centerX: number, groundY: number, sca
   ]);
   layer.endFill();
 
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x7a5f64, 0.68);
+  layer.drawPolygon([
+    leftX - 2 * scale, topY + 16 * scale,
+    leftX + bodyWidth + 2 * scale, topY + 16 * scale,
+    leftX + bodyWidth, topY + 20 * scale,
+    leftX, topY + 20 * scale,
+  ]);
+  layer.endFill();
+
+  layer.beginFill(0xc3abb0, 0.28);
+  layer.drawPolygon([
+    centerX - bodyWidth * 0.32, topY + 8 * scale,
+    centerX, topY - roofRise + 7 * scale,
+    centerX + bodyWidth * 0.12, topY + 9 * scale,
+    centerX - bodyWidth * 0.11, topY + 12 * scale,
+  ]);
+  layer.endFill();
+
+  layer.lineStyle(1, 0x655154, 0.4);
+  layer.moveTo(centerX - bodyWidth * 0.28, topY + 5 * scale);
+  layer.lineTo(centerX + bodyWidth * 0.28, topY + 7 * scale);
+  layer.moveTo(centerX - bodyWidth * 0.2, topY + 10 * scale);
+  layer.lineTo(centerX + bodyWidth * 0.2, topY + 12 * scale);
+
   const doorWidth = bodyWidth * 0.42;
   const doorHeight = bodyHeight * 0.65;
   const doorLeft = centerX - doorWidth * 0.5;
   const doorTop = groundY - doorHeight;
-  layer.lineStyle(2, 0xeec8a8, 0.9);
-  layer.beginFill(0xb75044, 1);
+  layer.lineStyle(lineWidth, 0xeec8a8, 0.9);
+  layer.beginFill(0xb74f44, 1);
   layer.drawRect(doorLeft, doorTop, doorWidth, doorHeight);
   layer.endFill();
 
@@ -694,80 +922,165 @@ function drawBarn(layer: PixiGraphicsLike, centerX: number, groundY: number, sca
   layer.lineTo(doorLeft + doorWidth, doorTop + doorHeight);
   layer.moveTo(doorLeft + doorWidth, doorTop);
   layer.lineTo(doorLeft, doorTop + doorHeight);
+  layer.moveTo(doorLeft + doorWidth * 0.5, doorTop + 1 * scale);
+  layer.lineTo(doorLeft + doorWidth * 0.5, doorTop + doorHeight - 1 * scale);
 
-  layer.lineStyle(2, 0xeec8a8, 0.9);
-  layer.beginFill(0xce6e61, 1);
-  layer.drawRect(leftX + bodyWidth * 0.32, topY + bodyHeight * 0.12, bodyWidth * 0.18, bodyHeight * 0.2);
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xf6d9bf, 0.2);
+  layer.drawRect(doorLeft + doorWidth * 0.08, doorTop + 1 * scale, doorWidth * 0.16, doorHeight - 2 * scale);
+  layer.endFill();
+
+  layer.beginFill(0x8f3931, 0.2);
+  layer.drawRect(doorLeft + doorWidth * 0.76, doorTop + 1 * scale, doorWidth * 0.14, doorHeight - 2 * scale);
+  layer.endFill();
+
+  layer.lineStyle(lineWidth, 0xeec8a8, 0.9);
+  layer.beginFill(0xcb6d60, 1);
+  layer.drawRect(leftX + bodyWidth * 0.31, topY + bodyHeight * 0.12, bodyWidth * 0.18, bodyHeight * 0.2);
+  layer.endFill();
+
+  layer.lineStyle(1.2, 0xf7e6d4, 0.7);
+  layer.moveTo(leftX + bodyWidth * 0.31 + bodyWidth * 0.09, topY + bodyHeight * 0.12 + 1 * scale);
+  layer.lineTo(leftX + bodyWidth * 0.31 + bodyWidth * 0.09, topY + bodyHeight * 0.12 + bodyHeight * 0.2 - 1 * scale);
+  layer.moveTo(leftX + bodyWidth * 0.31 + 1 * scale, topY + bodyHeight * 0.12 + bodyHeight * 0.1);
+  layer.lineTo(leftX + bodyWidth * 0.49 - 1 * scale, topY + bodyHeight * 0.12 + bodyHeight * 0.1);
+
+  layer.lineStyle(1, 0x725255, 0.68);
+  layer.beginFill(0xfff0d9, 0.9);
+  layer.drawCircle(centerX, topY - roofRise * 0.24, Math.max(2.2, 4.4 * scale));
+  layer.endFill();
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x73585a, 0.82);
+  layer.drawCircle(centerX, topY - roofRise * 0.24, Math.max(1.2, 2.2 * scale));
   layer.endFill();
 }
 
 function drawCow(layer: PixiGraphicsLike, originX: number, hoofY: number, scale: number, facingLeft: boolean): void {
   const direction = facingLeft ? -1 : 1;
-  const legTop = hoofY - 20 * scale;
-  const bodyY = legTop - 8 * scale;
-  const lineWidth = Math.max(1, Math.round(2 * scale));
+  const legHeight = 20 * scale;
+  const legWidth = 6 * scale;
+  const bodyY = hoofY - 28 * scale;
+  const lineWidth = Math.max(1, Math.round(1.8 * scale));
 
   layer.lineStyle(0, 0x000000, 0);
-  layer.beginFill(0x54724a, 0.2);
-  layer.drawEllipse(originX + 2 * direction * scale, hoofY + 4 * scale, 24 * scale, 8 * scale);
+  layer.beginFill(0x55734c, 0.22);
+  layer.drawEllipse(originX + 2 * direction * scale, hoofY + 4 * scale, 27 * scale, 8 * scale);
   layer.endFill();
 
-  layer.lineStyle(lineWidth, 0x6d5948, 0.9);
-  layer.beginFill(0x382d26, 1);
-  layer.drawRect(originX - 17 * scale, legTop, 7 * scale, 20 * scale);
-  layer.drawRect(originX - 4 * scale, legTop, 7 * scale, 20 * scale);
-  layer.drawRect(originX + 9 * scale, legTop, 7 * scale, 20 * scale);
+  layer.lineStyle(lineWidth, 0x6b5848, 0.92);
+  layer.beginFill(0x3d3129, 1);
+  for (const legOffset of [-17, -5, 7, 17]) {
+    const legLeft = originX + legOffset * scale - legWidth * 0.5;
+    layer.drawRect(legLeft, hoofY - legHeight, legWidth, legHeight);
+  }
   layer.endFill();
 
-  layer.lineStyle(lineWidth, 0x6d5948, 0.9);
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x201913, 0.92);
+  for (const legOffset of [-17, -5, 7, 17]) {
+    const hoofLeft = originX + legOffset * scale - legWidth * 0.56;
+    layer.drawRect(hoofLeft, hoofY - 3 * scale, legWidth * 1.12, 3.4 * scale);
+  }
+  layer.endFill();
+
+  layer.lineStyle(lineWidth, 0x6d5948, 0.92);
   layer.beginFill(0xffffff, 1);
-  layer.drawEllipse(originX, bodyY, 26 * scale, 17 * scale);
+  layer.drawEllipse(originX - direction * 2 * scale, bodyY, 29 * scale, 18 * scale);
   layer.endFill();
 
   layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xf1ebe2, 0.48);
+  layer.drawEllipse(originX - direction * 8 * scale, bodyY - 5 * scale, 11 * scale, 6 * scale);
+  layer.endFill();
+
   layer.beginFill(0x2f2a28, 0.92);
-  layer.drawEllipse(originX - 10 * scale, bodyY - 2 * scale, 8 * scale, 6 * scale);
-  layer.drawEllipse(originX + 8 * scale, bodyY + 4 * scale, 7 * scale, 5 * scale);
+  layer.drawEllipse(originX - direction * 10 * scale, bodyY - 2 * scale, 8.4 * scale, 6 * scale);
+  layer.drawEllipse(originX + direction * 1 * scale, bodyY + 4 * scale, 6.8 * scale, 5 * scale);
+  layer.drawEllipse(originX + direction * 12 * scale, bodyY - 1 * scale, 5.6 * scale, 4.2 * scale);
+  layer.endFill();
+
+  layer.lineStyle(Math.max(1, lineWidth - 0.4), 0x6d5948, 0.84);
+  layer.moveTo(originX - direction * 22 * scale, bodyY - 6 * scale);
+  layer.lineTo(originX - direction * 30 * scale, bodyY - 18 * scale);
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x2d2520, 0.92);
+  layer.drawCircle(originX - direction * 31 * scale, bodyY - 18 * scale, 2.2 * scale);
+  layer.endFill();
+
+  layer.lineStyle(Math.max(1, lineWidth - 0.3), 0x6d5948, 0.86);
+  layer.beginFill(0xffffff, 1);
+  layer.drawEllipse(originX + direction * 15 * scale, bodyY - 1 * scale, 8.6 * scale, 6.2 * scale);
   layer.endFill();
 
   const headX = originX + direction * 29 * scale;
-  const headY = bodyY - 1 * scale;
-  layer.lineStyle(lineWidth, 0x6d5948, 0.9);
+  const headY = bodyY - 2 * scale;
+  layer.lineStyle(lineWidth, 0x6d5948, 0.92);
   layer.beginFill(0xffffff, 1);
   layer.drawCircle(headX, headY, 12 * scale);
   layer.endFill();
 
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xf4ebe0, 0.5);
+  layer.drawCircle(headX - direction * 3 * scale, headY - 4 * scale, 4.4 * scale);
+  layer.endFill();
+
+  layer.lineStyle(Math.max(1, lineWidth - 0.5), 0x6d5948, 0.92);
   layer.beginFill(0xffffff, 1);
-  layer.drawCircle(headX - direction * 8 * scale, headY - 10 * scale, 4 * scale);
-  layer.drawCircle(headX + direction * 8 * scale, headY - 9 * scale, 4 * scale);
+  layer.drawCircle(headX - direction * 8.5 * scale, headY - 10 * scale, 4.3 * scale);
+  layer.drawCircle(headX + direction * 8 * scale, headY - 9.3 * scale, 4 * scale);
   layer.endFill();
 
   layer.lineStyle(0, 0x000000, 0);
   layer.beginFill(0xffc3c3, 1);
-  layer.drawEllipse(headX + direction * 5 * scale, headY + 6 * scale, 7 * scale, 5 * scale);
+  layer.drawEllipse(headX + direction * 4.8 * scale, headY + 6 * scale, 7.6 * scale, 5 * scale);
   layer.endFill();
 
   layer.beginFill(0x2a2a2a, 1);
-  layer.drawCircle(headX + direction * 1 * scale, headY - 2 * scale, 1.6 * scale);
-  layer.drawCircle(headX + direction * 8 * scale, headY - 1 * scale, 1.6 * scale);
+  layer.drawCircle(headX + direction * 0.8 * scale, headY - 2 * scale, 1.6 * scale);
+  layer.drawCircle(headX + direction * 8.2 * scale, headY - 1.2 * scale, 1.6 * scale);
+  layer.drawCircle(headX + direction * 3.2 * scale, headY + 6 * scale, 0.9 * scale);
+  layer.drawCircle(headX + direction * 6.8 * scale, headY + 6.4 * scale, 0.9 * scale);
+  layer.endFill();
+
+  layer.lineStyle(1.2, 0x6f5948, 0.78);
+  layer.moveTo(headX + direction * 3 * scale, headY + 8.8 * scale);
+  layer.lineTo(headX + direction * 5.2 * scale, headY + 9.6 * scale);
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xffffff, 0.9);
+  layer.drawCircle(headX + direction * 2.2 * scale, headY - 2.4 * scale, 0.85 * scale);
+  layer.drawCircle(headX + direction * 8.9 * scale, headY - 1.7 * scale, 0.85 * scale);
   layer.endFill();
 }
 
 function drawSheep(layer: PixiGraphicsLike, originX: number, hoofY: number, scale: number, facingLeft: boolean): void {
   const direction = facingLeft ? -1 : 1;
-  const bodyY = hoofY - 23 * scale;
-  const lineWidth = Math.max(1, Math.round(2 * scale));
+  const bodyY = hoofY - 24 * scale;
+  const lineWidth = Math.max(1, Math.round(1.8 * scale));
+  const legWidth = 5 * scale;
+  const legHeight = 16 * scale;
 
   layer.lineStyle(0, 0x000000, 0);
-  layer.beginFill(0x5c7551, 0.18);
+  layer.beginFill(0x5c7551, 0.2);
   layer.drawEllipse(originX, hoofY + 4 * scale, 20 * scale, 7 * scale);
   layer.endFill();
 
-  layer.lineStyle(lineWidth, 0x756a5a, 0.9);
+  layer.lineStyle(lineWidth, 0x6f6453, 0.9);
   layer.beginFill(0x6a5848, 1);
-  layer.drawRect(originX - 13 * scale, hoofY - 16 * scale, 5 * scale, 16 * scale);
-  layer.drawRect(originX - 2 * scale, hoofY - 16 * scale, 5 * scale, 16 * scale);
-  layer.drawRect(originX + 9 * scale, hoofY - 16 * scale, 5 * scale, 16 * scale);
+  for (const legOffset of [-14, -4, 6, 15]) {
+    const legLeft = originX + legOffset * scale - legWidth * 0.5;
+    layer.drawRect(legLeft, hoofY - legHeight, legWidth, legHeight);
+  }
+  layer.endFill();
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0x352d27, 0.92);
+  for (const legOffset of [-14, -4, 6, 15]) {
+    const hoofLeft = originX + legOffset * scale - legWidth * 0.56;
+    layer.drawRect(hoofLeft, hoofY - 2.8 * scale, legWidth * 1.12, 3.2 * scale);
+  }
   layer.endFill();
 
   layer.lineStyle(lineWidth, 0x9b8d79, 0.9);
@@ -778,6 +1091,17 @@ function drawSheep(layer: PixiGraphicsLike, originX: number, hoofY: number, scal
   layer.drawEllipse(originX + 1 * scale, bodyY + 3 * scale, 18 * scale, 10 * scale);
   layer.endFill();
 
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xf8f6f0, 0.68);
+  layer.drawCircle(originX - 9 * scale, bodyY - 3.5 * scale, 4.8 * scale);
+  layer.drawCircle(originX + 4 * scale, bodyY - 4.4 * scale, 4.6 * scale);
+  layer.endFill();
+
+  layer.beginFill(0xf8f7f1, 0.82);
+  layer.drawCircle(originX + direction * 20 * scale, bodyY - 2 * scale, 4.6 * scale);
+  layer.drawCircle(originX - direction * 18 * scale, bodyY - 1 * scale, 4.2 * scale);
+  layer.endFill();
+
   const faceX = originX + direction * 24 * scale;
   const faceY = bodyY + 2 * scale;
   layer.lineStyle(lineWidth, 0x66594b, 0.94);
@@ -786,15 +1110,65 @@ function drawSheep(layer: PixiGraphicsLike, originX: number, hoofY: number, scal
   layer.endFill();
 
   layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xe7dbca, 0.6);
+  layer.drawCircle(faceX - direction * 1.8 * scale, faceY - 2.2 * scale, 3.2 * scale);
+  layer.endFill();
+
+  layer.lineStyle(Math.max(1, lineWidth - 0.4), 0x675a4c, 0.9);
+  layer.beginFill(0xf8eee0, 1);
+  layer.drawPolygon([
+    faceX - direction * 7.2 * scale, faceY - 4 * scale,
+    faceX - direction * 12 * scale, faceY - 8.4 * scale,
+    faceX - direction * 8.3 * scale, faceY + 0.5 * scale,
+  ]);
+  layer.drawPolygon([
+    faceX + direction * 7.2 * scale, faceY - 4 * scale,
+    faceX + direction * 12 * scale, faceY - 8.4 * scale,
+    faceX + direction * 8.3 * scale, faceY + 0.5 * scale,
+  ]);
+  layer.endFill();
+
+  layer.lineStyle(0, 0x000000, 0);
   layer.beginFill(0x2f2f2f, 1);
-  layer.drawCircle(faceX - direction * 3 * scale, faceY - 1 * scale, 1.4 * scale);
-  layer.drawCircle(faceX + direction * 3 * scale, faceY - 1 * scale, 1.4 * scale);
+  layer.drawCircle(faceX - direction * 2.8 * scale, faceY - 1 * scale, 1.4 * scale);
+  layer.drawCircle(faceX + direction * 3.1 * scale, faceY - 0.8 * scale, 1.4 * scale);
+  layer.drawCircle(faceX + direction * 0.7 * scale, faceY + 2.8 * scale, 1 * scale);
   layer.endFill();
 
   layer.lineStyle(1, 0x6a5a49, 0.88);
   layer.moveTo(faceX - direction * 2 * scale, faceY + 4 * scale);
   layer.lineTo(faceX, faceY + 5.5 * scale);
   layer.lineTo(faceX + direction * 2 * scale, faceY + 4 * scale);
+
+  layer.lineStyle(0, 0x000000, 0);
+  layer.beginFill(0xffffff, 0.88);
+  layer.drawCircle(faceX - direction * 2.2 * scale, faceY - 1.6 * scale, 0.7 * scale);
+  layer.drawCircle(faceX + direction * 3.7 * scale, faceY - 1.4 * scale, 0.7 * scale);
+  layer.endFill();
+}
+
+function drawGrassTufts(
+  layer: PixiGraphicsLike,
+  startX: number,
+  baseY: number,
+  spanWidth: number,
+  count: number,
+  scale: number,
+  color: number,
+  alpha: number,
+): void {
+  if (count <= 0) return;
+  const lineWidth = Math.max(1, scale * 1.1);
+  for (let index = 0; index < count; index += 1) {
+    const ratio = count === 1 ? 0.5 : index / (count - 1);
+    const x = startX + spanWidth * ratio;
+    const sway = Math.sin(ratio * Math.PI * 4.8) * 2.4 * scale;
+    const height = (5.5 + (index % 4) * 1.8) * scale;
+    const curveAlpha = alpha * (0.78 + (index % 3) * 0.08);
+    layer.lineStyle(lineWidth, color, curveAlpha);
+    layer.moveTo(x, baseY);
+    layer.lineTo(x + sway, baseY - height);
+  }
 }
 
 function drawFrontDecorationLayer(
@@ -807,32 +1181,74 @@ function drawFrontDecorationLayer(
   frontLayer.clear();
 
   const scale = backdropLayout.decorationScale;
-  const frontSegmentWidth = Math.max(9, 15 * scale);
+  const depthScale = clamp((viewportHeight - sceneLayout.stageY) / 310, 0.92, 1.18);
+  const nearScale = scale * depthScale;
+  const frontSegmentWidth = Math.max(10, 16 * nearScale);
   const frontFenceSpan = 5 * frontSegmentWidth;
-  const edgeOffset = Math.max(10, 14 * scale);
+  const edgeOffset = Math.max(10, 16 * nearScale);
   const plotBottomY =
     sceneLayout.stageY +
     sceneLayout.stepY * 4 +
     sceneLayout.halfHeight +
     sceneLayout.thickness +
     sceneLayout.shadowOffsetY;
-  const frontGroundY = clamp(plotBottomY + 20 * scale, viewportHeight * 0.78, viewportHeight - 10);
+  const frontGroundY = clamp(plotBottomY + 12 * scale, viewportHeight * 0.74, viewportHeight - 8);
+  const bermTopY = clamp(plotBottomY + 5 * scale, frontGroundY - 22 * nearScale, frontGroundY - 7 * nearScale);
 
-  drawBarn(frontLayer, -20 * scale, viewportHeight * 0.987, 0.76 * scale);
-  drawCottage(frontLayer, viewportWidth + 20 * scale, viewportHeight * 0.987, 0.72 * scale);
+  drawBarn(frontLayer, -28 * nearScale, viewportHeight * 0.996, 0.92 * nearScale);
+  drawCottage(frontLayer, viewportWidth + 28 * nearScale, viewportHeight * 0.996, 0.88 * nearScale);
 
-  drawFence(frontLayer, edgeOffset, frontGroundY + 2 * scale, 5, frontSegmentWidth, 0.82 * scale);
+  frontLayer.lineStyle(0, 0x000000, 0);
+  frontLayer.beginFill(0x304726, 0.24);
+  frontLayer.drawEllipse(viewportWidth * 0.5, frontGroundY + 14 * nearScale, viewportWidth * 0.45, 19 * nearScale);
+  frontLayer.endFill();
+
+  frontLayer.beginFill(0x6fa342, 0.92);
+  frontLayer.drawPolygon([
+    0, viewportHeight,
+    0, bermTopY + 12 * nearScale,
+    viewportWidth * 0.1, bermTopY + 3 * nearScale,
+    viewportWidth * 0.24, bermTopY + 8 * nearScale,
+    viewportWidth * 0.38, bermTopY,
+    viewportWidth * 0.55, bermTopY + 7 * nearScale,
+    viewportWidth * 0.72, bermTopY + 1.5 * nearScale,
+    viewportWidth * 0.9, bermTopY + 10 * nearScale,
+    viewportWidth, bermTopY + 6 * nearScale,
+    viewportWidth, viewportHeight,
+  ]);
+  frontLayer.endFill();
+
+  frontLayer.beginFill(0xbfdf88, 0.24);
+  frontLayer.drawPolygon([
+    0, bermTopY + 12.5 * nearScale,
+    viewportWidth * 0.14, bermTopY + 5.2 * nearScale,
+    viewportWidth * 0.32, bermTopY + 7.6 * nearScale,
+    viewportWidth * 0.51, bermTopY + 3.4 * nearScale,
+    viewportWidth * 0.69, bermTopY + 7.8 * nearScale,
+    viewportWidth * 0.86, bermTopY + 6.5 * nearScale,
+    viewportWidth, bermTopY + 9.2 * nearScale,
+    viewportWidth, bermTopY + 13.5 * nearScale,
+    0, bermTopY + 13.5 * nearScale,
+  ]);
+  frontLayer.endFill();
+
+  drawFence(frontLayer, edgeOffset, frontGroundY + 1.5 * nearScale, 5, frontSegmentWidth, 0.88 * nearScale);
   drawFence(
     frontLayer,
     viewportWidth - frontFenceSpan - edgeOffset,
-    frontGroundY + 2 * scale,
+    frontGroundY + 1.5 * nearScale,
     5,
     frontSegmentWidth,
-    0.82 * scale,
+    0.88 * nearScale,
   );
 
-  drawCow(frontLayer, Math.max(20 * scale, viewportWidth * 0.09), frontGroundY - 18 * scale, 0.68 * scale, false);
-  drawSheep(frontLayer, viewportWidth - Math.max(22 * scale, viewportWidth * 0.1), frontGroundY - 20 * scale, 0.64 * scale, true);
+  const cowX = clamp(viewportWidth * 0.18, 48 * nearScale, viewportWidth * 0.37);
+  const sheepX = clamp(viewportWidth * 0.82, viewportWidth * 0.63, viewportWidth - 46 * nearScale);
+  drawCow(frontLayer, cowX, frontGroundY - 21 * nearScale, 0.82 * nearScale, false);
+  drawSheep(frontLayer, sheepX, frontGroundY - 22 * nearScale, 0.79 * nearScale, true);
+
+  drawGrassTufts(frontLayer, 0, bermTopY + 12 * nearScale, viewportWidth, 28, 0.72 * nearScale, 0x6d9c40, 0.42);
+  drawGrassTufts(frontLayer, 0, bermTopY + 14.6 * nearScale, viewportWidth, 22, 0.58 * nearScale, 0x4f7d2f, 0.3);
 }
 
 function getCoarsePointerMode(): boolean {
@@ -856,12 +1272,12 @@ function resolveSceneLayout(
   const halfHeight = Math.round(halfWidth * 0.54);
   const thickness = Math.round(clamp(halfHeight * 0.46, 11, 28));
   const stepX = Math.round(halfWidth * 1.0);
-  const stepY = Math.round(halfHeight * 0.98);
+  const stepY = Math.round(halfHeight * 0.95);
   const shadowWidth = Math.round(halfWidth * 0.86);
   const shadowHeight = Math.max(8, Math.round(halfHeight * 0.38));
   const shadowOffsetY = Math.round(thickness + shadowHeight * 0.34 + 1);
   const sceneBottom = 4 * stepY + halfHeight + thickness + shadowOffsetY + shadowHeight;
-  const preferredStageY = Math.round(backdropLayout.groundTopY + halfHeight + Math.max(10, halfHeight * 0.45));
+  const preferredStageY = Math.round(backdropLayout.groundTopY + halfHeight + Math.max(10, halfHeight * 0.5));
   const minStageY = Math.max(halfHeight + 12, backdropLayout.groundTopY + Math.round(halfHeight * 0.72));
   const maxStageY = Math.max(minStageY, viewportHeight - sceneBottom - 12);
   const stageY = clamp(preferredStageY, minStageY, maxStageY);
@@ -909,45 +1325,103 @@ function findHitPlotId(
   return null;
 }
 
+function drawSoilMicroTexture(
+  shape: PixiGraphicsLike,
+  layout: SceneLayout,
+  state: PlotVisualState,
+  topColor: number,
+  edgeColor: number,
+  hoverActive: boolean,
+): void {
+  const halfWidth = layout.halfWidth;
+  const halfHeight = layout.halfHeight;
+  const unlockedAlpha =
+    state === 'empty' ? 1 : state === 'seed' ? 0.9 : state === 'withered' ? 0.72 : 0.62;
+  const textureAlpha = state === 'locked' ? 0.52 : unlockedAlpha;
+  const hoverBoost = hoverActive ? 1.08 : 1;
+  const grainRadius = Math.max(0.68, halfWidth * 0.0125);
+  const darkColor = state === 'locked' ? mixColor(topColor, 0x474443, 0.58) : mixColor(topColor, 0x4a2d18, 0.6);
+  const lightColor = state === 'locked' ? lightenColor(topColor, 0.12) : lightenColor(topColor, 0.28);
+  const crackColor = state === 'locked' ? mixColor(edgeColor, 0x5d5956, 0.36) : mixColor(edgeColor, 0x5b351f, 0.38);
+
+  shape.lineStyle(0, 0x000000, 0);
+  shape.beginFill(darkColor, 0.18 * textureAlpha * hoverBoost);
+  for (const point of SOIL_MICRO_POINTS) {
+    shape.drawCircle(halfWidth * point.x, halfHeight * point.y, grainRadius * point.size);
+  }
+  shape.endFill();
+
+  shape.beginFill(lightColor, 0.12 * textureAlpha * hoverBoost);
+  for (let index = 0; index < SOIL_MICRO_POINTS.length; index += 2) {
+    const point = SOIL_MICRO_POINTS[index];
+    shape.drawCircle(
+      halfWidth * (point.x + 0.02),
+      halfHeight * (point.y - 0.015),
+      grainRadius * point.size * 0.64,
+    );
+  }
+  shape.endFill();
+
+  shape.lineStyle(1, crackColor, 0.24 * textureAlpha);
+  for (const crack of SOIL_MICRO_CRACKS) {
+    shape.moveTo(halfWidth * crack[0], halfHeight * crack[1]);
+    shape.lineTo(halfWidth * crack[2], halfHeight * crack[3]);
+    shape.lineTo(halfWidth * crack[4], halfHeight * crack[5]);
+  }
+
+  shape.lineStyle(0, 0x000000, 0);
+  shape.beginFill(mixColor(topColor, edgeColor, 0.52), 0.05 * textureAlpha);
+  shape.drawPolygon([
+    -halfWidth * 0.7, -halfHeight * 0.01,
+    0, -halfHeight * 0.48,
+    halfWidth * 0.7, -halfHeight * 0.01,
+    0, halfHeight * 0.3,
+  ]);
+  shape.endFill();
+}
+
 function drawEmptyOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
-  const grainRadius = Math.max(1.1, layout.halfWidth * 0.018);
+  const grainRadius = Math.max(0.9, layout.halfWidth * 0.013);
   const grains = [
-    { x: -0.36, y: -0.03, size: 0.88 },
-    { x: -0.24, y: 0.12, size: 1 },
-    { x: -0.15, y: -0.14, size: 0.76 },
-    { x: -0.02, y: 0.03, size: 1.1 },
-    { x: 0.08, y: -0.08, size: 0.84 },
-    { x: 0.19, y: 0.11, size: 1 },
-    { x: 0.31, y: -0.02, size: 0.82 },
-    { x: 0.26, y: 0.2, size: 0.78 },
-    { x: -0.06, y: 0.19, size: 0.9 },
-    { x: -0.28, y: 0.22, size: 0.72 },
+    { x: -0.38, y: -0.02, size: 0.66 },
+    { x: -0.3, y: 0.12, size: 0.74 },
+    { x: -0.26, y: -0.15, size: 0.58 },
+    { x: -0.16, y: 0.05, size: 0.76 },
+    { x: -0.07, y: -0.08, size: 0.7 },
+    { x: 0, y: 0.04, size: 0.82 },
+    { x: 0.09, y: -0.1, size: 0.66 },
+    { x: 0.15, y: 0.13, size: 0.74 },
+    { x: 0.24, y: -0.04, size: 0.7 },
+    { x: 0.31, y: 0.16, size: 0.64 },
+    { x: 0.36, y: 0, size: 0.58 },
+    { x: -0.04, y: 0.2, size: 0.68 },
+    { x: -0.22, y: 0.22, size: 0.62 },
   ];
 
   overlay.lineStyle(0, 0x000000, 0);
-  overlay.beginFill(0x794928, 0.38);
+  overlay.beginFill(0x774726, 0.28);
   for (const grain of grains) {
     overlay.drawCircle(layout.halfWidth * grain.x, layout.halfHeight * grain.y, grainRadius * grain.size);
   }
   overlay.endFill();
 
-  overlay.beginFill(0x5f391f, 0.22);
-  overlay.drawEllipse(-layout.halfWidth * 0.2, layout.halfHeight * 0.08, layout.halfWidth * 0.11, layout.halfHeight * 0.05);
-  overlay.drawEllipse(layout.halfWidth * 0.18, layout.halfHeight * 0.14, layout.halfWidth * 0.13, layout.halfHeight * 0.06);
+  overlay.beginFill(0x9e6c46, 0.14);
+  overlay.drawEllipse(-layout.halfWidth * 0.2, layout.halfHeight * 0.08, layout.halfWidth * 0.09, layout.halfHeight * 0.04);
+  overlay.drawEllipse(layout.halfWidth * 0.19, layout.halfHeight * 0.13, layout.halfWidth * 0.1, layout.halfHeight * 0.045);
   overlay.endFill();
 
-  overlay.lineStyle(1, 0x6d4124, 0.33);
-  overlay.moveTo(-layout.halfWidth * 0.45, layout.halfHeight * 0.02);
-  overlay.lineTo(-layout.halfWidth * 0.26, layout.halfHeight * 0.11);
-  overlay.lineTo(-layout.halfWidth * 0.14, layout.halfHeight * 0.08);
-  overlay.moveTo(layout.halfWidth * 0.08, layout.halfHeight * 0.03);
-  overlay.lineTo(layout.halfWidth * 0.22, layout.halfHeight * 0.1);
-  overlay.lineTo(layout.halfWidth * 0.34, layout.halfHeight * 0.05);
+  overlay.lineStyle(1, 0x6d4124, 0.24);
+  overlay.moveTo(-layout.halfWidth * 0.42, layout.halfHeight * 0.03);
+  overlay.lineTo(-layout.halfWidth * 0.29, layout.halfHeight * 0.1);
+  overlay.lineTo(-layout.halfWidth * 0.16, layout.halfHeight * 0.07);
+  overlay.moveTo(layout.halfWidth * 0.07, layout.halfHeight * 0.04);
+  overlay.lineTo(layout.halfWidth * 0.2, layout.halfHeight * 0.1);
+  overlay.lineTo(layout.halfWidth * 0.33, layout.halfHeight * 0.06);
 
-  overlay.lineStyle(1, 0x9b6a45, 0.28);
-  overlay.moveTo(-layout.halfWidth * 0.12, -layout.halfHeight * 0.04);
-  overlay.lineTo(layout.halfWidth * 0.02, layout.halfHeight * 0.02);
-  overlay.lineTo(layout.halfWidth * 0.1, -layout.halfHeight * 0.04);
+  overlay.lineStyle(1, 0x9b6a45, 0.22);
+  overlay.moveTo(-layout.halfWidth * 0.11, -layout.halfHeight * 0.03);
+  overlay.lineTo(layout.halfWidth * 0.03, layout.halfHeight * 0.02);
+  overlay.lineTo(layout.halfWidth * 0.11, -layout.halfHeight * 0.03);
 }
 
 function drawSeedOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
@@ -1475,6 +1949,8 @@ function drawPlot(
     halfWidth * 0.52, halfHeight * 0.19,
   ]);
   shape.endFill();
+
+  drawSoilMicroTexture(shape, layout, state, topColor, palette.edge, hoverActive);
 
   if (state === 'locked') {
     shape.lineStyle(0, 0x000000, 0);
