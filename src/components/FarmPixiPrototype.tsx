@@ -12,7 +12,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-type PlotState = 'empty' | 'growing' | 'mature' | 'withered';
+type PlotState = 'empty' | 'seed' | 'sprout' | 'leaf' | 'flower' | 'fruit' | 'mature' | 'withered';
 type PlotVisualState = PlotState | 'locked';
 type PrototypeStatus = 'loading' | 'ready' | 'error';
 
@@ -121,52 +121,80 @@ const PLOT_RENDER_ORDER = [0, 1, 3, 2, 4, 6, 5, 7, 8] as const;
 
 const DEFAULT_PLOT_STATES: PlotVisualState[] = [
   'empty',
-  'growing',
+  'seed',
+  'sprout',
+  'leaf',
+  'flower',
+  'fruit',
   'mature',
   'withered',
-  'locked',
-  'locked',
-  'locked',
-  'locked',
   'locked',
 ];
 
 const PLOT_PALETTES: Record<PlotVisualState, PlotPalette> = {
   empty: {
-    top: 0xe0b07c,
-    left: 0xaa7449,
-    right: 0x966239,
-    edge: 0x6a4427,
+    top: 0xd9a367,
+    left: 0xa87042,
+    right: 0x956136,
+    edge: 0x684126,
   },
-  growing: {
-    top: 0xd6b67e,
-    left: 0x9d7642,
-    right: 0x8f6837,
-    edge: 0x674726,
+  seed: {
+    top: 0xd4a06a,
+    left: 0xa1693f,
+    right: 0x8e5b35,
+    edge: 0x603d24,
+  },
+  sprout: {
+    top: 0xd6ad75,
+    left: 0x9e7544,
+    right: 0x8f693b,
+    edge: 0x624729,
+  },
+  leaf: {
+    top: 0xd3b67d,
+    left: 0x987444,
+    right: 0x87663a,
+    edge: 0x5f4426,
+  },
+  flower: {
+    top: 0xd6b983,
+    left: 0x9a7646,
+    right: 0x8a683c,
+    edge: 0x60462a,
+  },
+  fruit: {
+    top: 0xcfa572,
+    left: 0x92633b,
+    right: 0x7f5531,
+    edge: 0x563920,
   },
   mature: {
-    top: 0xd7ac73,
-    left: 0x8f663a,
-    right: 0x7f582f,
-    edge: 0x5c3e24,
+    top: 0xd4a268,
+    left: 0x8a5f36,
+    right: 0x784f2b,
+    edge: 0x53351d,
   },
   withered: {
-    top: 0xac9a83,
-    left: 0x746353,
-    right: 0x675849,
-    edge: 0x43372e,
+    top: 0x9f8f7a,
+    left: 0x70604f,
+    right: 0x615344,
+    edge: 0x3f342c,
   },
   locked: {
-    top: 0xa8a4a1,
-    left: 0x898683,
-    right: 0x7b7875,
-    edge: 0x5a5856,
+    top: 0xa6a2a0,
+    left: 0x84817f,
+    right: 0x757270,
+    edge: 0x545251,
   },
 };
 
 const HOVER_STATE_LABELS: Record<PlotState, string> = {
   empty: 'EMPTY',
-  growing: 'GROWING',
+  seed: 'SEED',
+  sprout: 'SPROUT',
+  leaf: 'LEAF',
+  flower: 'FLOWER',
+  fruit: 'FRUIT',
   mature: 'MATURE',
   withered: 'WITHERED',
 };
@@ -282,8 +310,12 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function cyclePlotState(current: PlotState): PlotState {
-  if (current === 'empty') return 'growing';
-  if (current === 'growing') return 'mature';
+  if (current === 'empty') return 'seed';
+  if (current === 'seed') return 'sprout';
+  if (current === 'sprout') return 'leaf';
+  if (current === 'leaf') return 'flower';
+  if (current === 'flower') return 'fruit';
+  if (current === 'fruit') return 'mature';
   if (current === 'mature') return 'withered';
   return 'empty';
 }
@@ -795,53 +827,196 @@ function resolvePlotCoordinate(plotId: number, layout: SceneLayout): { x: number
 }
 
 function drawEmptyOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
-  const dotRadius = Math.max(2, Math.round(layout.halfWidth * 0.03));
-  overlay.beginFill(0x7a4b28, 0.42);
-  overlay.drawCircle(-layout.halfWidth * 0.2, layout.halfHeight * 0.14, dotRadius);
-  overlay.drawCircle(layout.halfWidth * 0.03, layout.halfHeight * 0.05, dotRadius);
-  overlay.drawCircle(layout.halfWidth * 0.21, layout.halfHeight * 0.16, dotRadius);
+  const grainRadius = Math.max(1.1, layout.halfWidth * 0.018);
+  const grains = [
+    { x: -0.36, y: -0.03, size: 0.88 },
+    { x: -0.24, y: 0.12, size: 1 },
+    { x: -0.15, y: -0.14, size: 0.76 },
+    { x: -0.02, y: 0.03, size: 1.1 },
+    { x: 0.08, y: -0.08, size: 0.84 },
+    { x: 0.19, y: 0.11, size: 1 },
+    { x: 0.31, y: -0.02, size: 0.82 },
+    { x: 0.26, y: 0.2, size: 0.78 },
+    { x: -0.06, y: 0.19, size: 0.9 },
+    { x: -0.28, y: 0.22, size: 0.72 },
+  ];
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0x794928, 0.38);
+  for (const grain of grains) {
+    overlay.drawCircle(layout.halfWidth * grain.x, layout.halfHeight * grain.y, grainRadius * grain.size);
+  }
+  overlay.endFill();
+
+  overlay.beginFill(0x5f391f, 0.22);
+  overlay.drawEllipse(-layout.halfWidth * 0.2, layout.halfHeight * 0.08, layout.halfWidth * 0.11, layout.halfHeight * 0.05);
+  overlay.drawEllipse(layout.halfWidth * 0.18, layout.halfHeight * 0.14, layout.halfWidth * 0.13, layout.halfHeight * 0.06);
+  overlay.endFill();
+
+  overlay.lineStyle(1, 0x6d4124, 0.33);
+  overlay.moveTo(-layout.halfWidth * 0.45, layout.halfHeight * 0.02);
+  overlay.lineTo(-layout.halfWidth * 0.26, layout.halfHeight * 0.11);
+  overlay.lineTo(-layout.halfWidth * 0.14, layout.halfHeight * 0.08);
+  overlay.moveTo(layout.halfWidth * 0.08, layout.halfHeight * 0.03);
+  overlay.lineTo(layout.halfWidth * 0.22, layout.halfHeight * 0.1);
+  overlay.lineTo(layout.halfWidth * 0.34, layout.halfHeight * 0.05);
+
+  overlay.lineStyle(1, 0x9b6a45, 0.28);
+  overlay.moveTo(-layout.halfWidth * 0.12, -layout.halfHeight * 0.04);
+  overlay.lineTo(layout.halfWidth * 0.02, layout.halfHeight * 0.02);
+  overlay.lineTo(layout.halfWidth * 0.1, -layout.halfHeight * 0.04);
+}
+
+function drawSeedOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
+  const moundY = layout.halfHeight * 0.12;
+  const moundWidth = layout.halfWidth * 0.34;
+  const moundHeight = layout.halfHeight * 0.16;
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0x714423, 0.3);
+  overlay.drawEllipse(0, moundY + layout.halfHeight * 0.1, moundWidth * 0.88, moundHeight * 0.62);
+  overlay.endFill();
+
+  overlay.beginFill(0x99613a, 0.95);
+  overlay.drawEllipse(0, moundY, moundWidth, moundHeight);
+  overlay.endFill();
+
+  overlay.beginFill(0xc88a58, 0.5);
+  overlay.drawEllipse(-layout.halfWidth * 0.09, moundY - layout.halfHeight * 0.03, moundWidth * 0.42, moundHeight * 0.45);
+  overlay.endFill();
+
+  overlay.lineStyle(1, 0x5e371d, 0.42);
+  overlay.moveTo(-layout.halfWidth * 0.14, moundY + layout.halfHeight * 0.01);
+  overlay.lineTo(-layout.halfWidth * 0.01, moundY - layout.halfHeight * 0.03);
+  overlay.lineTo(layout.halfWidth * 0.12, moundY + layout.halfHeight * 0.01);
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0x6a3e21, 0.9);
+  overlay.drawEllipse(layout.halfWidth * 0.03, moundY - layout.halfHeight * 0.05, layout.halfWidth * 0.05, layout.halfHeight * 0.03);
   overlay.endFill();
 }
 
-function drawGrowingOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
-  const stemTop = -layout.halfHeight * 0.02;
-  const stemBottom = layout.halfHeight * 0.27;
+function drawSproutOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
+  const stemTop = -layout.halfHeight * 0.04;
+  const stemBottom = layout.halfHeight * 0.25;
 
-  overlay.lineStyle(2, 0x3f6212, 1);
+  overlay.lineStyle(2, 0x2f6f31, 0.98);
   overlay.moveTo(0, stemBottom);
   overlay.lineTo(0, stemTop);
 
+  overlay.lineStyle(0, 0x000000, 0);
   overlay.beginFill(0x86efac, 1);
   overlay.drawPolygon([
-    0, stemTop - 2,
-    -layout.halfWidth * 0.25, layout.halfHeight * 0.14,
-    -layout.halfWidth * 0.02, layout.halfHeight * 0.19,
+    0, stemTop - 1,
+    -layout.halfWidth * 0.24, layout.halfHeight * 0.1,
+    -layout.halfWidth * 0.01, layout.halfHeight * 0.18,
   ]);
   overlay.endFill();
 
   overlay.beginFill(0x4ade80, 1);
   overlay.drawPolygon([
-    0, stemTop,
-    layout.halfWidth * 0.24, layout.halfHeight * 0.08,
-    layout.halfWidth * 0.02, layout.halfHeight * 0.2,
+    0, stemTop - 1,
+    layout.halfWidth * 0.23, layout.halfHeight * 0.04,
+    layout.halfWidth * 0.03, layout.halfHeight * 0.17,
+  ]);
+  overlay.endFill();
+
+  overlay.beginFill(0xcfffd5, 0.45);
+  overlay.drawCircle(-layout.halfWidth * 0.05, layout.halfHeight * 0.06, Math.max(1.2, layout.halfWidth * 0.03));
+  overlay.drawCircle(layout.halfWidth * 0.05, layout.halfHeight * 0.04, Math.max(1.1, layout.halfWidth * 0.027));
+  overlay.endFill();
+}
+
+function drawLeafOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
+  overlay.lineStyle(2, 0x2f6e31, 0.98);
+  overlay.moveTo(-layout.halfWidth * 0.23, layout.halfHeight * 0.24);
+  overlay.lineTo(-layout.halfWidth * 0.09, layout.halfHeight * 0.11);
+  overlay.lineTo(layout.halfWidth * 0.01, layout.halfHeight * 0.03);
+  overlay.lineTo(layout.halfWidth * 0.15, -layout.halfHeight * 0.13);
+  overlay.lineTo(layout.halfWidth * 0.23, -layout.halfHeight * 0.21);
+
+  overlay.moveTo(-layout.halfWidth * 0.08, layout.halfHeight * 0.09);
+  overlay.lineTo(-layout.halfWidth * 0.24, -layout.halfHeight * 0.03);
+  overlay.moveTo(layout.halfWidth * 0.03, layout.halfHeight * 0);
+  overlay.lineTo(layout.halfWidth * 0.22, layout.halfHeight * 0.08);
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0x34d399, 0.96);
+  overlay.drawPolygon([
+    -layout.halfWidth * 0.08, layout.halfHeight * 0.09,
+    -layout.halfWidth * 0.31, layout.halfHeight * 0.03,
+    -layout.halfWidth * 0.21, -layout.halfHeight * 0.15,
+    -layout.halfWidth * 0.02, -layout.halfHeight * 0.01,
+  ]);
+  overlay.endFill();
+
+  overlay.beginFill(0x22c55e, 0.96);
+  overlay.drawPolygon([
+    layout.halfWidth * 0.02, layout.halfHeight * 0.02,
+    layout.halfWidth * 0.27, layout.halfHeight * 0.08,
+    layout.halfWidth * 0.19, -layout.halfHeight * 0.1,
+    layout.halfWidth * 0.03, -layout.halfHeight * 0.02,
+  ]);
+  overlay.endFill();
+
+  overlay.beginFill(0x4ade80, 0.92);
+  overlay.drawPolygon([
+    layout.halfWidth * 0.11, -layout.halfHeight * 0.12,
+    layout.halfWidth * 0.29, -layout.halfHeight * 0.18,
+    layout.halfWidth * 0.24, -layout.halfHeight * 0.31,
+    layout.halfWidth * 0.08, -layout.halfHeight * 0.22,
   ]);
   overlay.endFill();
 }
 
-function drawMatureOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
-  const radius = Math.max(5, Math.round(layout.halfWidth * 0.12));
+function drawFlowerOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
+  drawLeafOverlay(overlay, layout);
+
+  const flowerX = layout.halfWidth * 0.24;
+  const flowerY = -layout.halfHeight * 0.27;
+  const petalRadius = Math.max(2.1, layout.halfWidth * 0.055);
+  const petalOffset = petalRadius * 1.12;
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0xfbcfe8, 0.97);
+  overlay.drawCircle(flowerX - petalOffset, flowerY, petalRadius);
+  overlay.drawCircle(flowerX + petalOffset, flowerY, petalRadius);
+  overlay.drawCircle(flowerX, flowerY - petalOffset, petalRadius);
+  overlay.drawCircle(flowerX, flowerY + petalOffset, petalRadius);
+  overlay.drawCircle(flowerX - petalOffset * 0.72, flowerY + petalOffset * 0.72, petalRadius);
+  overlay.drawCircle(flowerX + petalOffset * 0.72, flowerY - petalOffset * 0.72, petalRadius);
+  overlay.endFill();
+
+  overlay.beginFill(0xf59e0b, 1);
+  overlay.drawCircle(flowerX, flowerY, petalRadius * 0.95);
+  overlay.endFill();
+
+  overlay.beginFill(0xfffbeb, 0.6);
+  overlay.drawCircle(flowerX - petalRadius * 0.22, flowerY - petalRadius * 0.28, petalRadius * 0.24);
+  overlay.endFill();
+}
+
+function drawMelonCluster(overlay: PixiGraphicsLike, layout: SceneLayout, scale: number): void {
+  const baseRadius = Math.max(4, Math.round(layout.halfWidth * 0.1 * scale));
   const melons = [
-    { x: -layout.halfWidth * 0.21, y: layout.halfHeight * 0.12 },
-    { x: layout.halfWidth * 0.02, y: layout.halfHeight * 0.03 },
-    { x: layout.halfWidth * 0.23, y: layout.halfHeight * 0.13 },
+    { x: -layout.halfWidth * 0.2, y: layout.halfHeight * 0.14, r: 0.92 },
+    { x: -layout.halfWidth * 0.03, y: layout.halfHeight * 0.02, r: 1.02 },
+    { x: layout.halfWidth * 0.18, y: layout.halfHeight * 0.12, r: 0.96 },
+    { x: layout.halfWidth * 0.05, y: layout.halfHeight * 0.19, r: 0.78 },
   ];
 
   for (const melon of melons) {
+    const radius = baseRadius * melon.r;
+    overlay.lineStyle(0, 0x000000, 0);
     overlay.beginFill(0x22c55e, 1);
     overlay.drawCircle(melon.x, melon.y, radius);
     overlay.endFill();
 
-    overlay.lineStyle(1, 0x14532d, 0.88);
+    overlay.beginFill(0x86efac, 0.22);
+    overlay.drawCircle(melon.x - radius * 0.25, melon.y - radius * 0.24, radius * 0.32);
+    overlay.endFill();
+
+    overlay.lineStyle(Math.max(1, radius * 0.18), 0x14532d, 0.9);
     overlay.moveTo(melon.x - radius * 0.6, melon.y - radius * 0.78);
     overlay.lineTo(melon.x - radius * 0.15, melon.y + radius * 0.78);
     overlay.moveTo(melon.x - radius * 0.1, melon.y - radius * 0.82);
@@ -849,24 +1024,115 @@ function drawMatureOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void
   }
 }
 
+function drawFruitOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
+  overlay.lineStyle(2, 0x2f6e31, 0.96);
+  overlay.moveTo(-layout.halfWidth * 0.22, layout.halfHeight * 0.24);
+  overlay.lineTo(-layout.halfWidth * 0.06, layout.halfHeight * 0.12);
+  overlay.lineTo(layout.halfWidth * 0.06, layout.halfHeight * 0.02);
+  overlay.lineTo(layout.halfWidth * 0.16, -layout.halfHeight * 0.07);
+
+  overlay.moveTo(-layout.halfWidth * 0.04, layout.halfHeight * 0.1);
+  overlay.lineTo(layout.halfWidth * 0.19, layout.halfHeight * 0.2);
+  drawMelonCluster(overlay, layout, 0.82);
+}
+
+function drawSpark(
+  overlay: PixiGraphicsLike,
+  centerX: number,
+  centerY: number,
+  size: number,
+  alpha: number,
+): void {
+  const lineWidth = Math.max(1, size * 0.16);
+  overlay.lineStyle(lineWidth, 0xfff6bf, alpha);
+  overlay.moveTo(centerX - size, centerY);
+  overlay.lineTo(centerX + size, centerY);
+  overlay.moveTo(centerX, centerY - size);
+  overlay.lineTo(centerX, centerY + size);
+  overlay.moveTo(centerX - size * 0.72, centerY - size * 0.72);
+  overlay.lineTo(centerX + size * 0.72, centerY + size * 0.72);
+  overlay.moveTo(centerX - size * 0.72, centerY + size * 0.72);
+  overlay.lineTo(centerX + size * 0.72, centerY - size * 0.72);
+}
+
+function drawMatureOverlay(overlay: PixiGraphicsLike, layout: SceneLayout, pulsePhase: number): void {
+  const pulse = (Math.sin(pulsePhase * Math.PI * 2) + 1) * 0.5;
+
+  overlay.lineStyle(2, 0x2f6e31, 0.98);
+  overlay.moveTo(-layout.halfWidth * 0.22, layout.halfHeight * 0.24);
+  overlay.lineTo(-layout.halfWidth * 0.08, layout.halfHeight * 0.11);
+  overlay.lineTo(layout.halfWidth * 0.03, layout.halfHeight * 0.01);
+  overlay.lineTo(layout.halfWidth * 0.16, -layout.halfHeight * 0.12);
+  overlay.lineTo(layout.halfWidth * 0.24, -layout.halfHeight * 0.2);
+
+  overlay.moveTo(-layout.halfWidth * 0.06, layout.halfHeight * 0.08);
+  overlay.lineTo(layout.halfWidth * 0.2, layout.halfHeight * 0.19);
+  drawMelonCluster(overlay, layout, 1);
+
+  const pulseCenterX = layout.halfWidth * 0.02;
+  const pulseCenterY = layout.halfHeight * 0.08;
+  const pulseRadiusX = layout.halfWidth * (0.29 + pulse * 0.15);
+  const pulseRadiusY = layout.halfHeight * (0.17 + pulse * 0.09);
+
+  overlay.lineStyle(1.5 + pulse * 1.1, 0xfef08a, 0.3 + pulse * 0.5);
+  overlay.drawEllipse(pulseCenterX, pulseCenterY, pulseRadiusX, pulseRadiusY);
+  overlay.lineStyle(1, 0xfde68a, 0.2 + pulse * 0.32);
+  overlay.drawEllipse(pulseCenterX, pulseCenterY, pulseRadiusX * 1.18, pulseRadiusY * 1.24);
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0xfef9c3, 0.08 + pulse * 0.15);
+  overlay.drawEllipse(pulseCenterX, pulseCenterY, pulseRadiusX * 0.92, pulseRadiusY * 0.74);
+  overlay.endFill();
+
+  const sparkAlpha = 0.34 + pulse * 0.6;
+  drawSpark(overlay, -layout.halfWidth * 0.26, -layout.halfHeight * 0.03, layout.halfWidth * 0.075, sparkAlpha);
+  drawSpark(overlay, layout.halfWidth * 0.28, layout.halfHeight * 0.02, layout.halfWidth * 0.07, sparkAlpha * 0.94);
+  drawSpark(overlay, layout.halfWidth * 0.07, -layout.halfHeight * 0.27, layout.halfWidth * 0.06, sparkAlpha * 0.82);
+}
+
 function drawWitheredOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
-  overlay.lineStyle(2, 0x6b5b4a, 1);
-  overlay.moveTo(0, layout.halfHeight * 0.28);
-  overlay.lineTo(-layout.halfWidth * 0.03, -layout.halfHeight * 0.03);
-  overlay.lineTo(layout.halfWidth * 0.08, -layout.halfHeight * 0.2);
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0x554a40, 0.35);
+  overlay.drawEllipse(0, layout.halfHeight * 0.2, layout.halfWidth * 0.38, layout.halfHeight * 0.15);
+  overlay.endFill();
 
-  overlay.moveTo(-layout.halfWidth * 0.02, layout.halfHeight * 0.08);
-  overlay.lineTo(-layout.halfWidth * 0.2, layout.halfHeight * 0.16);
-  overlay.moveTo(0, layout.halfHeight * 0.02);
-  overlay.lineTo(layout.halfWidth * 0.18, layout.halfHeight * 0.09);
+  overlay.lineStyle(2, 0x5d5044, 0.92);
+  overlay.moveTo(-layout.halfWidth * 0.02, layout.halfHeight * 0.25);
+  overlay.lineTo(-layout.halfWidth * 0.08, layout.halfHeight * 0.1);
+  overlay.lineTo(layout.halfWidth * 0.05, -layout.halfHeight * 0.04);
+  overlay.lineTo(layout.halfWidth * 0.01, -layout.halfHeight * 0.19);
 
-  overlay.beginFill(0x8c7b69, 0.95);
+  overlay.moveTo(-layout.halfWidth * 0.07, layout.halfHeight * 0.07);
+  overlay.lineTo(-layout.halfWidth * 0.25, layout.halfHeight * 0.15);
+  overlay.moveTo(layout.halfWidth * 0.01, layout.halfHeight * 0.01);
+  overlay.lineTo(layout.halfWidth * 0.22, layout.halfHeight * 0.08);
+
+  overlay.lineStyle(0, 0x000000, 0);
+  overlay.beginFill(0x807062, 0.95);
   overlay.drawPolygon([
-    layout.halfWidth * 0.06, -layout.halfHeight * 0.18,
-    layout.halfWidth * 0.26, -layout.halfHeight * 0.02,
-    layout.halfWidth * 0.12, layout.halfHeight * 0.03,
+    -layout.halfWidth * 0.08, layout.halfHeight * 0.08,
+    -layout.halfWidth * 0.3, layout.halfHeight * 0.16,
+    -layout.halfWidth * 0.16, layout.halfHeight * 0.27,
+    -layout.halfWidth * 0.03, layout.halfHeight * 0.15,
+  ]);
+  overlay.drawPolygon([
+    layout.halfWidth * 0.03, layout.halfHeight * 0.02,
+    layout.halfWidth * 0.25, layout.halfHeight * 0.09,
+    layout.halfWidth * 0.11, layout.halfHeight * 0.19,
+    -layout.halfWidth * 0.01, layout.halfHeight * 0.1,
   ]);
   overlay.endFill();
+
+  overlay.beginFill(0x6d6054, 0.92);
+  overlay.drawCircle(layout.halfWidth * 0.02, layout.halfHeight * 0.16, Math.max(2.2, layout.halfWidth * 0.07));
+  overlay.drawCircle(-layout.halfWidth * 0.15, layout.halfHeight * 0.18, Math.max(1.8, layout.halfWidth * 0.052));
+  overlay.endFill();
+
+  overlay.lineStyle(1, 0xa29688, 0.42);
+  overlay.moveTo(layout.halfWidth * 0.02, layout.halfHeight * 0.1);
+  overlay.lineTo(layout.halfWidth * 0.04, layout.halfHeight * 0.21);
+  overlay.moveTo(-layout.halfWidth * 0.16, layout.halfHeight * 0.13);
+  overlay.lineTo(-layout.halfWidth * 0.13, layout.halfHeight * 0.2);
 }
 
 function drawLockOverlay(lockOverlay: PixiGraphicsLike, layout: SceneLayout, topColor: number): void {
@@ -883,31 +1149,35 @@ function drawLockOverlay(lockOverlay: PixiGraphicsLike, layout: SceneLayout, top
 
   lockOverlay.clear();
   lockOverlay.lineStyle(0, 0x000000, 0);
-  lockOverlay.beginFill(0x19120d, 0.22);
+  lockOverlay.beginFill(0x161210, 0.3);
   lockOverlay.drawEllipse(0, bodyTopY + bodyHeight * 0.96, bodyWidth * 0.84, bodyHeight * 0.3);
   lockOverlay.endFill();
 
-  lockOverlay.lineStyle(2, 0x62594f, 0.92);
-  lockOverlay.beginFill(0xddd6cd, 0.98);
+  lockOverlay.lineStyle(2, 0x4d4540, 0.95);
+  lockOverlay.beginFill(0xf0ebe5, 1);
   lockOverlay.drawEllipse(0, shackleCenterY, shackleOuterX, shackleOuterY);
   lockOverlay.endFill();
 
   lockOverlay.lineStyle(0, 0x000000, 0);
-  lockOverlay.beginFill(topColor, 1);
+  lockOverlay.beginFill(mixColor(topColor, 0x34312f, 0.78), 1);
   lockOverlay.drawEllipse(0, shackleCenterY + bodyHeight * 0.2, shackleInnerX, shackleInnerY);
   lockOverlay.endFill();
 
-  lockOverlay.lineStyle(2, 0x4b4138, 0.95);
-  lockOverlay.beginFill(0xbeb8af, 0.99);
+  lockOverlay.lineStyle(2, 0x403934, 0.96);
+  lockOverlay.beginFill(0xd8d2ca, 1);
   lockOverlay.drawRect(-bodyWidth * 0.5, bodyTopY, bodyWidth, bodyHeight);
   lockOverlay.endFill();
 
+  lockOverlay.lineStyle(1, 0x67605a, 0.78);
+  lockOverlay.moveTo(-bodyWidth * 0.36, bodyTopY + bodyHeight * 0.66);
+  lockOverlay.lineTo(bodyWidth * 0.36, bodyTopY + bodyHeight * 0.66);
+
   lockOverlay.lineStyle(0, 0x000000, 0);
-  lockOverlay.beginFill(0xffffff, 0.16);
+  lockOverlay.beginFill(0xffffff, 0.22);
   lockOverlay.drawRect(-bodyWidth * 0.34, bodyTopY + bodyHeight * 0.15, bodyWidth * 0.68, bodyHeight * 0.18);
   lockOverlay.endFill();
 
-  lockOverlay.beginFill(0x4d443c, 0.96);
+  lockOverlay.beginFill(0x2f2a26, 0.98);
   lockOverlay.drawCircle(0, keyholeY, keyholeRadius);
   lockOverlay.drawRect(-keyholeRadius * 0.56, keyholeY, keyholeRadius * 1.12, bodyHeight * 0.2);
   lockOverlay.endFill();
@@ -919,6 +1189,7 @@ function drawPlot(
   hovered: boolean,
   layout: SceneLayout,
   hoverEnabled: boolean,
+  pulsePhase: number,
   pixi: PixiModuleLike,
 ): void {
   const palette = PLOT_PALETTES[state];
@@ -1107,6 +1378,25 @@ function drawPlot(
   ]);
   shape.endFill();
 
+  if (state === 'locked') {
+    shape.lineStyle(0, 0x000000, 0);
+    shape.beginFill(0x2e2b29, 0.24);
+    shape.drawPolygon([
+      0, -halfHeight * 0.86,
+      halfWidth * 0.76, 0,
+      0, halfHeight * 0.86,
+      -halfWidth * 0.76, 0,
+    ]);
+    shape.endFill();
+
+    shape.lineStyle(1, 0x666260, 0.42);
+    shape.moveTo(-halfWidth * 0.56, -halfHeight * 0.06);
+    shape.lineTo(0, halfHeight * 0.4);
+    shape.lineTo(halfWidth * 0.56, -halfHeight * 0.06);
+    shape.moveTo(-halfWidth * 0.42, -halfHeight * 0.32);
+    shape.lineTo(halfWidth * 0.42, halfHeight * 0.2);
+  }
+
   shape.lineStyle(1, lightenColor(palette.edge, 0.44), state === 'locked' ? 0.14 : 0.24);
   shape.moveTo(-halfWidth * 0.86, -halfHeight * 0.03);
   shape.lineTo(0, -halfHeight * 0.72);
@@ -1118,12 +1408,16 @@ function drawPlot(
 
   overlay.alpha = state === 'locked' ? 0 : 1;
   if (state === 'empty') drawEmptyOverlay(overlay, layout);
-  if (state === 'growing') drawGrowingOverlay(overlay, layout);
-  if (state === 'mature') drawMatureOverlay(overlay, layout);
+  if (state === 'seed') drawSeedOverlay(overlay, layout);
+  if (state === 'sprout') drawSproutOverlay(overlay, layout);
+  if (state === 'leaf') drawLeafOverlay(overlay, layout);
+  if (state === 'flower') drawFlowerOverlay(overlay, layout);
+  if (state === 'fruit') drawFruitOverlay(overlay, layout);
+  if (state === 'mature') drawMatureOverlay(overlay, layout, pulsePhase);
   if (state === 'withered') drawWitheredOverlay(overlay, layout);
 
   if (state === 'locked') {
-    plot.lockOverlay.alpha = 0.97;
+    plot.lockOverlay.alpha = 1;
     plot.lockOverlay.y = Math.round(halfHeight * 0.1);
     drawLockOverlay(plot.lockOverlay, layout, topColor);
   } else {
@@ -1143,6 +1437,8 @@ export function FarmPixiPrototype() {
   const requestRenderRef = useRef<(() => void) | null>(null);
   const renderRequestIdRef = useRef<number | null>(null);
   const isRenderQueuedRef = useRef(false);
+  const pulsePhaseRef = useRef(0);
+  const pulseFrameIdRef = useRef<number | null>(null);
 
   const [plotStates, setPlotStates] = useState<PlotVisualState[]>(DEFAULT_PLOT_STATES);
   const [hoveredPlotId, setHoveredPlotId] = useState<number | null>(null);
@@ -1183,6 +1479,11 @@ export function FarmPixiPrototype() {
         window.cancelAnimationFrame(renderRequestIdRef.current);
         renderRequestIdRef.current = null;
       }
+      if (pulseFrameIdRef.current !== null) {
+        window.cancelAnimationFrame(pulseFrameIdRef.current);
+        pulseFrameIdRef.current = null;
+      }
+      pulsePhaseRef.current = 0;
       isRenderQueuedRef.current = false;
       requestRenderRef.current = null;
       renderPlotsRef.current = null;
@@ -1260,13 +1561,24 @@ export function FarmPixiPrototype() {
         if (!activeLayout) return;
 
         const activeHoveredPlotId = hoverEnabledRef.current ? hoveredPlotIdRef.current : null;
+        const activePulsePhase = pulsePhaseRef.current;
         for (const plot of plotObjectsRef.current) {
           const state = plotStatesRef.current[plot.id] ?? 'locked';
-          drawPlot(plot, state, activeHoveredPlotId === plot.id, activeLayout, hoverEnabledRef.current, pixi);
+          drawPlot(plot, state, activeHoveredPlotId === plot.id, activeLayout, hoverEnabledRef.current, activePulsePhase, pixi);
         }
         requestRender();
       };
       renderPlotsRef.current = renderPlots;
+
+      const animatePulse = (timestamp: number) => {
+        if (cancelled) return;
+        pulsePhaseRef.current = (timestamp % 1800) / 1800;
+        if (plotStatesRef.current.some((state) => state === 'mature')) {
+          renderPlotsRef.current?.();
+        }
+        pulseFrameIdRef.current = window.requestAnimationFrame(animatePulse);
+      };
+      pulseFrameIdRef.current = window.requestAnimationFrame(animatePulse);
 
       const renderPlotsInOrder = PLOT_RENDER_ORDER.map((plotId) => {
         const container = new pixi.Container();
