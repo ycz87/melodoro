@@ -1,8 +1,8 @@
 /**
  * IsometricPlotShell - 2.5D wrapper for farm plots.
  *
- * Draws a diamond top, side thickness, and a ground shadow while keeping
- * a free content layer for PlotCard interactions and tooltips.
+ * Keeps existing plot interaction content untouched while softening depth,
+ * unifying color temperature, and improving ground contact shadows.
  */
 import { useId } from 'react';
 import type { ReactNode } from 'react';
@@ -18,8 +18,11 @@ interface PlotShellPalette {
   rightLight: string;
   rightDark: string;
   edge: string;
+  edgeSoft: string;
   highlight: string;
   shadow: string;
+  groundTint: string;
+  contactShadow: string;
 }
 
 interface IsometricPlotShellProps {
@@ -30,70 +33,88 @@ interface IsometricPlotShellProps {
 
 const PALETTES: Record<PlotShellState, PlotShellPalette> = {
   empty: {
-    topLight: '#E8C58E',
-    topDark: '#D8AA73',
-    leftLight: '#C28F57',
-    leftDark: '#A67543',
-    rightLight: '#BA854F',
-    rightDark: '#9E6D3E',
-    edge: '#896038',
-    highlight: 'rgba(255,255,255,0.44)',
-    shadow: 'rgba(78,52,27,0.2)',
+    topLight: '#e2c694',
+    topDark: '#cfae79',
+    leftLight: '#c69c65',
+    leftDark: '#ae844f',
+    rightLight: '#c19862',
+    rightDark: '#a9804d',
+    edge: '#846541',
+    edgeSoft: 'rgba(141,112,73,0.72)',
+    highlight: 'rgba(255,247,220,0.5)',
+    shadow: 'rgba(83,64,38,0.18)',
+    groundTint: 'rgba(156,191,106,0.22)',
+    contactShadow: 'rgba(72,54,32,0.24)',
   },
   growing: {
-    topLight: '#E7CB92',
-    topDark: '#D2AD6D',
-    leftLight: '#BE9256',
-    leftDark: '#A57A45',
-    rightLight: '#B58A50',
-    rightDark: '#9B733F',
-    edge: '#88633A',
-    highlight: 'rgba(236,255,214,0.4)',
-    shadow: 'rgba(74,50,28,0.2)',
+    topLight: '#dfc893',
+    topDark: '#c9ab72',
+    leftLight: '#c29a62',
+    leftDark: '#aa804b',
+    rightLight: '#bb935d',
+    rightDark: '#a37a46',
+    edge: '#7f643f',
+    edgeSoft: 'rgba(133,109,72,0.68)',
+    highlight: 'rgba(239,255,213,0.48)',
+    shadow: 'rgba(79,64,38,0.18)',
+    groundTint: 'rgba(149,193,106,0.25)',
+    contactShadow: 'rgba(70,54,33,0.24)',
   },
   mature: {
-    topLight: '#EDC68C',
-    topDark: '#CC9858',
-    leftLight: '#B68245',
-    leftDark: '#956636',
-    rightLight: '#A9773D',
-    rightDark: '#8C5D31',
-    edge: '#7D5630',
-    highlight: 'rgba(255,237,177,0.42)',
-    shadow: 'rgba(76,49,26,0.24)',
+    topLight: '#e4bf89',
+    topDark: '#c99558',
+    leftLight: '#b9864f',
+    leftDark: '#9d6d3f',
+    rightLight: '#b37f49',
+    rightDark: '#98673b',
+    edge: '#775834',
+    edgeSoft: 'rgba(124,93,59,0.72)',
+    highlight: 'rgba(255,236,184,0.48)',
+    shadow: 'rgba(80,58,33,0.2)',
+    groundTint: 'rgba(152,188,98,0.2)',
+    contactShadow: 'rgba(72,49,28,0.27)',
   },
   withered: {
-    topLight: '#C7B39A',
-    topDark: '#A38D74',
-    leftLight: '#927E69',
-    leftDark: '#776250',
-    rightLight: '#887460',
-    rightDark: '#6E5A49',
-    edge: '#665443',
-    highlight: 'rgba(255,255,255,0.28)',
-    shadow: 'rgba(60,47,35,0.22)',
+    topLight: '#c8b9a4',
+    topDark: '#ac967f',
+    leftLight: '#9b866f',
+    leftDark: '#836f5b',
+    rightLight: '#958169',
+    rightDark: '#7c6854',
+    edge: '#685747',
+    edgeSoft: 'rgba(109,94,79,0.66)',
+    highlight: 'rgba(250,248,243,0.36)',
+    shadow: 'rgba(66,54,43,0.2)',
+    groundTint: 'rgba(145,173,114,0.16)',
+    contactShadow: 'rgba(58,45,36,0.24)',
   },
   stolen: {
-    topLight: '#C98378',
-    topDark: '#A25B53',
-    leftLight: '#9A4D46',
-    leftDark: '#7D3A35',
-    rightLight: '#8F4841',
-    rightDark: '#71332E',
-    edge: '#6A2F2A',
-    highlight: 'rgba(255,213,205,0.32)',
-    shadow: 'rgba(74,30,26,0.3)',
+    topLight: '#cb8e82',
+    topDark: '#ad675d',
+    leftLight: '#a76a61',
+    leftDark: '#8b4f47',
+    rightLight: '#a0655d',
+    rightDark: '#845149',
+    edge: '#72403a',
+    edgeSoft: 'rgba(120,74,68,0.68)',
+    highlight: 'rgba(255,221,214,0.4)',
+    shadow: 'rgba(78,44,39,0.24)',
+    groundTint: 'rgba(147,172,106,0.16)',
+    contactShadow: 'rgba(70,37,33,0.28)',
   },
   locked: {
-    topLight: '#D1BC9F',
-    topDark: '#B59D80',
-    leftLight: '#A3896D',
-    leftDark: '#876F56',
-    rightLight: '#987F64',
-    rightDark: '#7B664E',
-    edge: '#6E5B46',
-    highlight: 'rgba(255,255,255,0.3)',
-    shadow: 'rgba(70,56,42,0.2)',
+    topLight: '#d0bf9f',
+    topDark: '#baa284',
+    leftLight: '#ab9374',
+    leftDark: '#90795f',
+    rightLight: '#a48d6f',
+    rightDark: '#8b765d',
+    edge: '#6f5d4a',
+    edgeSoft: 'rgba(116,99,79,0.68)',
+    highlight: 'rgba(255,252,244,0.34)',
+    shadow: 'rgba(67,56,44,0.18)',
+    groundTint: 'rgba(144,171,113,0.16)',
+    contactShadow: 'rgba(63,50,39,0.24)',
   },
 };
 
@@ -101,17 +122,19 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
   const gradientId = useId().replace(/:/g, '');
   const palette = PALETTES[state];
 
-  const topHeight = Math.round(size * 0.62);
+  const topHeight = Math.round(size * 0.6);
   const halfTopHeight = topHeight / 2;
-  const depth = Math.max(9, Math.round(size * 0.17));
-  const shadowPad = Math.max(12, Math.round(size * 0.18));
+  const depth = Math.max(7, Math.round(size * 0.14));
+  const shadowPad = Math.max(10, Math.round(size * 0.15));
   const shellHeight = topHeight + depth + shadowPad;
 
-  const contentWidth = Math.round(size * 0.68);
-  const contentTop = Math.round(topHeight * 0.1);
+  const contentWidth = Math.round(size * 0.69);
+  const contentTop = Math.round(topHeight * 0.08);
 
-  const shadowWidth = Math.round(size * 0.88);
-  const shadowHeight = Math.max(9, Math.round(size * 0.14));
+  const shadowWidth = Math.round(size * 0.96);
+  const shadowHeight = Math.max(8, Math.round(size * 0.12));
+  const contactShadowWidth = Math.round(size * 0.72);
+  const contactShadowHeight = Math.max(5, Math.round(size * 0.065));
 
   const topPoints = `${size / 2},0 ${size},${halfTopHeight} ${size / 2},${topHeight} 0,${halfTopHeight}`;
   const leftPoints = `0,${halfTopHeight} ${size / 2},${topHeight} ${size / 2},${topHeight + depth} 0,${halfTopHeight + depth}`;
@@ -137,39 +160,59 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
             <stop offset="0%" stopColor={palette.rightLight} />
             <stop offset="100%" stopColor={palette.rightDark} />
           </linearGradient>
-          <radialGradient id={`shine-${gradientId}`} cx="50%" cy="24%" r="76%">
+          <radialGradient id={`shine-${gradientId}`} cx="50%" cy="22%" r="78%">
             <stop offset="0%" stopColor={palette.highlight} />
             <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </radialGradient>
-          <filter id={`shadow-${gradientId}`} x="-24%" y="-100%" width="148%" height="270%">
-            <feGaussianBlur stdDeviation={Math.max(1.2, size * 0.013)} />
+          <radialGradient id={`ground-${gradientId}`} cx="50%" cy="50%" r="64%">
+            <stop offset="0%" stopColor={palette.groundTint} />
+            <stop offset="100%" stopColor="rgba(149,193,106,0)" />
+          </radialGradient>
+          <filter id={`shadow-${gradientId}`} x="-28%" y="-130%" width="156%" height="296%">
+            <feGaussianBlur stdDeviation={Math.max(1.4, size * 0.015)} />
           </filter>
         </defs>
 
         <ellipse
           cx={size / 2}
-          cy={topHeight + depth + shadowHeight * 0.5}
+          cy={topHeight + depth + shadowHeight * 0.35}
+          rx={shadowWidth / 2}
+          ry={shadowHeight / 2}
+          fill={`url(#ground-${gradientId})`}
+          filter={`url(#shadow-${gradientId})`}
+        />
+        <ellipse
+          cx={size / 2}
+          cy={topHeight + depth + shadowHeight * 0.58}
           rx={shadowWidth / 2}
           ry={shadowHeight / 2}
           fill={palette.shadow}
           filter={`url(#shadow-${gradientId})`}
         />
+        <ellipse
+          cx={size / 2}
+          cy={topHeight + depth + contactShadowHeight * 0.35}
+          rx={contactShadowWidth / 2}
+          ry={contactShadowHeight / 2}
+          fill={palette.contactShadow}
+          opacity="0.72"
+        />
 
-        <polygon points={leftPoints} fill={`url(#left-${gradientId})`} />
-        <polygon points={rightPoints} fill={`url(#right-${gradientId})`} />
+        <polygon points={leftPoints} fill={`url(#left-${gradientId})`} stroke={palette.edgeSoft} strokeWidth={Math.max(0.8, size * 0.008)} strokeLinejoin="round" />
+        <polygon points={rightPoints} fill={`url(#right-${gradientId})`} stroke={palette.edgeSoft} strokeWidth={Math.max(0.8, size * 0.008)} strokeLinejoin="round" />
 
         <polygon
           points={topPoints}
           fill={`url(#top-${gradientId})`}
           stroke={palette.edge}
-          strokeWidth={Math.max(1.2, size * 0.014)}
+          strokeWidth={Math.max(1, size * 0.012)}
           strokeLinejoin="round"
         />
-        <polygon points={topPoints} fill={`url(#shine-${gradientId})`} opacity="0.52" />
+        <polygon points={topPoints} fill={`url(#shine-${gradientId})`} opacity="0.56" />
         <polyline
           points={`0,${halfTopHeight} ${size / 2},0 ${size},${halfTopHeight}`}
           stroke={palette.highlight}
-          strokeWidth={Math.max(0.9, size * 0.008)}
+          strokeWidth={Math.max(0.75, size * 0.007)}
           fill="none"
           strokeLinecap="round"
         />

@@ -85,7 +85,9 @@ interface ScenePalette {
   skyTop: string;
   skyMid: string;
   skyBottom: string;
+  skyHaze: string;
   sunCore: string;
+  sunRing: string;
   sunGlow: string;
   cloudMain: string;
   cloudShade: string;
@@ -96,9 +98,11 @@ interface ScenePalette {
   hillNearTop: string;
   hillNearBottom: string;
   meadowTop: string;
+  meadowMid: string;
   meadowBottom: string;
   meadowLight: string;
-  horizonHaze: string;
+  horizonMist: string;
+  fieldShadow: string;
   clusterShadow: string;
 }
 
@@ -114,24 +118,28 @@ const PORTRAIT_SLOT_PLACEMENTS: SlotPlacement[] = [
 
 function buildScenePalette(theme: ThemeColors): ScenePalette {
   return {
-    skyTop: `color-mix(in oklab, #72cbff 86%, ${theme.bg} 14%)`,
-    skyMid: `color-mix(in oklab, #b6ecff 88%, ${theme.surface} 12%)`,
-    skyBottom: `color-mix(in oklab, #e5f9ff 90%, ${theme.surface} 10%)`,
-    sunCore: '#ffe279',
-    sunGlow: 'rgba(255,226,121,0.58)',
+    skyTop: `color-mix(in oklab, #8fd6ff 86%, ${theme.bg} 14%)`,
+    skyMid: `color-mix(in oklab, #c3ecff 88%, ${theme.surface} 12%)`,
+    skyBottom: `color-mix(in oklab, #ecfbff 90%, ${theme.surface} 10%)`,
+    skyHaze: 'rgba(234,248,255,0.74)',
+    sunCore: '#ffe99a',
+    sunRing: '#ffd47b',
+    sunGlow: 'rgba(255,226,133,0.55)',
     cloudMain: `color-mix(in oklab, #ffffff 92%, ${theme.surface} 8%)`,
-    cloudShade: `color-mix(in oklab, #cde4f0 84%, ${theme.bg} 16%)`,
-    ridgeFarTop: `color-mix(in oklab, #c2eca9 86%, ${theme.surface} 14%)`,
-    ridgeFarBottom: `color-mix(in oklab, #abde91 84%, ${theme.surface} 16%)`,
-    ridgeMidTop: `color-mix(in oklab, #b5e793 88%, ${theme.surface} 12%)`,
-    ridgeMidBottom: `color-mix(in oklab, #9bd47c 86%, ${theme.surface} 14%)`,
-    hillNearTop: `color-mix(in oklab, #a9e07e 88%, ${theme.surface} 12%)`,
-    hillNearBottom: `color-mix(in oklab, #8ec968 86%, ${theme.surface} 14%)`,
-    meadowTop: `color-mix(in oklab, #b9eb85 90%, ${theme.surface} 10%)`,
-    meadowBottom: `color-mix(in oklab, #95cf63 88%, ${theme.surface} 12%)`,
-    meadowLight: 'rgba(235,255,190,0.54)',
-    horizonHaze: 'rgba(222,247,255,0.74)',
-    clusterShadow: 'rgba(94,145,67,0.34)',
+    cloudShade: `color-mix(in oklab, #d8e9f4 84%, ${theme.bg} 16%)`,
+    ridgeFarTop: `color-mix(in oklab, #caebb4 86%, ${theme.surface} 14%)`,
+    ridgeFarBottom: `color-mix(in oklab, #b5dd9d 84%, ${theme.surface} 16%)`,
+    ridgeMidTop: `color-mix(in oklab, #bde6a1 88%, ${theme.surface} 12%)`,
+    ridgeMidBottom: `color-mix(in oklab, #a4d88b 86%, ${theme.surface} 14%)`,
+    hillNearTop: `color-mix(in oklab, #b2e08c 88%, ${theme.surface} 12%)`,
+    hillNearBottom: `color-mix(in oklab, #96cc72 86%, ${theme.surface} 14%)`,
+    meadowTop: `color-mix(in oklab, #b6e58a 90%, ${theme.surface} 10%)`,
+    meadowMid: `color-mix(in oklab, #9ed271 88%, ${theme.surface} 12%)`,
+    meadowBottom: `color-mix(in oklab, #89bf61 88%, ${theme.surface} 12%)`,
+    meadowLight: 'rgba(237,255,199,0.46)',
+    horizonMist: 'rgba(220,244,252,0.72)',
+    fieldShadow: 'rgba(85,126,56,0.2)',
+    clusterShadow: 'rgba(88,132,60,0.28)',
   };
 }
 
@@ -179,11 +187,11 @@ export function SimpleFarmGrid({
   const sceneWidth = layout.plotSize * 3 + layout.gap * 2;
   const sceneFrameMaxWidth = sceneWidth + (viewportWidth < MOBILE_BREAKPOINT ? 64 : 102);
   const sceneTopPadding = viewportWidth < MOBILE_BREAKPOINT
-    ? Math.round(layout.plotSize * 1.62)
-    : Math.round(layout.plotSize * 1.44);
+    ? Math.round(layout.plotSize * 1.88)
+    : Math.round(layout.plotSize * 1.72);
   const sceneBottomPadding = viewportWidth < MOBILE_BREAKPOINT
-    ? Math.round(layout.plotSize * 0.64)
-    : Math.round(layout.plotSize * 0.56);
+    ? Math.round(layout.plotSize * 0.68)
+    : Math.round(layout.plotSize * 0.6);
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
@@ -200,10 +208,14 @@ export function SimpleFarmGrid({
             <defs>
               <linearGradient id={`farm-sky-${sceneId}`} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={scenePalette.skyTop} />
-                <stop offset="48%" stopColor={scenePalette.skyMid} />
-                <stop offset="68%" stopColor={scenePalette.skyBottom} />
+                <stop offset="56%" stopColor={scenePalette.skyMid} />
+                <stop offset="76%" stopColor={scenePalette.skyBottom} />
                 <stop offset="100%" stopColor={scenePalette.meadowTop} />
               </linearGradient>
+              <radialGradient id={`farm-sky-haze-${sceneId}`} cx="50%" cy="24%" r="72%">
+                <stop offset="0%" stopColor={scenePalette.skyHaze} />
+                <stop offset="100%" stopColor="rgba(234,248,255,0)" />
+              </radialGradient>
               <linearGradient id={`farm-ridge-far-${sceneId}`} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={scenePalette.ridgeFarTop} />
                 <stop offset="100%" stopColor={scenePalette.ridgeFarBottom} />
@@ -218,81 +230,97 @@ export function SimpleFarmGrid({
               </linearGradient>
               <linearGradient id={`farm-meadow-${sceneId}`} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={scenePalette.meadowTop} />
+                <stop offset="44%" stopColor={scenePalette.meadowMid} />
                 <stop offset="100%" stopColor={scenePalette.meadowBottom} />
               </linearGradient>
               <radialGradient id={`farm-sun-glow-${sceneId}`} cx="50%" cy="50%" r="62%">
                 <stop offset="0%" stopColor={scenePalette.sunGlow} />
                 <stop offset="100%" stopColor="rgba(255,226,121,0)" />
               </radialGradient>
-              <radialGradient id={`farm-haze-${sceneId}`} cx="50%" cy="50%" r="62%">
-                <stop offset="0%" stopColor={scenePalette.horizonHaze} />
+              <radialGradient id={`farm-horizon-mist-${sceneId}`} cx="50%" cy="50%" r="68%">
+                <stop offset="0%" stopColor={scenePalette.horizonMist} />
                 <stop offset="100%" stopColor="rgba(222,247,255,0)" />
               </radialGradient>
+              <radialGradient id={`farm-meadow-light-${sceneId}`} cx="50%" cy="50%" r="64%">
+                <stop offset="0%" stopColor={scenePalette.meadowLight} />
+                <stop offset="100%" stopColor="rgba(237,255,199,0)" />
+              </radialGradient>
+              <filter id={`farm-ridge-soft-${sceneId}`} x="-20%" y="-18%" width="140%" height="158%">
+                <feGaussianBlur stdDeviation="3.4" />
+              </filter>
+              <filter id={`farm-cloud-soft-${sceneId}`} x="-20%" y="-36%" width="140%" height="172%">
+                <feGaussianBlur stdDeviation="1.2" />
+              </filter>
             </defs>
 
             <rect x="0" y="0" width="1000" height="1400" fill={`url(#farm-sky-${sceneId})`} />
-            <ellipse cx="500" cy="396" rx="560" ry="126" fill={`url(#farm-haze-${sceneId})`} opacity="0.8" />
-            <ellipse cx="128" cy="106" rx="96" ry="96" fill={`url(#farm-sun-glow-${sceneId})`} />
-            <g transform="translate(128 106)">
-              <circle cx="0" cy="0" r="38" fill={scenePalette.sunCore} />
-              <circle cx="-13" cy="-5" r="3.3" fill="#cf7b2e" />
-              <circle cx="13" cy="-5" r="3.3" fill="#cf7b2e" />
-              <path d="M -11 12 Q 0 21 11 12" stroke="#cf7b2e" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-              <circle cx="-49" cy="-6" r="5.2" fill={scenePalette.sunCore} />
-              <circle cx="50" cy="-8" r="5.2" fill={scenePalette.sunCore} />
-              <circle cx="-35" cy="-34" r="5.2" fill={scenePalette.sunCore} />
-              <circle cx="35" cy="-34" r="5.2" fill={scenePalette.sunCore} />
-              <circle cx="-2" cy="-52" r="5.2" fill={scenePalette.sunCore} />
+            <rect x="0" y="0" width="1000" height="640" fill={`url(#farm-sky-haze-${sceneId})`} />
+            <ellipse cx="500" cy="660" rx="620" ry="160" fill={`url(#farm-horizon-mist-${sceneId})`} opacity="0.76" />
+
+            <ellipse cx="156" cy="128" rx="106" ry="106" fill={`url(#farm-sun-glow-${sceneId})`} />
+            <g transform="translate(156 128)">
+              <circle cx="0" cy="0" r="42" fill={scenePalette.sunRing} opacity="0.54" />
+              <circle cx="0" cy="0" r="32" fill={scenePalette.sunCore} />
+              <circle cx="-14" cy="-6" r="3.2" fill="#cd8a41" />
+              <circle cx="14" cy="-6" r="3.2" fill="#cd8a41" />
+              <path d="M -12 11 Q 0 20 12 11" stroke="#cd8a41" strokeWidth="3" fill="none" strokeLinecap="round" />
             </g>
 
-            <g opacity="0.9">
-              <g transform="translate(210 118)">
+            <g opacity="0.87" filter={`url(#farm-cloud-soft-${sceneId})`}>
+              <g transform="translate(264 154)">
                 <ellipse cx="0" cy="0" rx="42" ry="23" fill={scenePalette.cloudMain} />
                 <ellipse cx="-29" cy="9" rx="25" ry="15" fill={scenePalette.cloudMain} />
                 <ellipse cx="30" cy="10" rx="23" ry="14" fill={scenePalette.cloudMain} />
-                <ellipse cx="8" cy="17" rx="36" ry="8" fill={scenePalette.cloudShade} opacity="0.44" />
+                <ellipse cx="8" cy="17" rx="36" ry="8" fill={scenePalette.cloudShade} opacity="0.46" />
               </g>
-              <g transform="translate(672 134)">
+              <g transform="translate(686 170)">
                 <ellipse cx="0" cy="0" rx="47" ry="25" fill={scenePalette.cloudMain} />
                 <ellipse cx="-34" cy="10" rx="25" ry="15" fill={scenePalette.cloudMain} />
                 <ellipse cx="36" cy="11" rx="25" ry="15" fill={scenePalette.cloudMain} />
-                <ellipse cx="10" cy="18" rx="40" ry="9" fill={scenePalette.cloudShade} opacity="0.44" />
+                <ellipse cx="10" cy="18" rx="40" ry="9" fill={scenePalette.cloudShade} opacity="0.46" />
+              </g>
+              <g transform="translate(504 124)" opacity="0.8">
+                <ellipse cx="0" cy="0" rx="34" ry="18" fill={scenePalette.cloudMain} />
+                <ellipse cx="-24" cy="7" rx="20" ry="12" fill={scenePalette.cloudMain} />
+                <ellipse cx="22" cy="7" rx="18" ry="11" fill={scenePalette.cloudMain} />
+                <ellipse cx="4" cy="14" rx="30" ry="7" fill={scenePalette.cloudShade} opacity="0.44" />
               </g>
             </g>
 
             <path
-              d="M -90 492 C 78 404 248 436 394 414 C 564 386 722 456 870 420 C 946 402 1020 420 1090 395 L 1090 744 L -90 744 Z"
+              d="M -120 628 C 84 560 242 578 382 556 C 542 530 706 600 864 570 C 954 552 1044 574 1120 548 L 1120 834 L -120 834 Z"
               fill={`url(#farm-ridge-far-${sceneId})`}
-              opacity="0.86"
+              opacity="0.78"
+              filter={`url(#farm-ridge-soft-${sceneId})`}
             />
             <path
-              d="M -104 576 C 88 518 238 536 368 514 C 524 486 690 554 846 520 C 938 500 1020 532 1104 504 L 1104 862 L -104 862 Z"
+              d="M -132 718 C 72 656 246 674 406 650 C 584 620 744 694 902 662 C 988 644 1064 662 1132 640 L 1132 954 L -132 954 Z"
               fill={`url(#farm-ridge-mid-${sceneId})`}
-              opacity="0.88"
+              opacity="0.84"
+              filter={`url(#farm-ridge-soft-${sceneId})`}
             />
             <path
-              d="M -120 672 C 86 620 252 636 396 614 C 590 582 770 658 930 624 C 1012 608 1066 620 1120 608 L 1120 984 L -120 984 Z"
+              d="M -146 810 C 86 752 264 772 432 744 C 608 716 786 790 964 760 C 1038 748 1088 756 1144 748 L 1144 1098 L -146 1098 Z"
               fill={`url(#farm-hill-near-${sceneId})`}
-              opacity="0.92"
+              opacity="0.9"
             />
             <path
-              d="M -132 786 C 70 734 246 750 406 730 C 592 700 774 782 958 748 C 1028 736 1088 742 1132 736 L 1132 1410 L -132 1410 Z"
+              d="M -160 930 C 88 862 276 882 456 852 C 648 822 836 900 1024 870 C 1082 862 1116 868 1160 860 L 1160 1410 L -160 1410 Z"
               fill={`url(#farm-meadow-${sceneId})`}
             />
-            <ellipse cx="542" cy="1008" rx="320" ry="132" fill={scenePalette.meadowLight} opacity="0.42" />
+            <ellipse cx="520" cy="1118" rx="372" ry="164" fill={`url(#farm-meadow-light-${sceneId})`} opacity="0.58" />
+            <ellipse cx="508" cy="1080" rx="306" ry="124" fill={scenePalette.meadowLight} opacity="0.34" />
           </svg>
 
           <div
-            className="absolute inset-x-[9%] bottom-[8%] h-[15%]"
+            className="absolute inset-x-[12%] bottom-[8.5%] h-[15%]"
             style={{
-              background: `radial-gradient(ellipse at center, ${scenePalette.clusterShadow} 0%, transparent 72%)`,
-              filter: 'blur(7px)',
+              background: `radial-gradient(ellipse at center, ${scenePalette.clusterShadow} 0%, transparent 76%)`,
+              filter: 'blur(8px)',
             }}
           />
-          <span className="absolute left-[11%] top-[63%] h-[5px] w-[5px] rounded-full" style={{ backgroundColor: 'rgba(247,253,211,0.68)' }} />
-          <span className="absolute left-[20%] bottom-[28%] h-[4px] w-[4px] rounded-full" style={{ backgroundColor: 'rgba(255,255,232,0.58)' }} />
-          <span className="absolute right-[17%] top-[60%] h-[5px] w-[5px] rounded-full" style={{ backgroundColor: 'rgba(247,253,211,0.68)' }} />
-          <span className="absolute right-[11%] bottom-[24%] h-[4px] w-[4px] rounded-full" style={{ backgroundColor: 'rgba(255,255,232,0.58)' }} />
+          <span className="absolute left-[12%] top-[63%] h-[5px] w-[5px] rounded-full" style={{ backgroundColor: 'rgba(246,255,223,0.5)' }} />
+          <span className="absolute right-[14%] top-[61.5%] h-[5px] w-[5px] rounded-full" style={{ backgroundColor: 'rgba(246,255,223,0.5)' }} />
         </div>
 
         <FarmDecorations />
@@ -301,8 +329,8 @@ export function SimpleFarmGrid({
           className="pointer-events-none absolute inset-x-[20%] bottom-[10%] z-[7] h-[18%]"
           aria-hidden="true"
           style={{
-            background: 'radial-gradient(ellipse at center, rgba(81,124,48,0.24) 0%, rgba(81,124,48,0.08) 46%, transparent 100%)',
-            filter: 'blur(4px)',
+            background: `radial-gradient(ellipse at center, ${scenePalette.fieldShadow} 0%, rgba(81,124,48,0.08) 48%, transparent 100%)`,
+            filter: 'blur(6px)',
           }}
         />
 
