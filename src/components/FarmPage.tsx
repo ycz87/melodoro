@@ -7,8 +7,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
-import { useCreatures } from '../hooks/useCreatures';
-import { useAlienVisit } from '../hooks/useAlienVisit';
 import type {
   Plot,
   VarietyId,
@@ -17,8 +15,6 @@ import type {
   StolenRecord,
   FusionHistory,
   Weather,
-  Creature,
-  AlienAppearance,
 } from '../types/farm';
 import type { GeneInventory } from '../types/gene';
 import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from '../types/gene';
@@ -35,7 +31,6 @@ import { VARIETY_DEFS, RARITY_COLOR, RARITY_STARS } from '../types/farm';
 import { getGrowthStage, getStageEmoji, isVarietyRevealed } from '../farm/growth';
 import { CollectionPage } from './CollectionPage';
 import { GeneLabPage } from './GeneLabPage';
-import { FarmEnvironment } from './farm/FarmEnvironment';
 import { SimpleFarmGrid } from './farm/SimpleFarmGrid';
 
 interface FarmPageProps {
@@ -129,12 +124,11 @@ export function FarmPage({
   onUseStarTracker,
   onUseGuardianBarrier,
   onUseTrapNet,
-  mutationDoctorSignal,
+  mutationDoctorSignal: _mutationDoctorSignal,
   onGoWarehouse,
 }: FarmPageProps) {
   const theme = useTheme();
   const t = useI18n();
-  const { creatures } = useCreatures();
 
   const [subTab, setSubTab] = useState<SubTab>('plots');
   const [plantingPlotId, setPlantingPlotId] = useState<number | null>(null);
@@ -193,17 +187,6 @@ export function FarmPage({
     }
     return latestByPlot;
   }, [farm.stolenRecords]);
-
-  const plantedMelonCount = useMemo(
-    () => farm.plots.filter((plot) => plot.state !== 'empty').length,
-    [farm.plots],
-  );
-
-  const { alienVisit } = useAlienVisit({
-    plantedMelonCount,
-    todayKey,
-    mutationDoctorSignal,
-  });
 
   const handlePlant = useCallback((quality: SeedQuality) => {
     if (plantingPlotId === null) return;
@@ -364,9 +347,10 @@ export function FarmPage({
       </div>
 
       {/* 农场场景 */}
-      <div className="farm-page relative isolate overflow-hidden min-h-[520px] sm:min-h-[620px] md:min-h-[720px] rounded-[var(--radius-panel)]">
-        <FarmEnvironment weather={weather} />
-        {/* <FarmDecorations /> */}
+      <div
+        className="farm-page relative min-h-[520px] sm:min-h-[620px] md:min-h-[720px] rounded-[var(--radius-panel)]"
+        style={{ backgroundColor: theme.surface }}
+      >
         <div className="relative z-[20] pt-8 sm:pt-12 md:pt-16">
           <SimpleFarmGrid
             plots={farm.plots}
@@ -393,8 +377,6 @@ export function FarmPage({
             onUseTrapNet={onUseTrapNet}
           />
         </div>
-        <CreatureLayer creatures={creatures} />
-        <AlienLayer alien={alienVisit.current} theme={theme} t={t} />
       </div>
 
       {/* 没有种子提示 */}
@@ -499,85 +481,6 @@ function adjustHexColor(hex: string, percent: number): string {
 function getPlotSoilVariance(plotId: number): number {
   const value = Math.sin(plotId * 12.9898) * 43758.5453;
   return (value - Math.floor(value) - 0.5) * 10;
-}
-
-const CREATURE_EMOJI: Record<Creature['type'], string> = {
-  bee: '🐝',
-  butterfly: '🦋',
-  ladybug: '🐞',
-  bird: '🐦',
-};
-
-function CreatureLayer({ creatures }: { creatures: Creature[] }) {
-  if (creatures.length === 0) return null;
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[30]">
-      {creatures.map((creature, index) => (
-        <span
-          key={creature.id}
-          className="absolute text-xl sm:text-2xl"
-          style={{
-            left: `${creature.xPercent}%`,
-            top: `${creature.yPercent}%`,
-            transform: 'translate(-50%, -50%)',
-            animation: `creatureHover ${2.6 + index * 0.25}s ease-in-out infinite`,
-            filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-          }}
-        >
-          {CREATURE_EMOJI[creature.type]}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function AlienLayer({ alien, theme, t }: {
-  alien: AlienAppearance | null;
-  theme: ReturnType<typeof useTheme>;
-  t: ReturnType<typeof useI18n>;
-}) {
-  if (!alien) return null;
-
-  const avatar = alien.type === 'melon-alien' ? '👽' : '🧪';
-  let bubbleText = t.alienMelonGreeting;
-  switch (alien.messageKey) {
-    case 'alienMelonGreeting':
-      bubbleText = t.alienMelonGreeting;
-      break;
-    case 'alienMutationDoctor':
-      bubbleText = t.alienMutationDoctor;
-      break;
-  }
-
-  return (
-    <div
-      className="pointer-events-none absolute bottom-2 right-2 z-[35] flex items-end gap-2"
-      style={{ animation: 'alienPop 220ms ease-out both' }}
-    >
-      <div
-        className="max-w-[180px] rounded-[var(--radius-card)] px-3 py-2 text-[11px] leading-relaxed"
-        style={{
-          color: theme.text,
-          backgroundColor: `${theme.surface}f2`,
-          border: `1px solid ${theme.border}`,
-          boxShadow: 'var(--shadow-elevated)',
-        }}
-      >
-        {bubbleText}
-      </div>
-      <div
-        className="h-10 w-10 rounded-full border flex items-center justify-center text-lg"
-        style={{
-          backgroundColor: `${theme.inputBg}ef`,
-          borderColor: theme.border,
-          boxShadow: 'var(--shadow-card)',
-        }}
-      >
-        {avatar}
-      </div>
-    </div>
-  );
 }
 
 // ─── Sub-tab header ───
