@@ -1,20 +1,41 @@
 /**
- * FarmPixiPrototype — Step 3 完成态可验收 Pixi 样机。
+ * FarmPixiPrototype — Step 5 交互优化版 Pixi 样机。
  *
  * 目标：
- * 1) 3x3 等距地块（前 4 解锁，后 5 锁定）
- * 2) 地块厚度感（顶面 + 左右侧面 + 接地阴影）
- * 3) 最小状态集（空地/生长中/成熟/枯萎/锁定）与基础交互
- * 4) 背景层（天空渐变 + 草地）与装饰层（太阳/云/房屋/谷仓/栅栏/牛羊）
+ * 1) 保持 Step 4 视觉层（背景/装饰/地块体积感）不回退
+ * 2) 使用菱形 hitArea 并可通过日志验证命中
+ * 3) 接入种植/生长/收获语义链路与锁定拦截日志
+ * 4) 保持交互轻量与渲染流畅
  *
  * 约束：
  * - 不接入 Phase2 机制，仅验证视觉与交互原型
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type PlotState = 'empty' | 'seed' | 'sprout' | 'leaf' | 'flower' | 'fruit' | 'mature' | 'withered';
 type PlotVisualState = PlotState | 'locked';
 type PrototypeStatus = 'loading' | 'ready' | 'error';
+type InteractionAction = 'HIT' | 'PASS' | 'PLANT' | 'GROW' | 'HARVEST' | 'CLEAR' | 'LOCKED_BLOCK';
+
+interface PlotTransition {
+  nextState: PlotState;
+  action: 'PLANT' | 'GROW' | 'HARVEST' | 'CLEAR';
+  result: string;
+  harvestedDelta: number;
+}
+
+interface InteractionLogEntry {
+  id: number;
+  time: string;
+  plotId: number | null;
+  action: InteractionAction;
+  result: string;
+}
+
+interface LastActionInfo {
+  action: InteractionAction | 'NONE';
+  detail: string;
+}
 
 interface PlotPalette {
   top: number;
@@ -118,6 +139,7 @@ const PIXI_LEGACY_SCRIPT_ID = 'farm-pixi-legacy-runtime';
 const GRID_SIZE = 3;
 const TOTAL_PLOTS = GRID_SIZE * GRID_SIZE;
 const PLOT_RENDER_ORDER = [0, 1, 3, 2, 4, 6, 5, 7, 8] as const;
+const MAX_INTERACTION_LOGS = 6;
 
 const DEFAULT_PLOT_STATES: PlotVisualState[] = [
   'empty',
@@ -318,6 +340,48 @@ function cyclePlotState(current: PlotState): PlotState {
   if (current === 'fruit') return 'mature';
   if (current === 'mature') return 'withered';
   return 'empty';
+}
+
+function resolvePlotTransition(current: PlotState): PlotTransition {
+  if (current === 'empty') {
+    return {
+      nextState: 'seed',
+      action: 'PLANT',
+      result: 'empty->seed',
+      harvestedDelta: 0,
+    };
+  }
+  if (current === 'mature') {
+    return {
+      nextState: 'empty',
+      action: 'HARVEST',
+      result: 'mature->empty',
+      harvestedDelta: 1,
+    };
+  }
+  if (current === 'withered') {
+    return {
+      nextState: 'empty',
+      action: 'CLEAR',
+      result: 'withered->empty',
+      harvestedDelta: 0,
+    };
+  }
+
+  const nextState = cyclePlotState(current);
+  return {
+    nextState,
+    action: 'GROW',
+    result: `${current}->${nextState}`,
+    harvestedDelta: 0,
+  };
+}
+
+function formatLogTime(date: Date): string {
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
 }
 
 function lightenColor(color: number, ratio: number): number {
@@ -824,6 +888,25 @@ function resolvePlotCoordinate(plotId: number, layout: SceneLayout): { x: number
     x: (col - row) * layout.stepX,
     y: (col + row) * layout.stepY,
   };
+}
+
+function findHitPlotId(
+  pointerX: number,
+  pointerY: number,
+  plotLayer: PixiContainerLike,
+  plots: RenderPlot[],
+  layout: SceneLayout,
+): number | null {
+  const localX = pointerX - plotLayer.x;
+  const localY = pointerY - plotLayer.y;
+  for (let index = plots.length - 1; index >= 0; index -= 1) {
+    const plot = plots[index];
+    const deltaX = localX - plot.container.x;
+    const deltaY = localY - plot.container.y;
+    const diamondDistance = Math.abs(deltaX) / layout.halfWidth + Math.abs(deltaY) / layout.halfHeight;
+    if (diamondDistance <= 1) return plot.id;
+  }
+  return null;
 }
 
 function drawEmptyOverlay(overlay: PixiGraphicsLike, layout: SceneLayout): void {
@@ -1335,6 +1418,21 @@ function drawPlot(
   ]);
   shape.endFill();
 
+  if (hoverActive) {
+    shape.lineStyle(3, 0xfff0b3, 0.94);
+    shape.beginFill(0xfff7cf, 0.12);
+    shape.drawPolygon([
+      0, -halfHeight,
+      halfWidth, 0,
+      0, halfHeight,
+      -halfWidth, 0,
+    ]);
+    shape.endFill();
+
+    shape.lineStyle(1.4, 0xfffde8, 0.72);
+    shape.drawEllipse(0, -halfHeight * 0.04, halfWidth * 0.62, halfHeight * 0.36);
+  }
+
   shape.lineStyle(0, 0x000000, 0);
   shape.beginFill(lightenColor(topColor, 0.22), state === 'locked' ? 0.09 : hoverActive ? 0.23 : 0.17);
   shape.drawPolygon([
@@ -1439,16 +1537,64 @@ export function FarmPixiPrototype() {
   const isRenderQueuedRef = useRef(false);
   const pulsePhaseRef = useRef(0);
   const pulseFrameIdRef = useRef<number | null>(null);
+  const interactionLogIdRef = useRef(0);
 
   const [plotStates, setPlotStates] = useState<PlotVisualState[]>(DEFAULT_PLOT_STATES);
   const [hoveredPlotId, setHoveredPlotId] = useState<number | null>(null);
   const [hoverEnabled, setHoverEnabled] = useState(true);
   const [status, setStatus] = useState<PrototypeStatus>('loading');
   const [errorText, setErrorText] = useState('');
+  const [harvestedCount, setHarvestedCount] = useState(0);
+  const [interactionLogs, setInteractionLogs] = useState<InteractionLogEntry[]>([]);
+  const [lastAction, setLastAction] = useState<LastActionInfo>({
+    action: 'NONE',
+    detail: 'waiting input',
+  });
 
   const plotStatesRef = useRef<PlotVisualState[]>(DEFAULT_PLOT_STATES);
   const hoveredPlotIdRef = useRef<number | null>(null);
   const hoverEnabledRef = useRef(true);
+
+  const appendInteractionLog = useCallback(
+    (plotId: number | null, action: InteractionAction, result: string) => {
+      interactionLogIdRef.current += 1;
+      const logEntry: InteractionLogEntry = {
+        id: interactionLogIdRef.current,
+        time: formatLogTime(new Date()),
+        plotId,
+        action,
+        result,
+      };
+      setInteractionLogs((previous) => [logEntry, ...previous].slice(0, MAX_INTERACTION_LOGS));
+      setLastAction({
+        action,
+        detail: plotId === null ? result : `plot ${plotId + 1} • ${result}`,
+      });
+    },
+    [],
+  );
+
+  const handlePlotTap = useCallback(
+    (plotId: number) => {
+      const currentState = plotStatesRef.current[plotId] ?? 'locked';
+      if (!isUnlockedState(currentState)) {
+        appendInteractionLog(plotId, 'LOCKED_BLOCK', 'locked');
+        return;
+      }
+
+      const transition = resolvePlotTransition(currentState);
+      const nextStates = plotStatesRef.current.slice();
+      nextStates[plotId] = transition.nextState;
+      plotStatesRef.current = nextStates;
+      setPlotStates(nextStates);
+
+      if (transition.harvestedDelta > 0) {
+        setHarvestedCount((previous) => previous + transition.harvestedDelta);
+      }
+      appendInteractionLog(plotId, transition.action, transition.result);
+    },
+    [appendInteractionLog],
+  );
 
   const unlockedCount = useMemo(() => plotStates.filter((state) => state !== 'locked').length, [plotStates]);
   const lockedCount = TOTAL_PLOTS - unlockedCount;
@@ -1469,8 +1615,13 @@ export function FarmPixiPrototype() {
   useEffect(() => {
     let cancelled = false;
     let resizeObserver: ResizeObserver | null = null;
+    let removeCanvasPointerListener: (() => void) | null = null;
 
     const resetRuntime = () => {
+      if (removeCanvasPointerListener) {
+        removeCanvasPointerListener();
+        removeCanvasPointerListener = null;
+      }
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
@@ -1545,6 +1696,30 @@ export function FarmPixiPrototype() {
       stageRef.current = plotLayer;
       app.stage.addChild(sceneRoot);
 
+      const handleCanvasPointerUp = (event: PointerEvent) => {
+        const activeLayout = layoutRef.current;
+        const activePlotLayer = stageRef.current;
+        const activeApp = appRef.current;
+        if (!activeLayout || !activePlotLayer || !activeApp) return;
+        if (!Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return;
+
+        const canvasBounds = canvas.getBoundingClientRect();
+        if (canvasBounds.width <= 0 || canvasBounds.height <= 0) return;
+
+        const pointerX = ((event.clientX - canvasBounds.left) * activeApp.screen.width) / canvasBounds.width;
+        const pointerY = ((event.clientY - canvasBounds.top) * activeApp.screen.height) / canvasBounds.height;
+        const hitPlotId = findHitPlotId(pointerX, pointerY, activePlotLayer, plotObjectsRef.current, activeLayout);
+        if (hitPlotId === null) {
+          appendInteractionLog(null, 'PASS', 'outside_diamond');
+          return;
+        }
+        appendInteractionLog(hitPlotId, 'HIT', 'diamond');
+      };
+      canvas.addEventListener('pointerup', handleCanvasPointerUp);
+      removeCanvasPointerListener = () => {
+        canvas.removeEventListener('pointerup', handleCanvasPointerUp);
+      };
+
       const requestRender = () => {
         if (cancelled || isRenderQueuedRef.current) return;
         isRenderQueuedRef.current = true;
@@ -1589,13 +1764,7 @@ export function FarmPixiPrototype() {
         shape.interactive = true;
         shape.cursor = 'pointer';
         shape.on('pointertap', () => {
-          setPlotStates((previous) => {
-            const current = previous[plotId];
-            if (!current || !isUnlockedState(current)) return previous;
-            const next = previous.slice();
-            next[plotId] = cyclePlotState(current);
-            return next;
-          });
+          handlePlotTap(plotId);
         });
 
         if (!coarsePointer) {
@@ -1702,16 +1871,16 @@ export function FarmPixiPrototype() {
       cancelled = true;
       resetRuntime();
     };
-  }, []);
+  }, [appendInteractionLog, handlePlotTap]);
 
   return (
     <div className="min-h-dvh w-full bg-slate-950 px-4 py-5 text-slate-100 sm:px-6 sm:py-7">
       <div className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-700/80 bg-slate-900/75 p-4 shadow-[0_20px_80px_rgba(15,23,42,0.55)] sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-lg font-semibold tracking-wide text-slate-100 sm:text-xl">Pixi Farm Prototype • Step 3 Complete</h1>
+            <h1 className="text-lg font-semibold tracking-wide text-slate-100 sm:text-xl">Pixi Farm Prototype • Step 5 Interactive</h1>
             <p className="text-xs text-slate-400 sm:text-sm">
-              Step 3 完成态：全景卡通背景、地块体积光影与锁定图形化已合并，保留 3x3 地块交互与状态切换。
+              Step 5：保留 Step 4 视觉层，新增菱形命中日志、hover 强化高亮与种植/生长/收获语义交互。
             </p>
           </div>
           <a
@@ -1722,15 +1891,42 @@ export function FarmPixiPrototype() {
           </a>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <MetricCard title="Unlocked" value={String(unlockedCount)} suffix="plots" />
           <MetricCard title="Locked" value={String(lockedCount)} suffix="plots" />
           <MetricCard title="Hover" value={hoverEnabled ? 'ON' : 'OFF'} suffix={hoverEnabled ? hoveredStateLabel : 'coarse'} />
           <MetricCard title="Grid" value="3 x 3" suffix="isometric" />
+          <MetricCard title="Harvested" value={String(harvestedCount)} suffix="times" />
+          <MetricCard title="Last Action" value={lastAction.action} suffix={lastAction.detail} />
         </div>
 
         <div className="mt-4 overflow-hidden rounded-3xl border border-slate-700 bg-slate-900 p-2 sm:p-3">
           <div ref={mountRef} className="h-[360px] w-full rounded-2xl bg-slate-950 sm:h-[460px]" />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900/70 p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-slate-100 sm:text-base">Interaction Log (Latest 6)</h2>
+            <p className="text-[11px] text-slate-400 sm:text-xs">Time / Plot / Action / Result</p>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {interactionLogs.length === 0 && (
+              <p className="rounded-xl border border-slate-700/70 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
+                Waiting for interaction...
+              </p>
+            )}
+            {interactionLogs.map((entry) => (
+              <div
+                key={entry.id}
+                className="grid grid-cols-[74px_52px_88px_1fr] items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-950/70 px-3 py-2 text-xs text-slate-200"
+              >
+                <span className="font-mono text-slate-300">{entry.time}</span>
+                <span className="text-slate-300">{entry.plotId === null ? '--' : `#${entry.plotId + 1}`}</span>
+                <span className="font-semibold tracking-wide text-emerald-200">{entry.action}</span>
+                <span className="truncate text-slate-300">{entry.result}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {status === 'loading' && (
