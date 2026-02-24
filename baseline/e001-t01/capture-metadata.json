@@ -1,0 +1,197 @@
+{
+  "source": {
+    "path": "/home/ycz87/.openclaw/workspace-coder/cosmelon/farm-plot-reference.jpg",
+    "width": 858,
+    "height": 1280
+  },
+  "captures": [
+    {
+      "name": "desktop",
+      "width": 1366,
+      "height": 768,
+      "posX": 0.5,
+      "posY": 0.5065,
+      "resizedW": 1366,
+      "resizedH": 2038,
+      "left": 0,
+      "top": 648,
+      "scale": 1.592075,
+      "outputPath": "/home/ycz87/.openclaw/workspace-coder/cosmelon/baseline/e001-t01/e001-t01-baseline-desktop.png"
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 640,
+      "posX": 0.5,
+      "posY": 0.56,
+      "resizedW": 429,
+      "resizedH": 640,
+      "left": 20,
+      "top": 0,
+      "scale": 0.5,
+      "outputPath": "/home/ycz87/.openclaw/workspace-coder/cosmelon/baseline/e001-t01/e001-t01-baseline-mobile.png"
+    },
+    {
+      "name": "detail",
+      "width": 1024,
+      "height": 1024,
+      "posX": 0.5,
+      "posY": 0.56,
+      "resizedW": 1024,
+      "resizedH": 1528,
+      "left": 0,
+      "top": 344,
+      "scale": 1.193473,
+      "outputPath": "/home/ycz87/.openclaw/workspace-coder/cosmelon/baseline/e001-t01/e001-t01-baseline-detail.png"
+    }
+  ],
+  "sourceAnchors": [
+    {
+      "id": "A1",
+      "name": "sun",
+      "x": 120,
+      "y": 434,
+      "xNorm": 0.14,
+      "yNorm": 0.339058
+    },
+    {
+      "id": "A2",
+      "name": "mainCloud",
+      "x": 480,
+      "y": 451,
+      "xNorm": 0.56,
+      "yNorm": 0.352461
+    },
+    {
+      "id": "A3",
+      "name": "leftHouse",
+      "x": 146,
+      "y": 837,
+      "xNorm": 0.17,
+      "yNorm": 0.654031
+    },
+    {
+      "id": "A4",
+      "name": "rightBarn",
+      "x": 721,
+      "y": 837,
+      "xNorm": 0.84,
+      "yNorm": 0.654031
+    },
+    {
+      "id": "A5",
+      "name": "plotClusterCenter",
+      "x": 429,
+      "y": 889,
+      "xNorm": 0.5,
+      "yNorm": 0.694241
+    }
+  ],
+  "anchorsByViewport": [
+    {
+      "viewport": "desktop",
+      "points": [
+        {
+          "id": "A1",
+          "name": "sun",
+          "x": 191,
+          "y": 43
+        },
+        {
+          "id": "A2",
+          "name": "mainCloud",
+          "x": 765,
+          "y": 70
+        },
+        {
+          "id": "A3",
+          "name": "leftHouse",
+          "x": 232,
+          "y": 685
+        },
+        {
+          "id": "A4",
+          "name": "rightBarn",
+          "x": 1147,
+          "y": 685
+        },
+        {
+          "id": "A5",
+          "name": "plotClusterCenter",
+          "x": 683,
+          "y": 767
+        }
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "points": [
+        {
+          "id": "A1",
+          "name": "sun",
+          "x": 40,
+          "y": 217
+        },
+        {
+          "id": "A2",
+          "name": "mainCloud",
+          "x": 220,
+          "y": 226
+        },
+        {
+          "id": "A3",
+          "name": "leftHouse",
+          "x": 53,
+          "y": 419
+        },
+        {
+          "id": "A4",
+          "name": "rightBarn",
+          "x": 340,
+          "y": 419
+        },
+        {
+          "id": "A5",
+          "name": "plotClusterCenter",
+          "x": 195,
+          "y": 444
+        }
+      ]
+    },
+    {
+      "viewport": "detail",
+      "points": [
+        {
+          "id": "A1",
+          "name": "sun",
+          "x": 143,
+          "y": 174
+        },
+        {
+          "id": "A2",
+          "name": "mainCloud",
+          "x": 573,
+          "y": 195
+        },
+        {
+          "id": "A3",
+          "name": "leftHouse",
+          "x": 174,
+          "y": 655
+        },
+        {
+          "id": "A4",
+          "name": "rightBarn",
+          "x": 860,
+          "y": 655
+        },
+        {
+          "id": "A5",
+          "name": "plotClusterCenter",
+          "x": 512,
+          "y": 717
+        }
+      ]
+    }
+  ]
+}
