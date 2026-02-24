@@ -175,6 +175,13 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
           <filter id={`shadow-${gradientId}`} x="-28%" y="-130%" width="156%" height="296%">
             <feGaussianBlur stdDeviation={Math.max(1.4, size * 0.015)} />
           </filter>
+          <filter id={`grain-${gradientId}`} x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" result="grayNoise" />
+            <feComponentTransfer in="grayNoise" result="softNoise">
+              <feFuncA type="table" tableValues="0 0.06" />
+            </feComponentTransfer>
+          </filter>
         </defs>
 
         <ellipse
@@ -214,7 +221,8 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
           strokeWidth={Math.max(1, size * 0.012)}
           strokeLinejoin="round"
         />
-        <polygon points={topPoints} fill={`url(#shine-${gradientId})`} opacity="0.56" />
+        <polygon points={topPoints} fill={`url(#shine-${gradientId})`} opacity="0.52" />
+        <polygon points={topPoints} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity="0.34" />
         <polyline
           points={`0,${halfTopHeight} ${size / 2},0 ${size},${halfTopHeight}`}
           stroke={palette.highlight}
