@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "compare:e001-t02": "node scripts/e001-t02-generate-triptych-compare.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
