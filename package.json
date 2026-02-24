@@ -1,7 +1,7 @@
 {
   "name": "pomodoro",
   "private": true,
-  "version": "0.59.0",
+  "version": "0.60.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,8 @@
     "compare:e001-t06": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T06",
     "compare:e001-t07": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T07",
     "compare:e001-t08": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T08",
-    "compare:e001-t09": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T09"
+    "compare:e001-t09": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T09",
+    "compare:e001-t10": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T10"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
