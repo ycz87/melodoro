@@ -84,6 +84,25 @@ function ensurePlotCapacity(plots: Plot[], requiredCount: number): Plot[] {
   return nextPlots;
 }
 
+function isPagesPreviewHost(): boolean {
+  try {
+    return window.location.hostname.endsWith('.watermelon-clock.pages.dev');
+  } catch {
+    return false;
+  }
+}
+
+function shouldSeedPreviewShowcase(collection: CollectedVariety[], plots: Plot[]): boolean {
+  if (!isPagesPreviewHost()) return false;
+  if (collection.length > 0) return false;
+
+  const matureCount = plots.filter((plot) => plot.state === 'mature').length;
+  const growingCount = plots.filter((plot) => plot.state === 'growing').length;
+
+  // Keep preview acceptance screenshots stable: avoid a +Plant-dominant first screen.
+  return matureCount < 3 || growingCount < 2;
+}
+
 function toNonNegativeInt(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
   return Math.max(0, Math.floor(value));
@@ -244,8 +263,15 @@ function migrateFarm(raw: unknown): FarmStorage {
     result.plots = result.plots.slice(0, MAX_PLOT_COUNT);
   }
 
-  const targetPlotCount = Math.min(getPlotCount(result.collection), MAX_PLOT_COUNT);
+  const usePreviewShowcase = shouldSeedPreviewShowcase(result.collection, result.plots);
+  const targetPlotCount = usePreviewShowcase
+    ? DEFAULT_FARM_STORAGE.plots.length
+    : Math.min(getPlotCount(result.collection), MAX_PLOT_COUNT);
   result.plots = ensurePlotCapacity(result.plots, targetPlotCount);
+
+  if (usePreviewShowcase) {
+    result.plots = DEFAULT_FARM_STORAGE.plots.map((plot) => ({ ...plot }));
+  }
 
   if (typeof s.lastActiveDate === 'string') result.lastActiveDate = s.lastActiveDate;
   if (typeof s.consecutiveInactiveDays === 'number') result.consecutiveInactiveDays = s.consecutiveInactiveDays;
