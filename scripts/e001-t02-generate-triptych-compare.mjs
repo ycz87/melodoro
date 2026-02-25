@@ -64,10 +64,22 @@ async function waitForDevServer(url, timeoutMs = 30_000) {
   throw new Error(`Dev server did not become ready within ${timeoutMs}ms: ${url}`);
 }
 
-function seedFarmStateScript() {
+function seedFarmStateScript(taskId) {
   return () => {
     const now = Date.UTC(2026, 1, 24, 12, 0, 0, 0);
     const day = new Date(now).toISOString().slice(0, 10);
+    const plotCount = taskId === 'E-001-T11' ? 7 : 4;
+    const plots = Array.from({ length: plotCount }, (_, id) => ({
+      id,
+      state: 'empty',
+      progress: 0,
+      mutationStatus: 'none',
+      mutationChance: 0.02,
+      isMutant: false,
+      accumulatedMinutes: 0,
+      lastActivityTimestamp: 0,
+      hasTracker: false,
+    }));
 
     localStorage.clear();
     localStorage.setItem('pomodoro-guide-seen', '1');
@@ -78,12 +90,7 @@ function seedFarmStateScript() {
       theme: 'light',
     }));
     localStorage.setItem('watermelon-farm', JSON.stringify({
-      plots: [
-        { id: 0, state: 'empty', progress: 0, mutationStatus: 'none', mutationChance: 0.02, isMutant: false, accumulatedMinutes: 0, lastActivityTimestamp: 0, hasTracker: false },
-        { id: 1, state: 'empty', progress: 0, mutationStatus: 'none', mutationChance: 0.02, isMutant: false, accumulatedMinutes: 0, lastActivityTimestamp: 0, hasTracker: false },
-        { id: 2, state: 'empty', progress: 0, mutationStatus: 'none', mutationChance: 0.02, isMutant: false, accumulatedMinutes: 0, lastActivityTimestamp: 0, hasTracker: false },
-        { id: 3, state: 'empty', progress: 0, mutationStatus: 'none', mutationChance: 0.02, isMutant: false, accumulatedMinutes: 0, lastActivityTimestamp: 0, hasTracker: false },
-      ],
+      plots,
       collection: [],
       lastActiveDate: day,
       consecutiveInactiveDays: 0,
@@ -117,7 +124,7 @@ async function captureCurrentScreenshots(outputDir, taskId) {
     for (const viewport of viewports) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
       const page = await context.newPage();
-      await page.addInitScript(seedFarmStateScript());
+      await page.addInitScript(seedFarmStateScript(taskId));
       await page.goto(DEV_SERVER_URL, { waitUntil: 'networkidle' });
       await page.locator('header button').filter({ hasText: '🌱' }).first().click();
       await page.locator('.farm-page').waitFor({ state: 'visible' });
