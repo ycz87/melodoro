@@ -221,10 +221,10 @@ export function FarmDecorations() {
       <div className="absolute right-[4.6%] top-[45.8%] z-[9] opacity-78">
         <FenceSegment mirrored />
       </div>
-      <div className="absolute left-[8%] bottom-[9%] z-[12] opacity-76">
+      <div className="absolute left-[8%] bottom-[9%] z-[12] hidden opacity-76 sm:block">
         <FenceSegment />
       </div>
-      <div className="absolute right-[8%] bottom-[8.8%] z-[12] opacity-76">
+      <div className="absolute right-[8%] bottom-[8.8%] z-[12] hidden opacity-76 sm:block">
         <FenceSegment mirrored />
       </div>
 
@@ -237,31 +237,31 @@ export function FarmDecorations() {
         <TopRightBarnIcon className="h-[136px] w-[178px] sm:h-[172px] sm:w-[228px] md:h-[220px] md:w-[290px]" />
       </div>
 
-      {/* ── Crate + chick (right mid, slightly larger) ── */}
-      <div className="absolute right-[9%] top-[36%] z-[12] opacity-100">
-        <CrateIcon className="h-[38px] w-[46px] sm:h-[46px] sm:w-[56px] md:h-[54px] md:w-[66px]" />
+      {/* ── Crate + chick (desktop/tablet only to keep mobile uncluttered) ── */}
+      <div className="absolute right-[9%] top-[36%] z-[12] hidden opacity-100 sm:block">
+        <CrateIcon className="h-[46px] w-[56px] md:h-[54px] md:w-[66px]" />
       </div>
-      <div className="absolute right-[4.8%] top-[38%] z-[13] opacity-100">
-        <ChickIcon className="h-[34px] w-[40px] sm:h-[42px] sm:w-[48px] md:h-[50px] md:w-[58px]" />
+      <div className="absolute right-[4.8%] top-[38%] z-[13] hidden opacity-100 sm:block">
+        <ChickIcon className="h-[42px] w-[48px] md:h-[50px] md:w-[58px]" />
       </div>
 
-      {/* ── Bottom corners: deep intrusion framing (desktop-first) ── */}
-      <div className="absolute left-[1%] sm:left-[0.5%] md:left-[1.5%] bottom-[12%] sm:bottom-[16%] md:bottom-[26%] z-[18] opacity-95 drop-shadow-[0_10px_16px_rgba(74,114,56,0.36)]">
-        <BarnIcon className="h-[168px] w-[222px] sm:h-[228px] sm:w-[300px] md:h-[392px] md:w-[516px]" />
+      {/* ── Bottom corners: present but not over-shooting (desktop-first) ── */}
+      <div className="absolute left-[-5%] sm:left-[-6%] md:left-[-7%] bottom-[5.2%] sm:bottom-[6.2%] md:bottom-[10.2%] z-[16] opacity-93 drop-shadow-[0_8px_14px_rgba(74,114,56,0.32)]">
+        <BarnIcon className="h-[114px] w-[150px] sm:h-[150px] sm:w-[198px] md:h-[302px] md:w-[398px]" />
       </div>
-      <div className="absolute right-[1%] sm:right-[0.5%] md:right-[1.5%] bottom-[12.2%] sm:bottom-[16.2%] md:bottom-[26.2%] z-[18] opacity-95 drop-shadow-[0_10px_16px_rgba(74,114,56,0.36)]">
+      <div className="absolute right-[-5%] sm:right-[-6%] md:right-[-7%] bottom-[5.4%] sm:bottom-[6.4%] md:bottom-[10.4%] z-[16] opacity-93 drop-shadow-[0_8px_14px_rgba(74,114,56,0.32)]">
         <HouseIcon
           roof="blue"
-          className="h-[162px] w-[214px] sm:h-[222px] sm:w-[292px] md:h-[382px] md:w-[504px]"
+          className="h-[108px] w-[142px] sm:h-[144px] sm:w-[190px] md:h-[294px] md:w-[386px]"
         />
       </div>
 
-      {/* ── Animals (larger and higher for stronger lower-frame anchor) ── */}
-      <div className="absolute left-[-2%] top-[77%] sm:top-[78%] md:top-[74%] z-[16] -translate-y-1/2 opacity-95">
-        <CowIcon className="h-[112px] w-[152px] sm:h-[136px] sm:w-[184px] md:h-[170px] md:w-[230px]" />
+      {/* ── Animals (hidden on mobile to reduce lower-area crowding) ── */}
+      <div className="absolute left-[-3%] top-[76%] z-[14] hidden -translate-y-1/2 opacity-94 sm:block md:top-[73%]">
+        <CowIcon className="h-[126px] w-[170px] md:h-[156px] md:w-[210px]" />
       </div>
-      <div className="absolute right-[-2%] top-[77.4%] sm:top-[78.4%] md:top-[74.4%] z-[16] -translate-y-1/2 opacity-95">
-        <SheepIcon className="h-[112px] w-[152px] sm:h-[136px] sm:w-[184px] md:h-[170px] md:w-[230px]" />
+      <div className="absolute right-[-3%] top-[76.4%] z-[14] hidden -translate-y-1/2 opacity-94 sm:block md:top-[73.4%]">
+        <SheepIcon className="h-[126px] w-[170px] md:h-[156px] md:w-[210px]" />
       </div>
 
       {/* ── Bushes ── */}
@@ -271,11 +271,11 @@ export function FarmDecorations() {
       <div className="absolute right-[1.8%] top-[42.8%] z-[9] opacity-82">
         <BushIcon className="h-[28px] w-[40px] sm:h-[34px] sm:w-[48px] md:h-[40px] md:w-[56px]" />
       </div>
-      <div className="absolute left-[4.6%] bottom-[11%] z-[12] opacity-80">
-        <BushIcon className="h-[28px] w-[40px] sm:h-[34px] sm:w-[48px] md:h-[40px] md:w-[56px]" />
+      <div className="absolute left-[4.6%] bottom-[11%] z-[12] hidden opacity-80 sm:block">
+        <BushIcon className="h-[34px] w-[48px] md:h-[40px] md:w-[56px]" />
       </div>
-      <div className="absolute right-[4.6%] bottom-[10.8%] z-[12] opacity-80">
-        <BushIcon className="h-[28px] w-[40px] sm:h-[34px] sm:w-[48px] md:h-[40px] md:w-[56px]" />
+      <div className="absolute right-[4.6%] bottom-[10.8%] z-[12] hidden opacity-80 sm:block">
+        <BushIcon className="h-[34px] w-[48px] md:h-[40px] md:w-[56px]" />
       </div>
 
       {/* ── Flower patches ── */}
@@ -293,11 +293,11 @@ export function FarmDecorations() {
       <div className="absolute right-[3%] top-[38.8%] z-[9] opacity-80">
         <GrassTuft className="h-[16px] w-[34px] sm:h-[18px] sm:w-[40px] md:h-[20px] md:w-[46px]" />
       </div>
-      <div className="absolute left-[3%] bottom-[5%] z-[12] opacity-78">
-        <GrassTuft className="h-[16px] w-[34px] sm:h-[18px] sm:w-[40px] md:h-[20px] md:w-[46px]" />
+      <div className="absolute left-[3%] bottom-[5%] z-[12] hidden opacity-78 sm:block">
+        <GrassTuft className="h-[18px] w-[40px] md:h-[20px] md:w-[46px]" />
       </div>
-      <div className="absolute right-[3%] bottom-[4.8%] z-[12] opacity-78">
-        <GrassTuft className="h-[16px] w-[34px] sm:h-[18px] sm:w-[40px] md:h-[20px] md:w-[46px]" />
+      <div className="absolute right-[3%] bottom-[4.8%] z-[12] hidden opacity-78 sm:block">
+        <GrassTuft className="h-[18px] w-[40px] md:h-[20px] md:w-[46px]" />
       </div>
     </div>
   );
