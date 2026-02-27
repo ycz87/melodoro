@@ -73,6 +73,7 @@ interface FarmPageProps {
   onUseTrapNet: (plotId: number) => void;
   mutationDoctorSignal: number;
   onGoWarehouse: () => void;
+  compactShell?: boolean;
 }
 
 type SubTab = 'plots' | 'collection' | 'lab';
@@ -126,6 +127,7 @@ export function FarmPage({
   onUseTrapNet,
   mutationDoctorSignal: _mutationDoctorSignal,
   onGoWarehouse,
+  compactShell = false,
 }: FarmPageProps) {
   const theme = useTheme();
   const t = useI18n();
@@ -277,78 +279,83 @@ export function FarmPage({
 
   return (
     <div
-      className="flex-1 flex flex-col w-full px-4 pt-4 pb-6 gap-4"
+      className={`flex-1 flex flex-col w-full ${compactShell ? 'px-0 pt-0 pb-0 gap-0' : 'px-4 pt-4 pb-6 gap-4'}`}
     >
-      {/* Sub-tab header */}
-      <SubTabHeader subTab={subTab} setSubTab={setSubTab} theme={theme} t={t} />
+      {!compactShell && (
+        <>
+          {/* Sub-tab header */}
+          <SubTabHeader subTab={subTab} setSubTab={setSubTab} theme={theme} t={t} />
 
-      {/* 今日专注信息 */}
-      <div
-        className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-[var(--radius-card)] border shadow-[var(--shadow-card)]"
-        style={{ backgroundColor: theme.inputBg, borderColor: theme.border }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: theme.textFaint }}>
-            {t.farmTodayFocus(todayFocusMinutes)}
-          </span>
-          <button
-            onClick={() => setShowFarmHelp(true)}
-            className="h-5 w-5 rounded-full border text-[11px] leading-none flex items-center justify-center"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: `${theme.inputBg}cc`,
-              color: theme.textFaint,
-            }}
-            title={t.farmHelpTitle}
-            aria-label={t.farmHelpTitle}
-          >
-            ℹ️
-          </button>
-        </div>
-        <span className="text-xs sm:whitespace-nowrap" style={{ color: theme.textFaint }}>
-          {`🌱 ${totalBaseSeeds} · 🧬 ${injectedSeeds.length} · 🌈 ${prismaticSeeds.length} · 🌑 ${darkMatterSeeds.length}`}
-        </span>
-      </div>
-
-      {/* 道具快捷栏 */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-        {(guardianBarrierCount > 0 || barrierActiveToday) && (
-          <button
-            onClick={onUseGuardianBarrier}
-            className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button"
-            style={{
-              backgroundColor: `${theme.surface}cc`,
-              borderColor: barrierActiveToday ? '#fbbf24' : theme.border,
-              color: barrierActiveToday ? '#fbbf24' : theme.text,
-              boxShadow: 'var(--shadow-card)',
-            }}
-            title={barrierActiveToday ? t.itemGuardianBarrierActive : t.itemName('guardian-barrier')}
-          >
-            <span>🎪</span>
-            <span>{barrierActiveToday ? t.itemGuardianBarrierActive : `${t.itemName('guardian-barrier')} · ${guardianBarrierCount}`}</span>
-          </button>
-        )}
-        {trapNetCount > 0 && (
+          {/* 今日专注信息 */}
           <div
-            className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium"
-            style={{
-              backgroundColor: `${theme.surface}cc`,
-              borderColor: theme.border,
-              color: theme.text,
-              boxShadow: 'var(--shadow-card)',
-            }}
-            title={t.itemName('trap-net')}
-            data-testid="trap-net-inventory"
+            className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-[var(--radius-card)] border shadow-[var(--shadow-card)]"
+            style={{ backgroundColor: theme.inputBg, borderColor: theme.border }}
           >
-            <span>🪤</span>
-            <span>{trapNetCount}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: theme.textFaint }}>
+                {t.farmTodayFocus(todayFocusMinutes)}
+              </span>
+              <button
+                onClick={() => setShowFarmHelp(true)}
+                className="h-5 w-5 rounded-full border text-[11px] leading-none flex items-center justify-center"
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: `${theme.inputBg}cc`,
+                  color: theme.textFaint,
+                }}
+                title={t.farmHelpTitle}
+                aria-label={t.farmHelpTitle}
+              >
+                ℹ️
+              </button>
+            </div>
+            <span className="text-xs sm:whitespace-nowrap" style={{ color: theme.textFaint }}>
+              {`🌱 ${totalBaseSeeds} · 🧬 ${injectedSeeds.length} · 🌈 ${prismaticSeeds.length} · 🌑 ${darkMatterSeeds.length}`}
+            </span>
           </div>
-        )}
-      </div>
+
+          {/* 道具快捷栏 */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            {(guardianBarrierCount > 0 || barrierActiveToday) && (
+              <button
+                onClick={onUseGuardianBarrier}
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button"
+                style={{
+                  backgroundColor: `${theme.surface}cc`,
+                  borderColor: barrierActiveToday ? '#fbbf24' : theme.border,
+                  color: barrierActiveToday ? '#fbbf24' : theme.text,
+                  boxShadow: 'var(--shadow-card)',
+                }}
+                title={barrierActiveToday ? t.itemGuardianBarrierActive : t.itemName('guardian-barrier')}
+              >
+                <span>🎪</span>
+                <span>{barrierActiveToday ? t.itemGuardianBarrierActive : `${t.itemName('guardian-barrier')} · ${guardianBarrierCount}`}</span>
+              </button>
+            )}
+            {trapNetCount > 0 && (
+              <div
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium"
+                style={{
+                  backgroundColor: `${theme.surface}cc`,
+                  borderColor: theme.border,
+                  color: theme.text,
+                  boxShadow: 'var(--shadow-card)',
+                }}
+                title={t.itemName('trap-net')}
+                data-testid="trap-net-inventory"
+              >
+                <span>🪤</span>
+                <span>{trapNetCount}</span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* 农场场景 */}
-      <div className="farm-page pt-4">
+      <div className={`farm-page ${compactShell ? 'pt-0' : 'pt-4'}`}>
           <SimpleFarmGrid
+            compactMode={compactShell}
             plots={farm.plots}
             weather={weather}
             nowTimestamp={nowTimestamp}

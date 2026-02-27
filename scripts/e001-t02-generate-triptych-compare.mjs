@@ -154,9 +154,14 @@ async function captureCurrentScreenshots(outputDir, taskId) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
       const page = await context.newPage();
       await page.addInitScript(seedFarmStateScript(taskId));
-      await page.goto(DEV_SERVER_URL, { waitUntil: 'networkidle' });
-      await page.locator('header button').filter({ hasText: '🌱' }).first().click();
-      await page.locator('.farm-page').waitFor({ state: 'visible' });
+      await page.goto(`${DEV_SERVER_URL}/?farmReview=1`, { waitUntil: 'networkidle' });
+
+      const farmPage = page.locator('.farm-page');
+      const farmVisible = await farmPage.isVisible().catch(() => false);
+      if (!farmVisible) {
+        await page.locator('header button').filter({ hasText: '🌱' }).first().click();
+      }
+      await farmPage.waitFor({ state: 'visible' });
 
       const currentPath = path.join(outputDir, `${taskId}-current-${viewport.name}.png`);
       await page.screenshot({ path: currentPath, fullPage: false });
@@ -182,6 +187,44 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
   `);
 }
 
+function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, headerHeight) {
+  if (taskId !== 'E-001-T11') {
+    return null;
+  }
+
+  const currentLeft = Math.round(totalWidth / 2);
+  const markerRadius = viewportName === 'mobile' ? 14 : 16;
+  const points = viewportName === 'mobile'
+    ? [
+        { id: 1, x: currentLeft + 92, y: headerHeight + 245 },
+        { id: 2, x: currentLeft + 42, y: headerHeight + 102 },
+        { id: 3, x: currentLeft + 118, y: headerHeight + 476 },
+      ]
+    : [
+        { id: 1, x: currentLeft + 260, y: headerHeight + 212 },
+        { id: 2, x: currentLeft + 120, y: headerHeight + 120 },
+        { id: 3, x: currentLeft + 316, y: headerHeight + 530 },
+      ];
+
+  const legendWidth = viewportName === 'mobile' ? 240 : 320;
+  const legendX = totalWidth - legendWidth - 14;
+  const legendY = headerHeight + 16;
+
+  return Buffer.from(`
+    <svg width="${totalWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
+      <rect x="${legendX}" y="${legendY}" width="${legendWidth}" height="${viewportName === 'mobile' ? 108 : 96}" rx="10" fill="rgba(8,15,36,0.78)" stroke="rgba(148,163,184,0.8)" stroke-width="1.5"/>
+      <text x="${legendX + 12}" y="${legendY + 22}" font-size="14" font-family="Arial, sans-serif" fill="#f8fafc">Change Markers</text>
+      <text x="${legendX + 12}" y="${legendY + 42}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">1. Corner props enlarged + rebalanced</text>
+      <text x="${legendX + 12}" y="${legendY + 60}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">2. Compact review shell (header removed)</text>
+      <text x="${legendX + 12}" y="${legendY + 78}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">3. Ground contact blend strengthened</text>
+      ${points.map((point) => `
+        <circle cx="${point.x}" cy="${point.y}" r="${markerRadius}" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+        <text x="${point.x}" y="${point.y + 5}" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle" fill="#fff">${point.id}</text>
+      `).join('')}
+    </svg>
+  `);
+}
+
 async function buildCompareImage({ viewportName, baselinePath, currentPath, outputPath, taskId }) {
   ensureFileExists(baselinePath);
   ensureFileExists(currentPath);
@@ -199,19 +242,29 @@ async function buildCompareImage({ viewportName, baselinePath, currentPath, outp
     .toBuffer();
 
   const headerHeight = 60;
+  const totalWidth = outW * 2;
+  const totalHeight = outH + headerHeight;
+  const markerOverlay = buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, headerHeight);
+
+  const composites = [
+    { input: buildCompareHeaderSvg(totalWidth, headerHeight, viewportName, taskId), top: 0, left: 0 },
+    { input: await sharp(baselinePath).png().toBuffer(), top: headerHeight, left: 0 },
+    { input: resizedCurrent, top: headerHeight, left: outW },
+  ];
+
+  if (markerOverlay) {
+    composites.push({ input: markerOverlay, top: 0, left: 0 });
+  }
+
   const compareCanvas = await sharp({
     create: {
-      width: outW * 2,
-      height: outH + headerHeight,
+      width: totalWidth,
+      height: totalHeight,
       channels: 4,
       background: '#111827',
     },
   })
-    .composite([
-      { input: buildCompareHeaderSvg(outW * 2, headerHeight, viewportName, taskId), top: 0, left: 0 },
-      { input: await sharp(baselinePath).png().toBuffer(), top: headerHeight, left: 0 },
-      { input: resizedCurrent, top: headerHeight, left: outW },
-    ])
+    .composite(composites)
     .png()
     .toBuffer();
 

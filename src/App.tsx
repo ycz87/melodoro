@@ -159,7 +159,10 @@ function App() {
   const [showGuide, setShowGuide] = useState(false);
   const [lastRolledStage, setLastRolledStage] = useState<GrowthStage | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'focus' | 'warehouse' | 'farm' | 'market'>('focus');
+  const farmReviewMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('farmReview') === '1';
+  const [activeTab, setActiveTab] = useState<'focus' | 'warehouse' | 'farm' | 'market'>(() => (
+    farmReviewMode ? 'farm' : 'focus'
+  ));
   const [debugMode, setDebugMode] = useState(() => localStorage.getItem('watermelon-debug') === 'true');
   const [timeMultiplier, setTimeMultiplier] = useState(1);
   const [showCosmicHeartCelebration, setShowCosmicHeartCelebration] = useState(false);
@@ -1520,7 +1523,8 @@ function App() {
       <div key={settings.language} className="min-h-dvh flex flex-col items-center transition-colors duration-[1500ms]"
         style={{ backgroundColor: bgColor }}>
 
-        {/* Header — 48px, logo left, segmented center, icons right */}
+        {/* Header — hidden in farm review mode to maximize first-screen farm area */}
+        {!farmReviewMode && (
         <header
           className="w-full h-12 flex items-center px-3 sm:px-5 shrink-0 z-40 sticky top-0 border-b"
           style={{
@@ -1612,6 +1616,7 @@ function App() {
             />
           </div>
         </header>
+        )}
 
         {/* 主内容 */}
         {activeTab === 'focus' && (() => {
@@ -1732,6 +1737,7 @@ function App() {
 
         {activeTab === 'farm' && (
           <FarmPage
+            compactShell={farmReviewMode}
             farm={farm}
             geneInventory={geneInventory}
             seeds={shed.seeds}

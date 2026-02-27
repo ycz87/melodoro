@@ -32,6 +32,7 @@ interface SimpleFarmGridProps {
   onUseNectar: (plotId: number) => void;
   onUseStarTracker: (plotId: number) => void;
   onUseTrapNet: (plotId: number) => void;
+  compactMode?: boolean;
 }
 
 interface GridLayout {
@@ -174,6 +175,7 @@ export function SimpleFarmGrid({
   onUseNectar,
   onUseStarTracker,
   onUseTrapNet,
+  compactMode = false,
 }: SimpleFarmGridProps) {
   const theme = useTheme();
   const t = useI18n();
@@ -197,29 +199,58 @@ export function SimpleFarmGrid({
   const scenePalette = useMemo(() => buildScenePalette(theme), [theme]);
   const isCompactMobile = viewportWidth < SMALL_MOBILE_BREAKPOINT;
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
-  const safeSideInset = isCompactMobile ? 12 : isMobile ? 10 : 0;
-  const sceneWidth = layout.plotSize * 3 + layout.gap * 2;
-  const sceneFrameMaxWidth = sceneWidth + (isMobile ? 72 : 108);
-  // Responsive safe-area only: keep anchors fully visible on narrow screens.
-  const sceneTopPadding = isCompactMobile
-    ? Math.round(layout.plotSize * 1.72)
-    : isMobile
-      ? Math.round(layout.plotSize * 1.76)
-      : Math.round(layout.plotSize * 1.62);
-  const sceneBottomPadding = isCompactMobile
-    ? Math.round(layout.plotSize * 0.32)
-    : isMobile
-      ? Math.round(layout.plotSize * 0.3)
-      : Math.round(layout.plotSize * 0.26);
-  const slotOffsetScale = isCompactMobile ? 0.96 : isMobile ? 1 : 1.02;
+
+  const plotScale = compactMode
+    ? (isCompactMobile ? 1.14 : isMobile ? 1.2 : 1.36)
+    : 1;
+  const effectivePlotSize = Math.round(layout.plotSize * plotScale);
+  const safeSideInset = compactMode ? 0 : (isCompactMobile ? 12 : isMobile ? 10 : 0);
+  const sceneWidth = effectivePlotSize * 3 + layout.gap * 2;
+  const sceneFrameMaxWidth = compactMode
+    ? undefined
+    : sceneWidth + (isMobile ? 72 : 108);
+
+  // Compact review mode intentionally prioritizes farm scene coverage.
+  const sceneTopPadding = compactMode
+    ? (isCompactMobile
+      ? Math.round(effectivePlotSize * 1.34)
+      : isMobile
+        ? Math.round(effectivePlotSize * 1.3)
+        : Math.round(effectivePlotSize * 1.18))
+    : (isCompactMobile
+      ? Math.round(effectivePlotSize * 1.72)
+      : isMobile
+        ? Math.round(effectivePlotSize * 1.76)
+        : Math.round(effectivePlotSize * 1.62));
+  const sceneBottomPadding = compactMode
+    ? (isCompactMobile
+      ? Math.round(effectivePlotSize * 0.18)
+      : isMobile
+        ? Math.round(effectivePlotSize * 0.16)
+        : Math.round(effectivePlotSize * 0.12))
+    : (isCompactMobile
+      ? Math.round(effectivePlotSize * 0.32)
+      : isMobile
+        ? Math.round(effectivePlotSize * 0.3)
+        : Math.round(effectivePlotSize * 0.26));
+  const slotOffsetScale = compactMode
+    ? (isCompactMobile ? 1.02 : isMobile ? 1.05 : 1.1)
+    : (isCompactMobile ? 0.96 : isMobile ? 1 : 1.02);
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
       <div
         className="relative mx-auto w-full overflow-visible"
-        style={{ maxWidth: sceneFrameMaxWidth, paddingLeft: safeSideInset, paddingRight: safeSideInset }}
+        style={{
+          maxWidth: sceneFrameMaxWidth,
+          paddingLeft: safeSideInset,
+          paddingRight: safeSideInset,
+        }}
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[var(--radius-container)]" aria-hidden="true">
+        <div
+          className={`pointer-events-none absolute inset-0 overflow-hidden ${compactMode ? 'rounded-none' : 'rounded-[var(--radius-container)]'}`}
+          aria-hidden="true"
+        >
           <svg
             className="absolute inset-0 h-full w-full"
             viewBox="0 0 1000 1400"
@@ -366,8 +397,8 @@ export function SimpleFarmGrid({
             style={{
               width: sceneWidth,
               gap: layout.gap,
-              gridTemplateColumns: `repeat(3, minmax(0, ${layout.plotSize}px))`,
-              gridAutoRows: `${Math.round(layout.plotSize * 0.56)}px`,
+              gridTemplateColumns: `repeat(3, minmax(0, ${effectivePlotSize}px))`,
+              gridAutoRows: `${Math.round(effectivePlotSize * 0.56)}px`,
             }}
           >
             {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
@@ -379,13 +410,13 @@ export function SimpleFarmGrid({
                   key={plot ? `plot-simple-${plot.id}` : `plot-locked-${slotIndex}`}
                   className="relative justify-self-center"
                   style={{
-                    width: layout.plotSize,
+                    width: effectivePlotSize,
                     gridColumnStart: placement.column,
                     gridRowStart: placement.row,
                     transform: `translate(${Math.round(placement.xOffset * slotOffsetScale)}px, ${Math.round(placement.yOffset * slotOffsetScale)}px)`,
                   }}
                 >
-                  <IsometricPlotShell size={layout.plotSize} state={plot ? plot.state : 'locked'}>
+                  <IsometricPlotShell size={effectivePlotSize} state={plot ? plot.state : 'locked'}>
                     {plot ? (
                       <PlotCard
                         plot={plot}

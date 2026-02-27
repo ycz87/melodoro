@@ -59,7 +59,7 @@ function BarnIcon({ className = 'h-[54px] w-[72px] sm:h-[64px] sm:w-[84px] md:h-
   );
 }
 
-function TopLeftHouseIcon({ className = 'h-[92px] w-[122px] sm:h-[106px] sm:w-[138px] md:h-[126px] md:w-[164px]' }: { className?: string }) {
+function TopLeftHouseIcon({ className = 'h-[118px] w-[156px] sm:h-[134px] sm:w-[176px] md:h-[156px] md:w-[206px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 176 152" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="86" cy="136" rx="56" ry="10" fill={SHADOW} />
@@ -76,7 +76,7 @@ function TopLeftHouseIcon({ className = 'h-[92px] w-[122px] sm:h-[106px] sm:w-[1
   );
 }
 
-function TopRightBarnIcon({ className = 'h-[96px] w-[126px] sm:h-[112px] sm:w-[146px] md:h-[132px] md:w-[172px]' }: { className?: string }) {
+function TopRightBarnIcon({ className = 'h-[122px] w-[160px] sm:h-[138px] sm:w-[182px] md:h-[162px] md:w-[214px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 186 160" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="92" cy="142" rx="58" ry="10" fill={SHADOW} />
@@ -147,7 +147,7 @@ function GrassTuft({ className = 'h-[12px] w-[26px] sm:h-[14px] sm:w-[30px] md:h
   );
 }
 
-function CowIcon({ className = 'h-[58px] w-[80px] sm:h-[70px] sm:w-[96px] md:h-[82px] md:w-[112px]' }: { className?: string }) {
+function CowIcon({ className = 'h-[66px] w-[90px] sm:h-[80px] sm:w-[110px] md:h-[94px] md:w-[128px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 132 98" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="66" cy="90" rx="40" ry="6" fill={SHADOW} />
@@ -168,7 +168,7 @@ function CowIcon({ className = 'h-[58px] w-[80px] sm:h-[70px] sm:w-[96px] md:h-[
   );
 }
 
-function SheepIcon({ className = 'h-[58px] w-[80px] sm:h-[70px] sm:w-[96px] md:h-[82px] md:w-[112px]' }: { className?: string }) {
+function SheepIcon({ className = 'h-[66px] w-[90px] sm:h-[80px] sm:w-[110px] md:h-[94px] md:w-[128px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 132 98" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="64" cy="90" rx="40" ry="6" fill={SHADOW} />
@@ -227,17 +227,17 @@ export function FarmDecorations() {
         <FenceSegment mirrored />
       </div>
 
-      <div className="absolute left-[-1.6%] top-[25.8%] z-[10] opacity-100 drop-shadow-[0_6px_10px_rgba(74,114,56,0.24)]">
+      <div className="absolute left-[-5.2%] top-[19.8%] z-[10] opacity-100 drop-shadow-[0_7px_12px_rgba(74,114,56,0.26)]">
         <TopLeftHouseIcon />
       </div>
-      <div className="absolute right-[-1.2%] top-[25.4%] z-[10] opacity-100 drop-shadow-[0_6px_10px_rgba(74,114,56,0.24)]">
+      <div className="absolute right-[-5%] top-[19.2%] z-[10] opacity-100 drop-shadow-[0_7px_12px_rgba(74,114,56,0.26)]">
         <TopRightBarnIcon />
       </div>
-      <div className="absolute right-[10.4%] top-[39.1%] z-[12] opacity-100">
-        <CrateIcon />
+      <div className="absolute right-[11.6%] top-[37.4%] z-[12] opacity-100">
+        <CrateIcon className="h-[34px] w-[40px] sm:h-[40px] sm:w-[48px] md:h-[46px] md:w-[56px]" />
       </div>
-      <div className="absolute right-[6.4%] top-[40.8%] z-[13] opacity-100">
-        <ChickIcon />
+      <div className="absolute right-[7.2%] top-[39.2%] z-[13] opacity-100">
+        <ChickIcon className="h-[30px] w-[34px] sm:h-[36px] sm:w-[42px] md:h-[44px] md:w-[50px]" />
       </div>
       <div className="absolute left-[1.8%] bottom-[2.8%] z-[11] opacity-76 drop-shadow-[0_3px_5px_rgba(74,114,56,0.16)]">
         <BarnIcon className="h-[44px] w-[58px] sm:h-[54px] sm:w-[70px] md:h-[64px] md:w-[84px]" />
@@ -249,10 +249,10 @@ export function FarmDecorations() {
         />
       </div>
 
-      <div className="absolute left-[-0.4%] top-[71.6%] z-[13] -translate-y-1/2 opacity-90">
+      <div className="absolute left-[-2.2%] top-[72.4%] z-[13] -translate-y-1/2 opacity-92">
         <CowIcon />
       </div>
-      <div className="absolute right-[-0.4%] top-[72.1%] z-[13] -translate-y-1/2 opacity-90">
+      <div className="absolute right-[-2.2%] top-[72.8%] z-[13] -translate-y-1/2 opacity-92">
         <SheepIcon />
       </div>
 
