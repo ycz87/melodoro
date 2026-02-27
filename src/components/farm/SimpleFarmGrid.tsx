@@ -46,23 +46,23 @@ const DESKTOP_VIEWPORT_WIDTH = 1024;
 const TOTAL_SLOTS = 7;
 
 const COMPACT_MOBILE_LAYOUT: GridLayout = {
-  gap: 2,
-  plotSize: 88,
+  gap: 1,
+  plotSize: 104,
 };
 
 const MOBILE_LAYOUT: GridLayout = {
-  gap: 3,
-  plotSize: 96,
+  gap: 2,
+  plotSize: 114,
 };
 
 const TABLET_LAYOUT: GridLayout = {
-  gap: 6,
-  plotSize: 110,
+  gap: 4,
+  plotSize: 132,
 };
 
 const DESKTOP_LAYOUT: GridLayout = {
-  gap: 8,
-  plotSize: 128,
+  gap: 6,
+  plotSize: 150,
 };
 
 function getViewportWidth(): number {
@@ -118,13 +118,13 @@ interface ScenePalette {
 }
 
 const PORTRAIT_SLOT_PLACEMENTS: SlotPlacement[] = [
-  { column: 2, row: 1, xOffset: -16, yOffset: 4 },
-  { column: 1, row: 2, xOffset: 30, yOffset: -18 },
-  { column: 3, row: 2, xOffset: -8, yOffset: -6 },
-  { column: 2, row: 3, xOffset: 18, yOffset: -32 },
-  { column: 1, row: 4, xOffset: 42, yOffset: -43 },
-  { column: 3, row: 4, xOffset: -31, yOffset: -29 },
-  { column: 2, row: 5, xOffset: -4, yOffset: -58 },
+  { column: 2, row: 1, xOffset: 0, yOffset: 0 },
+  { column: 1, row: 2, xOffset: 16, yOffset: -6 },
+  { column: 3, row: 2, xOffset: -16, yOffset: -6 },
+  { column: 2, row: 3, xOffset: 0, yOffset: -12 },
+  { column: 1, row: 4, xOffset: 16, yOffset: -18 },
+  { column: 3, row: 4, xOffset: -16, yOffset: -18 },
+  { column: 2, row: 5, xOffset: 0, yOffset: -24 },
 ];
 
 function buildScenePalette(theme: ThemeColors): ScenePalette {
@@ -202,16 +202,16 @@ export function SimpleFarmGrid({
   const sceneFrameMaxWidth = sceneWidth + (isMobile ? 72 : 108);
   // Responsive safe-area only: keep anchors fully visible on narrow screens.
   const sceneTopPadding = isCompactMobile
-    ? Math.round(layout.plotSize * 2.6)
+    ? Math.round(layout.plotSize * 1.72)
     : isMobile
-      ? Math.round(layout.plotSize * 2.64)
-      : Math.round(layout.plotSize * 2.42);
+      ? Math.round(layout.plotSize * 1.76)
+      : Math.round(layout.plotSize * 1.62);
   const sceneBottomPadding = isCompactMobile
-    ? Math.round(layout.plotSize * 0.5)
+    ? Math.round(layout.plotSize * 0.32)
     : isMobile
-      ? Math.round(layout.plotSize * 0.48)
-      : Math.round(layout.plotSize * 0.42);
-  const slotOffsetScale = isCompactMobile ? 0.84 : isMobile ? 0.92 : 1;
+      ? Math.round(layout.plotSize * 0.3)
+      : Math.round(layout.plotSize * 0.26);
+  const slotOffsetScale = isCompactMobile ? 0.96 : isMobile ? 1 : 1.02;
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
@@ -367,6 +367,7 @@ export function SimpleFarmGrid({
               width: sceneWidth,
               gap: layout.gap,
               gridTemplateColumns: `repeat(3, minmax(0, ${layout.plotSize}px))`,
+              gridAutoRows: `${Math.round(layout.plotSize * 0.56)}px`,
             }}
           >
             {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
@@ -429,6 +430,23 @@ export function SimpleFarmGrid({
             })}
           </div>
         </div>
+
+        <div
+          className="pointer-events-none absolute inset-x-[17%] bottom-[8%] z-[11] h-[11%]"
+          aria-hidden="true"
+          style={{
+            background: `radial-gradient(ellipse at center, rgba(96,138,62,0.42) 0%, rgba(96,138,62,0.18) 44%, rgba(96,138,62,0) 100%)`,
+            filter: 'blur(2px)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-x-[13%] bottom-[5.8%] z-[11] h-[8%]"
+          aria-hidden="true"
+          style={{
+            background: 'linear-gradient(180deg, rgba(176,216,122,0) 0%, rgba(159,205,103,0.44) 48%, rgba(144,193,90,0.62) 100%)',
+            clipPath: 'ellipse(48% 88% at 50% 100%)',
+          }}
+        />
       </div>
     </div>
   );

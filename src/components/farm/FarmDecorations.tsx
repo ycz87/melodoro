@@ -59,7 +59,7 @@ function BarnIcon({ className = 'h-[54px] w-[72px] sm:h-[64px] sm:w-[84px] md:h-
   );
 }
 
-function TopLeftHouseIcon({ className = 'h-[74px] w-[98px] sm:h-[88px] sm:w-[116px] md:h-[108px] md:w-[140px]' }: { className?: string }) {
+function TopLeftHouseIcon({ className = 'h-[92px] w-[122px] sm:h-[106px] sm:w-[138px] md:h-[126px] md:w-[164px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 176 152" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="86" cy="136" rx="56" ry="10" fill={SHADOW} />
@@ -76,7 +76,7 @@ function TopLeftHouseIcon({ className = 'h-[74px] w-[98px] sm:h-[88px] sm:w-[116
   );
 }
 
-function TopRightBarnIcon({ className = 'h-[76px] w-[100px] sm:h-[92px] sm:w-[118px] md:h-[110px] md:w-[144px]' }: { className?: string }) {
+function TopRightBarnIcon({ className = 'h-[96px] w-[126px] sm:h-[112px] sm:w-[146px] md:h-[132px] md:w-[172px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 186 160" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="92" cy="142" rx="58" ry="10" fill={SHADOW} />
@@ -147,7 +147,7 @@ function GrassTuft({ className = 'h-[12px] w-[26px] sm:h-[14px] sm:w-[30px] md:h
   );
 }
 
-function CowIcon({ className = 'h-[48px] w-[66px] sm:h-[58px] sm:w-[78px] md:h-[68px] md:w-[92px]' }: { className?: string }) {
+function CowIcon({ className = 'h-[58px] w-[80px] sm:h-[70px] sm:w-[96px] md:h-[82px] md:w-[112px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 132 98" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="66" cy="90" rx="40" ry="6" fill={SHADOW} />
@@ -168,7 +168,7 @@ function CowIcon({ className = 'h-[48px] w-[66px] sm:h-[58px] sm:w-[78px] md:h-[
   );
 }
 
-function SheepIcon({ className = 'h-[48px] w-[66px] sm:h-[58px] sm:w-[78px] md:h-[68px] md:w-[92px]' }: { className?: string }) {
+function SheepIcon({ className = 'h-[58px] w-[80px] sm:h-[70px] sm:w-[96px] md:h-[82px] md:w-[112px]' }: { className?: string }) {
   return (
     <svg viewBox="0 0 132 98" className={className} strokeLinejoin="round" strokeLinecap="round">
       <ellipse cx="64" cy="90" rx="40" ry="6" fill={SHADOW} />
@@ -214,78 +214,78 @@ function FlowerPatch({ className = 'h-[12px] w-[28px] sm:h-[14px] sm:w-[32px] md
 export function FarmDecorations() {
   return (
     <div className="pointer-events-none absolute inset-0 z-[8] overflow-hidden" aria-hidden="true">
-      <div className="absolute left-[7.8%] top-[48.2%] z-[9] opacity-72">
+      <div className="absolute left-[6.8%] top-[47.4%] z-[9] opacity-74">
         <FenceSegment />
       </div>
-      <div className="absolute right-[7.8%] top-[48.4%] z-[9] opacity-72">
+      <div className="absolute right-[6.8%] top-[47.2%] z-[9] opacity-74">
         <FenceSegment mirrored />
       </div>
-      <div className="absolute left-[11.4%] bottom-[9.6%] z-[12] opacity-68">
+      <div className="absolute left-[10.2%] bottom-[10.4%] z-[12] opacity-72">
         <FenceSegment />
       </div>
-      <div className="absolute right-[11.4%] bottom-[9.4%] z-[12] opacity-68">
+      <div className="absolute right-[10.2%] bottom-[10.2%] z-[12] opacity-72">
         <FenceSegment mirrored />
       </div>
 
-      <div className="absolute left-[0.3%] top-[29.6%] z-[10] opacity-95 drop-shadow-[0_5px_8px_rgba(74,114,56,0.2)]">
+      <div className="absolute left-[-1.6%] top-[25.8%] z-[10] opacity-100 drop-shadow-[0_6px_10px_rgba(74,114,56,0.24)]">
         <TopLeftHouseIcon />
       </div>
-      <div className="absolute right-[0.1%] top-[29.2%] z-[10] opacity-95 drop-shadow-[0_5px_8px_rgba(74,114,56,0.2)]">
+      <div className="absolute right-[-1.2%] top-[25.4%] z-[10] opacity-100 drop-shadow-[0_6px_10px_rgba(74,114,56,0.24)]">
         <TopRightBarnIcon />
       </div>
-      <div className="absolute right-[10.6%] top-[40%] z-[12] opacity-95">
+      <div className="absolute right-[10.4%] top-[39.1%] z-[12] opacity-100">
         <CrateIcon />
       </div>
-      <div className="absolute right-[6.8%] top-[41.8%] z-[13] opacity-96">
+      <div className="absolute right-[6.4%] top-[40.8%] z-[13] opacity-100">
         <ChickIcon />
       </div>
-      <div className="absolute left-[2.6%] bottom-[3.2%] z-[11] opacity-74 drop-shadow-[0_3px_5px_rgba(74,114,56,0.16)]">
-        <BarnIcon className="h-[42px] w-[56px] sm:h-[50px] sm:w-[66px] md:h-[60px] md:w-[78px]" />
+      <div className="absolute left-[1.8%] bottom-[2.8%] z-[11] opacity-76 drop-shadow-[0_3px_5px_rgba(74,114,56,0.16)]">
+        <BarnIcon className="h-[44px] w-[58px] sm:h-[54px] sm:w-[70px] md:h-[64px] md:w-[84px]" />
       </div>
-      <div className="absolute right-[2.6%] bottom-[3.3%] z-[11] opacity-74 drop-shadow-[0_3px_5px_rgba(74,114,56,0.16)]">
+      <div className="absolute right-[1.8%] bottom-[2.9%] z-[11] opacity-76 drop-shadow-[0_3px_5px_rgba(74,114,56,0.16)]">
         <HouseIcon
           roof="blue"
-          className="h-[40px] w-[54px] sm:h-[48px] sm:w-[64px] md:h-[58px] md:w-[76px]"
+          className="h-[42px] w-[56px] sm:h-[52px] sm:w-[68px] md:h-[62px] md:w-[80px]"
         />
       </div>
 
-      <div className="absolute left-[0.6%] top-[68.2%] z-[13] -translate-y-1/2 opacity-88">
+      <div className="absolute left-[-0.4%] top-[71.6%] z-[13] -translate-y-1/2 opacity-90">
         <CowIcon />
       </div>
-      <div className="absolute right-[0.6%] top-[68.6%] z-[13] -translate-y-1/2 opacity-88">
+      <div className="absolute right-[-0.4%] top-[72.1%] z-[13] -translate-y-1/2 opacity-90">
         <SheepIcon />
       </div>
 
-      <div className="absolute left-[3.8%] top-[45.2%] z-[9] opacity-78">
+      <div className="absolute left-[3.2%] top-[44.4%] z-[9] opacity-80">
         <BushIcon className="h-[24px] w-[34px] sm:h-[28px] sm:w-[40px] md:h-[32px] md:w-[46px]" />
       </div>
-      <div className="absolute right-[3.8%] top-[44.8%] z-[9] opacity-78">
+      <div className="absolute right-[3.2%] top-[44.2%] z-[9] opacity-80">
         <BushIcon className="h-[24px] w-[34px] sm:h-[28px] sm:w-[40px] md:h-[32px] md:w-[46px]" />
       </div>
-      <div className="absolute left-[6.8%] bottom-[13.2%] z-[12] opacity-74">
-        <BushIcon className="h-[22px] w-[32px] sm:h-[26px] sm:w-[38px] md:h-[30px] md:w-[44px]" />
+      <div className="absolute left-[6.2%] bottom-[12.6%] z-[12] opacity-78">
+        <BushIcon className="h-[24px] w-[34px] sm:h-[28px] sm:w-[40px] md:h-[32px] md:w-[46px]" />
       </div>
-      <div className="absolute right-[6.8%] bottom-[13%] z-[12] opacity-74">
-        <BushIcon className="h-[22px] w-[32px] sm:h-[26px] sm:w-[38px] md:h-[30px] md:w-[44px]" />
-      </div>
-
-      <div className="absolute left-[8.2%] top-[57.2%] z-[12] opacity-74">
-        <FlowerPatch className="h-[14px] w-[32px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[42px]" />
-      </div>
-      <div className="absolute right-[8.2%] top-[57.5%] z-[12] opacity-74">
-        <FlowerPatch className="h-[14px] w-[32px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[42px]" />
+      <div className="absolute right-[6.2%] bottom-[12.4%] z-[12] opacity-78">
+        <BushIcon className="h-[24px] w-[34px] sm:h-[28px] sm:w-[40px] md:h-[32px] md:w-[46px]" />
       </div>
 
-      <div className="absolute left-[5.1%] top-[40.8%] z-[9] opacity-78">
+      <div className="absolute left-[7.8%] top-[56.2%] z-[12] opacity-76">
+        <FlowerPatch className="h-[14px] w-[32px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[42px]" />
+      </div>
+      <div className="absolute right-[7.8%] top-[56.4%] z-[12] opacity-76">
+        <FlowerPatch className="h-[14px] w-[32px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[42px]" />
+      </div>
+
+      <div className="absolute left-[4.8%] top-[40.4%] z-[9] opacity-78">
         <GrassTuft className="h-[14px] w-[30px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[40px]" />
       </div>
-      <div className="absolute right-[5.1%] top-[40.4%] z-[9] opacity-78">
+      <div className="absolute right-[4.8%] top-[40.2%] z-[9] opacity-78">
         <GrassTuft className="h-[14px] w-[30px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[40px]" />
       </div>
-      <div className="absolute left-[5.1%] bottom-[6.7%] z-[12] opacity-74">
+      <div className="absolute left-[4.8%] bottom-[6.6%] z-[12] opacity-76">
         <GrassTuft className="h-[14px] w-[30px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[40px]" />
       </div>
-      <div className="absolute right-[5.1%] bottom-[6.5%] z-[12] opacity-74">
+      <div className="absolute right-[4.8%] bottom-[6.4%] z-[12] opacity-76">
         <GrassTuft className="h-[14px] w-[30px] sm:h-[16px] sm:w-[36px] md:h-[18px] md:w-[40px]" />
       </div>
     </div>

@@ -28,7 +28,7 @@ import type {
   ItemId,
 } from '../types/slicing';
 import { VARIETY_DEFS, RARITY_COLOR, RARITY_STARS } from '../types/farm';
-import { getGrowthStage, getStageEmoji, isVarietyRevealed } from '../farm/growth';
+import { getGrowthStage, isVarietyRevealed } from '../farm/growth';
 import { CollectionPage } from './CollectionPage';
 import { GeneLabPage } from './GeneLabPage';
 import { SimpleFarmGrid } from './farm/SimpleFarmGrid';
@@ -438,46 +438,6 @@ export function FarmPage({
   );
 }
 
-function getPlotLightOverlay(weather: Weather | null): string {
-  if (weather === 'sunny' || weather === 'rainbow') {
-    return 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 42%)';
-  }
-  if (weather === 'night') {
-    return 'radial-gradient(circle at 12% 8%, rgba(208,228,255,0.28) 0%, rgba(208,228,255,0.06) 28%, rgba(208,228,255,0) 64%)';
-  }
-  if (weather === 'cloudy') {
-    return 'linear-gradient(180deg, rgba(20,20,20,0.08) 0%, rgba(20,20,20,0.08) 100%)';
-  }
-  if (weather === 'rainy' || weather === 'stormy') {
-    return 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(40,40,40,0.12) 100%)';
-  }
-  return 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 40%)';
-}
-
-function adjustHexColor(hex: string, percent: number): string {
-  const normalized = hex.replace('#', '');
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    return hex;
-  }
-  const ratio = percent / 100;
-  const toChannel = (offset: number): number => {
-    const value = Number.parseInt(normalized.slice(offset, offset + 2), 16);
-    const next = ratio >= 0
-      ? value + (255 - value) * ratio
-      : value * (1 + ratio);
-    return Math.min(255, Math.max(0, Math.round(next)));
-  };
-  const r = toChannel(0).toString(16).padStart(2, '0');
-  const g = toChannel(2).toString(16).padStart(2, '0');
-  const b = toChannel(4).toString(16).padStart(2, '0');
-  return `#${r}${g}${b}`;
-}
-
-function getPlotSoilVariance(plotId: number): number {
-  const value = Math.sin(plotId * 12.9898) * 43758.5453;
-  return (value - Math.floor(value) - 0.5) * 10;
-}
-
 // ─── Sub-tab header ───
 function SubTabHeader({ subTab, setSubTab, theme, t }: {
   subTab: SubTab;
@@ -561,7 +521,7 @@ export interface PlotCardProps {
   onUseTrapNet: () => void;
 }
 
-export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
+export function PlotCard({ plot, weather: _weather, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
   const variety = plot.varietyId ? VARIETY_DEFS[plot.varietyId] : null;
   const varietyLabel = plot.varietyId
     ? `${t.varietyName(plot.varietyId)}${plot.isMutant ? ` · ${t.mutationPositive}` : ''}`
@@ -571,10 +531,7 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
     : null;
   const revealed = plot.varietyId ? isVarietyRevealed(plot.progress) : false;
   const stage = getGrowthStage(plot.progress);
-  const stageEmoji = getStageEmoji(plot.progress, plot.varietyId);
   const progressPercent = Math.min(100, plot.progress * 100);
-  const hasFlowingShine = variety ? (variety.rarity === 'epic' || variety.rarity === 'legendary') : false;
-  const flowShineColor = variety?.rarity === 'legendary' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.62)';
   const matureMinutes = variety?.matureMinutes ?? 10000;
   const mutationChance = Math.max(0, Math.min(1, plot.mutationChance ?? 0.02));
   const isMutationResolved = plot.progress >= 0.20 && (plot.mutationChance ?? 0.02) === 0;
@@ -654,56 +611,10 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
         ? 'plantSwayMd 3.2s ease-in-out infinite'
         : 'plantSwayLg 3.8s ease-in-out infinite';
 
-  const progressHue = Math.round(120 - (plot.progress * 75));
-  const progressRingColor = `hsl(${progressHue} 84% 52%)`;
-  const progressRing = `conic-gradient(${progressRingColor} ${progressPercent}%, rgba(255,255,255,0.16) ${progressPercent}% 100%)`;
-  const plotFaceClipPath = 'polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%)';
-  const isEarlyGrowthStage = stage === 'seed' || stage === 'sprout';
-  const wetSoil = weather === 'rainy' || weather === 'stormy';
-  const soilBaseColor = '#D4A574';
-  const soilDeepColor = '#B98554';
-  const soilVariance = getPlotSoilVariance(plot.id);
-  const variedSoilMid = adjustHexColor(soilBaseColor, soilVariance);
-  const variedSoilTop = adjustHexColor(variedSoilMid, 5);
-  const variedSoilBottom = adjustHexColor(soilDeepColor, soilVariance - 2);
-  const stageDarknessAdjust = stage === 'seed' || stage === 'sprout'
-    ? 3
-    : stage === 'leaf' || stage === 'flower'
-      ? -1
-      : -4;
-  const growingSoilBottom = adjustHexColor(variedSoilBottom, stageDarknessAdjust);
-  const matureSoilBottom = adjustHexColor(variedSoilBottom, -7);
-  const buildSoilTexture = (topColor: string, bottomColor: string): string => {
-    const layers = [
-      'radial-gradient(circle at 50% 22%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 58%)',
-      'radial-gradient(circle at 52% 105%, rgba(107,71,44,0.36) 0%, rgba(107,71,44,0) 52%)',
-      'repeating-linear-gradient(52deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, rgba(122,83,54,0.09) 1px, rgba(122,83,54,0.09) 4px)',
-      `linear-gradient(180deg, ${adjustHexColor(topColor, 8)} 0%, ${bottomColor} 100%)`,
-      `linear-gradient(145deg, ${topColor} 0%, ${bottomColor} 100%)`,
-    ];
-    if (wetSoil) {
-      layers.unshift('linear-gradient(160deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0) 55%)');
-    }
-    return layers.join(', ');
-  };
-
-  const tileBackground = plot.state === 'empty'
-    ? `repeating-radial-gradient(circle at 50% 55%, rgba(110,70,40,0.15) 0px, rgba(110,70,40,0.15) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 7px), ${buildSoilTexture(variedSoilTop, variedSoilBottom)}`
-    : plot.state === 'growing'
-      ? buildSoilTexture(variedSoilTop, growingSoilBottom)
-      : plot.state === 'mature'
-        ? buildSoilTexture(adjustHexColor(variedSoilTop, -4), matureSoilBottom)
-        : plot.state === 'withered'
-          ? `linear-gradient(145deg, ${theme.surface} 0%, ${theme.border} 100%)`
-          : plot.state === 'stolen'
-            ? 'linear-gradient(145deg, rgba(185,28,28,0.5) 0%, rgba(127,29,29,0.36) 100%)'
-            : `linear-gradient(145deg, ${theme.surface} 0%, ${theme.inputBg} 100%)`;
-  const tileBorderColor = plot.state === 'stolen' ? '#9A3B33' : '#8B6F47';
-  const plotLightOverlay = getPlotLightOverlay(weather);
 
   return (
     <div
-      className={`group relative aspect-square sm:aspect-[3/4] w-full select-none${isTooltipOpen ? ' z-[100]' : ''}`}
+      className={`group relative w-full h-full select-none${isTooltipOpen ? ' z-[100]' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocusCapture={() => setIsHovered(true)}
@@ -715,32 +626,6 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
           transform: isHovered ? 'translateY(-3px)' : 'translateY(0)',
         }}
       >
-        <div
-          className="absolute inset-0 transition-all duration-200 ease-out"
-          style={{
-            background: tileBackground,
-            border: `4px solid ${tileBorderColor}`,
-            clipPath: plotFaceClipPath,
-            opacity: plot.state === 'withered' ? 0.74 : plot.state === 'stolen' ? 0.96 : 1,
-            animation: isPlantFxActive ? 'farmSoilShake 260ms ease-in-out' : 'none',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: wetSoil
-              ? `${plotLightOverlay}, linear-gradient(160deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 24%, rgba(255,255,255,0) 56%)`
-              : `${plotLightOverlay}, linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 48%)`,
-            clipPath: plotFaceClipPath,
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-[2px]"
-          style={{
-            clipPath: plotFaceClipPath,
-            border: '1px solid rgba(255,255,255,0.2)',
-          }}
-        />
         {isPlantFxActive && (
           <span
             className="pointer-events-none absolute left-1/2 top-[14%] z-30 text-[1.35rem]"
@@ -777,18 +662,42 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
         {plot.state === 'empty' && (
           <button
             onClick={onPlantClick}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center transition-all duration-200 ease-out hover:-translate-y-0.5"
+            className="absolute inset-0 flex items-center justify-center text-center transition-all duration-200 ease-out hover:-translate-y-0.5"
           >
             <span
-              className="pointer-events-none absolute left-1/2 top-[56%] h-3.5 w-11 -translate-x-1/2"
+              className="pointer-events-none absolute left-1/2 top-[62%] h-3 w-12 -translate-x-1/2"
               style={{
-                background: 'linear-gradient(180deg, rgba(104,70,43,0.5) 0%, rgba(104,70,43,0) 100%)',
+                background: 'linear-gradient(180deg, rgba(104,70,43,0.42) 0%, rgba(104,70,43,0) 100%)',
                 borderRadius: '999px',
               }}
             />
-            <span className="text-[clamp(1.7rem,5vw,2.4rem)] font-light leading-none" style={{ color: '#f8eddc' }}>+</span>
-            <span className="text-[10px] font-medium tracking-wide leading-none" style={{ color: '#f8eddc' }}>
-              {t.farmPlant}
+            <span className="relative h-10 w-12">
+              <span
+                className="absolute left-1/2 top-1 h-[3px] w-[3px] -translate-x-1/2 rounded-full"
+                style={{ backgroundColor: '#6b4a2d' }}
+              />
+              <span
+                className="absolute left-[28%] top-[28%] h-[5px] w-[5px] rounded-full"
+                style={{ backgroundColor: '#7a5432' }}
+              />
+              <span
+                className="absolute right-[26%] top-[26%] h-[5px] w-[5px] rounded-full"
+                style={{ backgroundColor: '#7a5432' }}
+              />
+              <span
+                className="absolute left-[24%] bottom-[18%] h-5 w-3 -rotate-[14deg] rounded-[100%_0_100%_0]"
+                style={{
+                  background: 'linear-gradient(160deg, #7ec95f 0%, #4c9f44 100%)',
+                  border: '1px solid rgba(58,115,48,0.7)',
+                }}
+              />
+              <span
+                className="absolute right-[24%] bottom-[18%] h-5 w-3 rotate-[14deg] rounded-[0_100%_0_100%]"
+                style={{
+                  background: 'linear-gradient(200deg, #7ec95f 0%, #4c9f44 100%)',
+                  border: '1px solid rgba(58,115,48,0.7)',
+                }}
+              />
             </span>
           </button>
         )}
@@ -802,77 +711,58 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
               onTooltipToggle();
             }}
           >
-            <div className="relative flex h-16 w-16 items-center justify-center">
+            <div className="relative h-[4.2rem] w-full">
               <span
-                className="pointer-events-none absolute bottom-[6px] h-3.5 w-9 rounded-[999px]"
+                className="pointer-events-none absolute left-1/2 top-[64%] h-3 w-14 -translate-x-1/2"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(71,46,27,0.55) 0%, rgba(71,46,27,0) 100%)',
+                  background: 'linear-gradient(180deg, rgba(71,46,27,0.5) 0%, rgba(71,46,27,0) 100%)',
+                  borderRadius: '999px',
                 }}
               />
               <span
-                className="absolute inset-0 rounded-full transition-all duration-300 ease-out"
+                className="absolute left-1/2 top-[34%] h-10 w-10 -translate-x-1/2 -translate-y-1/2"
                 style={{
-                  background: progressRing,
-                }}
-              />
-              <span
-                className="absolute inset-[5px] rounded-full"
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.22)',
-                  border: `1px solid ${theme.border}99`,
-                }}
-              />
-              {hasFlowingShine && progressPercent > 2 && (
-                <span
-                  className="absolute inset-y-2 left-[20%] w-[28%]"
-                  style={{
-                    background: `linear-gradient(115deg, transparent 0%, ${flowShineColor} 50%, transparent 100%)`,
-                    filter: 'blur(0.5px)',
-                    animation: 'progressShine 1.7s linear infinite',
-                  }}
-                />
-              )}
-              {isEarlyGrowthStage && (
-                <span
-                  className="absolute -right-1 top-0 text-[0.9rem]"
-                  style={{
-                    filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.25))',
-                    animation: 'plantSwaySm 3.1s ease-in-out infinite',
-                  }}
-                >
-                  🍃
-                </span>
-              )}
-              <span
-                className="relative inline-flex items-center justify-center"
-                style={{
-                  animation: isPlantFxActive ? 'farmSprout 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both' : 'none',
+                  animation: stageSwayAnimation,
+                  transformOrigin: 'bottom center',
+                  filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.16))',
                 }}
               >
                 <span
-                  className="block text-[clamp(2.3rem,7vw,3.15rem)] leading-none"
+                  className="absolute left-1/2 bottom-[8%] h-5 w-[3px] -translate-x-1/2 rounded-full"
+                  style={{ background: 'linear-gradient(180deg, #77bf53 0%, #4e9440 100%)' }}
+                />
+                <span
+                  className="absolute left-[12%] bottom-[26%] h-4 w-3 -rotate-[22deg] rounded-[100%_0_100%_0]"
                   style={{
-                    animation: stageSwayAnimation,
-                    transformOrigin: 'bottom center',
+                    background: 'linear-gradient(160deg, #86d069 0%, #4ea145 100%)',
+                    border: '1px solid rgba(62,128,53,0.78)',
                   }}
-                >
-                  {stageEmoji}
-                </span>
+                />
+                <span
+                  className="absolute right-[12%] bottom-[26%] h-4 w-3 rotate-[22deg] rounded-[0_100%_0_100%]"
+                  style={{
+                    background: 'linear-gradient(200deg, #86d069 0%, #4ea145 100%)',
+                    border: '1px solid rgba(62,128,53,0.78)',
+                  }}
+                />
+              </span>
+              <span
+                className="absolute left-[17%] top-[43%] h-6 w-6"
+                style={{ animation: 'plantSwaySm 3.2s ease-in-out infinite', transformOrigin: 'bottom center' }}
+              >
+                <span className="absolute left-1/2 bottom-0 h-3 w-[2px] -translate-x-1/2 rounded-full" style={{ backgroundColor: '#5aa04a' }} />
+                <span className="absolute left-[18%] top-[22%] h-3 w-2 -rotate-[20deg] rounded-[100%_0_100%_0]" style={{ background: 'linear-gradient(160deg, #86d069 0%, #56aa4d 100%)' }} />
+                <span className="absolute right-[18%] top-[22%] h-3 w-2 rotate-[20deg] rounded-[0_100%_0_100%]" style={{ background: 'linear-gradient(200deg, #86d069 0%, #56aa4d 100%)' }} />
+              </span>
+              <span
+                className="absolute right-[17%] top-[44%] h-6 w-6"
+                style={{ animation: 'plantSwaySm 3.2s ease-in-out 120ms infinite', transformOrigin: 'bottom center' }}
+              >
+                <span className="absolute left-1/2 bottom-0 h-3 w-[2px] -translate-x-1/2 rounded-full" style={{ backgroundColor: '#5aa04a' }} />
+                <span className="absolute left-[18%] top-[22%] h-3 w-2 -rotate-[20deg] rounded-[100%_0_100%_0]" style={{ background: 'linear-gradient(160deg, #86d069 0%, #56aa4d 100%)' }} />
+                <span className="absolute right-[18%] top-[22%] h-3 w-2 rotate-[20deg] rounded-[0_100%_0_100%]" style={{ background: 'linear-gradient(200deg, #86d069 0%, #56aa4d 100%)' }} />
               </span>
             </div>
-            {revealed && variety ? (
-              <span className="mt-1 text-[11px] font-semibold leading-tight" style={{ color: theme.text }}>
-                {varietyLabel}
-              </span>
-            ) : (
-              <span className="mt-1 text-[11px] font-medium" style={{ color: theme.textFaint }}>???</span>
-            )}
-            <span className="mt-1 text-[10px] font-semibold" style={{ color: progressRingColor }}>
-              {`${Math.round(progressPercent)}%`}
-            </span>
-            <span className="text-[10px]" style={{ color: theme.textFaint }}>
-              {t.farmStage(stage)}
-            </span>
             {plot.thief && (
               <div className="mt-1 w-[78%]">
                 <div className="h-1.5 overflow-hidden" style={{ backgroundColor: 'rgba(239,68,68,0.25)' }}>
@@ -982,61 +872,65 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
             }}
             className="absolute inset-0 flex flex-col items-center justify-center px-3 py-3 text-center transition-all duration-200 ease-out hover:-translate-y-0.5"
           >
-            <div className="relative h-[3.4rem] w-[4.4rem]">
+            <div className="relative h-[5rem] w-full">
               <span
-                className="absolute left-[3%] top-[2%] text-[clamp(1.55rem,4.8vw,2.1rem)]"
+                className="absolute left-[9%] top-[8%] h-8 w-8 rounded-full"
                 style={{
                   animation: 'farmMaturePulse 1.65s ease-in-out infinite',
-                  filter: 'drop-shadow(0 3px 1px rgba(0,0,0,0.31))',
+                  filter: 'drop-shadow(0 3px 2px rgba(0,0,0,0.24))',
+                  background: 'radial-gradient(circle at 32% 28%, #9be07a 0%, #4fae42 42%, #2f7c2f 100%)',
+                  border: '2px solid #2d6f2a',
                 }}
               >
-                {variety.emoji}
+                <span className="absolute inset-[20%] rounded-full opacity-55" style={{ background: 'repeating-linear-gradient(90deg, rgba(30,94,37,0.86) 0px, rgba(30,94,37,0.86) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 6px)' }} />
               </span>
               <span
-                className="absolute right-[3%] top-[2%] text-[clamp(1.55rem,4.8vw,2.1rem)]"
+                className="absolute right-[9%] top-[8%] h-8 w-8 rounded-full"
                 style={{
                   animation: 'farmMaturePulse 1.65s ease-in-out 120ms infinite',
-                  filter: 'drop-shadow(0 3px 1px rgba(0,0,0,0.31))',
+                  filter: 'drop-shadow(0 3px 2px rgba(0,0,0,0.24))',
+                  background: 'radial-gradient(circle at 32% 28%, #9be07a 0%, #4fae42 42%, #2f7c2f 100%)',
+                  border: '2px solid #2d6f2a',
                 }}
               >
-                {variety.emoji}
+                <span className="absolute inset-[20%] rounded-full opacity-55" style={{ background: 'repeating-linear-gradient(90deg, rgba(30,94,37,0.86) 0px, rgba(30,94,37,0.86) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 6px)' }} />
               </span>
               <span
-                className="absolute left-[3%] bottom-[2%] text-[clamp(1.55rem,4.8vw,2.1rem)]"
+                className="absolute left-[9%] bottom-[8%] h-8 w-8 rounded-full"
                 style={{
                   animation: 'farmMaturePulse 1.65s ease-in-out 60ms infinite',
-                  filter: 'drop-shadow(0 3px 1px rgba(0,0,0,0.31))',
+                  filter: 'drop-shadow(0 3px 2px rgba(0,0,0,0.24))',
+                  background: 'radial-gradient(circle at 32% 28%, #9be07a 0%, #4fae42 42%, #2f7c2f 100%)',
+                  border: '2px solid #2d6f2a',
                 }}
               >
-                {variety.emoji}
+                <span className="absolute inset-[20%] rounded-full opacity-55" style={{ background: 'repeating-linear-gradient(90deg, rgba(30,94,37,0.86) 0px, rgba(30,94,37,0.86) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 6px)' }} />
               </span>
               <span
-                className="absolute right-[3%] bottom-[2%] text-[clamp(1.55rem,4.8vw,2.1rem)]"
+                className="absolute right-[9%] bottom-[8%] h-8 w-8 rounded-full"
                 style={{
                   animation: 'farmMaturePulse 1.65s ease-in-out 180ms infinite',
-                  filter: 'drop-shadow(0 3px 1px rgba(0,0,0,0.31))',
+                  filter: 'drop-shadow(0 3px 2px rgba(0,0,0,0.24))',
+                  background: 'radial-gradient(circle at 32% 28%, #9be07a 0%, #4fae42 42%, #2f7c2f 100%)',
+                  border: '2px solid #2d6f2a',
                 }}
               >
-                {variety.emoji}
+                <span className="absolute inset-[20%] rounded-full opacity-55" style={{ background: 'repeating-linear-gradient(90deg, rgba(30,94,37,0.86) 0px, rgba(30,94,37,0.86) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 6px)' }} />
               </span>
             </div>
-            <span className="text-[11px] font-semibold leading-tight" style={{ color: theme.text }}>
-              {varietyLabel}
-            </span>
             {negativeStatusText && (
               <span className="mt-1 text-[10px] font-medium leading-tight" style={{ color: '#ef4444' }}>
                 {negativeStatusText}
               </span>
             )}
             <span
-              className="mt-1 px-3 py-1 text-[10px] font-bold transition-all duration-200 ease-out"
+              className="mt-1 text-[0.95rem] transition-all duration-200 ease-out"
               style={{
-                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                color: '#000',
-                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                color: '#6a4a2a',
+                transform: isHovered ? 'scale(1.06)' : 'scale(1)',
               }}
             >
-              ✋ {t.farmHarvest}
+              ✋
             </span>
           </button>
         )}
@@ -1246,20 +1140,7 @@ export function PlotCard({ plot, weather, stolenRecord, nowTimestamp, theme, t, 
           </button>
         )}
 
-        {/* Seed quality badge */}
-        {plot.seedQuality && plot.state !== 'empty' && plot.state !== 'withered' && plot.state !== 'stolen' && (
-          <div className="absolute right-2 top-2 z-20">
-            <span
-              className="px-2 py-1 text-[10px] font-medium"
-              style={{
-                backgroundColor: plot.seedQuality === 'legendary' ? '#fbbf2420' : plot.seedQuality === 'epic' ? '#a78bfa20' : `${theme.border}50`,
-                color: plot.seedQuality === 'legendary' ? '#fbbf24' : plot.seedQuality === 'epic' ? '#a78bfa' : theme.textFaint,
-              }}
-            >
-              {t.seedQualityLabel(plot.seedQuality)}
-            </span>
-          </div>
-        )}
+
       </div>
 
       <style>{`
