@@ -245,23 +245,23 @@ export function FarmDecorations() {
         <ChickIcon className="h-[34px] w-[40px] sm:h-[42px] sm:w-[48px] md:h-[50px] md:w-[58px]" />
       </div>
 
-      {/* ── Bottom corners: stronger intrusion framing (desktop-first) ── */}
-      <div className="absolute left-[-2%] sm:left-[-3%] md:left-[-2%] bottom-[9%] sm:bottom-[10%] md:bottom-[15%] z-[17] opacity-95 drop-shadow-[0_9px_15px_rgba(74,114,56,0.34)]">
-        <BarnIcon className="h-[156px] w-[206px] sm:h-[198px] sm:w-[260px] md:h-[340px] md:w-[448px]" />
+      {/* ── Bottom corners: deep intrusion framing (desktop-first) ── */}
+      <div className="absolute left-[1%] sm:left-[0.5%] md:left-[1.5%] bottom-[12%] sm:bottom-[16%] md:bottom-[26%] z-[18] opacity-95 drop-shadow-[0_10px_16px_rgba(74,114,56,0.36)]">
+        <BarnIcon className="h-[168px] w-[222px] sm:h-[228px] sm:w-[300px] md:h-[392px] md:w-[516px]" />
       </div>
-      <div className="absolute right-[-2%] sm:right-[-3%] md:right-[-2%] bottom-[9.2%] sm:bottom-[10.2%] md:bottom-[15.2%] z-[17] opacity-95 drop-shadow-[0_9px_15px_rgba(74,114,56,0.34)]">
+      <div className="absolute right-[1%] sm:right-[0.5%] md:right-[1.5%] bottom-[12.2%] sm:bottom-[16.2%] md:bottom-[26.2%] z-[18] opacity-95 drop-shadow-[0_10px_16px_rgba(74,114,56,0.36)]">
         <HouseIcon
           roof="blue"
-          className="h-[150px] w-[198px] sm:h-[192px] sm:w-[252px] md:h-[332px] md:w-[436px]"
+          className="h-[162px] w-[214px] sm:h-[222px] sm:w-[292px] md:h-[382px] md:w-[504px]"
         />
       </div>
 
-      {/* ── Animals (larger to fill lower scene and reduce empty meadow) ── */}
-      <div className="absolute left-[-5%] top-[75.6%] z-[14] -translate-y-1/2 opacity-95">
-        <CowIcon className="h-[102px] w-[138px] sm:h-[124px] sm:w-[168px] md:h-[152px] md:w-[206px]" />
+      {/* ── Animals (larger and higher for stronger lower-frame anchor) ── */}
+      <div className="absolute left-[-2%] top-[77%] sm:top-[78%] md:top-[74%] z-[16] -translate-y-1/2 opacity-95">
+        <CowIcon className="h-[112px] w-[152px] sm:h-[136px] sm:w-[184px] md:h-[170px] md:w-[230px]" />
       </div>
-      <div className="absolute right-[-5%] top-[76%] z-[14] -translate-y-1/2 opacity-95">
-        <SheepIcon className="h-[102px] w-[138px] sm:h-[124px] sm:w-[168px] md:h-[152px] md:w-[206px]" />
+      <div className="absolute right-[-2%] top-[77.4%] sm:top-[78.4%] md:top-[74.4%] z-[16] -translate-y-1/2 opacity-95">
+        <SheepIcon className="h-[112px] w-[152px] sm:h-[136px] sm:w-[184px] md:h-[170px] md:w-[230px]" />
       </div>
 
       {/* ── Bushes ── */}

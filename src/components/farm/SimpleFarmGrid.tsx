@@ -201,7 +201,7 @@ export function SimpleFarmGrid({
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
   const plotScale = compactMode
-    ? (isCompactMobile ? 1.36 : isMobile ? 1.4 : 1.46)
+    ? (isCompactMobile ? 1.44 : isMobile ? 1.48 : 1.52)
     : 1;
   const effectivePlotSize = Math.round(layout.plotSize * plotScale);
   const safeSideInset = compactMode ? 0 : (isCompactMobile ? 12 : isMobile ? 10 : 0);
@@ -213,10 +213,10 @@ export function SimpleFarmGrid({
   // Compact review mode intentionally prioritizes first-screen focus on plots.
   const sceneTopPadding = compactMode
     ? (isCompactMobile
-      ? Math.round(effectivePlotSize * 1.78)
+      ? Math.round(effectivePlotSize * 1.92)
       : isMobile
-        ? Math.round(effectivePlotSize * 1.72)
-        : Math.round(effectivePlotSize * 1.3))
+        ? Math.round(effectivePlotSize * 1.86)
+        : Math.round(effectivePlotSize * 1.34))
     : (isCompactMobile
       ? Math.round(effectivePlotSize * 1.52)
       : isMobile
@@ -227,14 +227,14 @@ export function SimpleFarmGrid({
       ? 0
       : isMobile
         ? 0
-        : Math.round(effectivePlotSize * 0.01))
+        : 0)
     : (isCompactMobile
       ? Math.round(effectivePlotSize * 0.52)
       : isMobile
         ? Math.round(effectivePlotSize * 0.5)
         : Math.round(effectivePlotSize * 0.44));
   const slotOffsetScale = compactMode
-    ? (isCompactMobile ? 0.9 : isMobile ? 0.92 : 0.98)
+    ? (isCompactMobile ? 0.82 : isMobile ? 0.86 : 0.94)
     : (isCompactMobile ? 0.96 : isMobile ? 1 : 1.02);
 
   return (
@@ -399,7 +399,7 @@ export function SimpleFarmGrid({
               width: sceneWidth,
               gap: layout.gap,
               gridTemplateColumns: `repeat(3, minmax(0, ${effectivePlotSize}px))`,
-              gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.82 : 0.7) : 0.56))}px`,
+              gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.84 : 0.72) : 0.56))}px`,
             }}
           >
             {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
