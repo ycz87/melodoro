@@ -201,7 +201,7 @@ export function SimpleFarmGrid({
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
   const plotScale = compactMode
-    ? (isCompactMobile ? 1.3 : isMobile ? 1.34 : 1.46)
+    ? (isCompactMobile ? 1.34 : isMobile ? 1.38 : 1.48)
     : 1;
   const effectivePlotSize = Math.round(layout.plotSize * plotScale);
   const safeSideInset = compactMode ? 0 : (isCompactMobile ? 12 : isMobile ? 10 : 0);
@@ -213,10 +213,10 @@ export function SimpleFarmGrid({
   // Compact review mode intentionally prioritizes first-screen focus on plots.
   const sceneTopPadding = compactMode
     ? (isCompactMobile
-      ? Math.round(effectivePlotSize * 1.66)
+      ? Math.round(effectivePlotSize * 1.72)
       : isMobile
-        ? Math.round(effectivePlotSize * 1.6)
-        : Math.round(effectivePlotSize * 1.28))
+        ? Math.round(effectivePlotSize * 1.66)
+        : Math.round(effectivePlotSize * 1.3))
     : (isCompactMobile
       ? Math.round(effectivePlotSize * 1.52)
       : isMobile
@@ -230,7 +230,7 @@ export function SimpleFarmGrid({
         ? Math.round(effectivePlotSize * 0.5)
         : Math.round(effectivePlotSize * 0.44));
   const slotOffsetScale = compactMode
-    ? (isCompactMobile ? 1.02 : isMobile ? 1.04 : 1)
+    ? (isCompactMobile ? 0.96 : isMobile ? 0.98 : 0.98)
     : (isCompactMobile ? 0.96 : isMobile ? 1 : 1.02);
 
   return (
@@ -395,7 +395,7 @@ export function SimpleFarmGrid({
               width: sceneWidth,
               gap: layout.gap,
               gridTemplateColumns: `repeat(3, minmax(0, ${effectivePlotSize}px))`,
-              gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.78 : 0.68) : 0.56))}px`,
+              gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.8 : 0.7) : 0.56))}px`,
             }}
           >
             {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
