@@ -164,7 +164,7 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
             <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" stitchTiles="stitch" result="noise" />
             <feColorMatrix in="noise" type="saturate" values="0" result="grayNoise" />
             <feComponentTransfer in="grayNoise" result="softNoise">
-              <feFuncA type="table" tableValues="0 0.05" />
+              <feFuncA type="table" tableValues="0 0.09" />
             </feComponentTransfer>
           </filter>
         </defs>
@@ -195,6 +195,7 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
           strokeWidth={Math.max(1.1, size * 0.011)}
           strokeLinejoin="round"
         />
+        <path d={sidePath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity="0.14" />
 
         {/* Top face */}
         <path
@@ -227,7 +228,7 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
         {/* Shine overlay */}
         <path d={topPath} fill={`url(#shine-${gradientId})`} opacity="0.42" />
         {/* Grain texture */}
-        <path d={topPath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity="0.22" />
+        <path d={topPath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity="0.3" />
         {/* Top edge highlight */}
         <path
           d={`M ${cornerR} 0 L ${bedWidth - cornerR} 0 Q ${bedWidth} 0 ${bedWidth} ${cornerR}`}

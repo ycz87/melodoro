@@ -245,15 +245,14 @@ export function FarmDecorations() {
         <ChickIcon className="h-[34px] w-[40px] sm:h-[42px] sm:w-[48px] md:h-[50px] md:w-[58px]" />
       </div>
 
-      {/* ── Bottom-left barn (desktop-priority oversized cut-edge framing) ── */}
-      <div className="absolute left-[-10%] sm:left-[-11%] md:left-[-14%] bottom-[-8%] sm:bottom-[-9%] md:bottom-[-12%] z-[14] opacity-90 drop-shadow-[0_6px_11px_rgba(74,114,56,0.28)]">
-        <BarnIcon className="h-[112px] w-[148px] sm:h-[136px] sm:w-[178px] md:h-[196px] md:w-[258px]" />
+      {/* ── Bottom corners: strong visible cut-edge framing (desktop priority) ── */}
+      <div className="absolute left-[-9%] sm:left-[-11%] md:left-[-13%] bottom-[3%] sm:bottom-[2%] md:bottom-[1%] z-[15] opacity-92 drop-shadow-[0_7px_13px_rgba(74,114,56,0.3)]">
+        <BarnIcon className="h-[132px] w-[174px] sm:h-[164px] sm:w-[216px] md:h-[246px] md:w-[324px]" />
       </div>
-      {/* ── Bottom-right house (desktop-priority oversized cut-edge framing) ── */}
-      <div className="absolute right-[-10%] sm:right-[-11%] md:right-[-14%] bottom-[-7.8%] sm:bottom-[-8.8%] md:bottom-[-11.8%] z-[14] opacity-90 drop-shadow-[0_6px_11px_rgba(74,114,56,0.28)]">
+      <div className="absolute right-[-9%] sm:right-[-11%] md:right-[-13%] bottom-[3.2%] sm:bottom-[2.2%] md:bottom-[1.2%] z-[15] opacity-92 drop-shadow-[0_7px_13px_rgba(74,114,56,0.3)]">
         <HouseIcon
           roof="blue"
-          className="h-[108px] w-[142px] sm:h-[132px] sm:w-[172px] md:h-[188px] md:w-[246px]"
+          className="h-[126px] w-[166px] sm:h-[158px] sm:w-[206px] md:h-[236px] md:w-[310px]"
         />
       </div>
 
