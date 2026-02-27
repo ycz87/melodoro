@@ -48,22 +48,22 @@ const TOTAL_SLOTS = 7;
 
 const COMPACT_MOBILE_LAYOUT: GridLayout = {
   gap: 1,
-  plotSize: 104,
+  plotSize: 100,
 };
 
 const MOBILE_LAYOUT: GridLayout = {
   gap: 2,
-  plotSize: 114,
+  plotSize: 108,
 };
 
 const TABLET_LAYOUT: GridLayout = {
-  gap: 4,
-  plotSize: 132,
+  gap: 3,
+  plotSize: 124,
 };
 
 const DESKTOP_LAYOUT: GridLayout = {
-  gap: 6,
-  plotSize: 150,
+  gap: 4,
+  plotSize: 140,
 };
 
 function getViewportWidth(): number {
@@ -201,7 +201,7 @@ export function SimpleFarmGrid({
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
   const plotScale = compactMode
-    ? (isCompactMobile ? 1.14 : isMobile ? 1.2 : 1.36)
+    ? (isCompactMobile ? 1.0 : isMobile ? 1.06 : 1.28)
     : 1;
   const effectivePlotSize = Math.round(layout.plotSize * plotScale);
   const safeSideInset = compactMode ? 0 : (isCompactMobile ? 12 : isMobile ? 10 : 0);
@@ -213,36 +213,37 @@ export function SimpleFarmGrid({
   // Compact review mode intentionally prioritizes farm scene coverage.
   const sceneTopPadding = compactMode
     ? (isCompactMobile
-      ? Math.round(effectivePlotSize * 1.34)
+      ? Math.round(effectivePlotSize * 1.18)
       : isMobile
-        ? Math.round(effectivePlotSize * 1.3)
-        : Math.round(effectivePlotSize * 1.18))
+        ? Math.round(effectivePlotSize * 1.14)
+        : Math.round(effectivePlotSize * 1.02))
     : (isCompactMobile
-      ? Math.round(effectivePlotSize * 1.72)
+      ? Math.round(effectivePlotSize * 1.52)
       : isMobile
-        ? Math.round(effectivePlotSize * 1.76)
-        : Math.round(effectivePlotSize * 1.62));
+        ? Math.round(effectivePlotSize * 1.56)
+        : Math.round(effectivePlotSize * 1.42));
   const sceneBottomPadding = compactMode
     ? (isCompactMobile
-      ? Math.round(effectivePlotSize * 0.18)
+      ? Math.round(effectivePlotSize * 0.38)
       : isMobile
-        ? Math.round(effectivePlotSize * 0.16)
-        : Math.round(effectivePlotSize * 0.12))
+        ? Math.round(effectivePlotSize * 0.36)
+        : Math.round(effectivePlotSize * 0.3))
     : (isCompactMobile
-      ? Math.round(effectivePlotSize * 0.32)
+      ? Math.round(effectivePlotSize * 0.52)
       : isMobile
-        ? Math.round(effectivePlotSize * 0.3)
-        : Math.round(effectivePlotSize * 0.26));
+        ? Math.round(effectivePlotSize * 0.5)
+        : Math.round(effectivePlotSize * 0.44));
   const slotOffsetScale = compactMode
     ? (isCompactMobile ? 1.02 : isMobile ? 1.05 : 1.1)
     : (isCompactMobile ? 0.96 : isMobile ? 1 : 1.02);
 
   return (
-    <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)}>
+    <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)} style={{ backgroundColor: scenePalette.meadowBottom }}>
       <div
         className="relative mx-auto w-full overflow-visible"
         style={{
           maxWidth: sceneFrameMaxWidth,
+          minHeight: compactMode ? '100dvh' : undefined,
           paddingLeft: safeSideInset,
           paddingRight: safeSideInset,
         }}
@@ -463,7 +464,7 @@ export function SimpleFarmGrid({
         </div>
 
         <div
-          className="pointer-events-none absolute inset-x-[17%] bottom-[8%] z-[11] h-[11%]"
+          className="pointer-events-none absolute inset-x-[17%] bottom-[8%] z-[6] h-[11%]"
           aria-hidden="true"
           style={{
             background: `radial-gradient(ellipse at center, rgba(96,138,62,0.42) 0%, rgba(96,138,62,0.18) 44%, rgba(96,138,62,0) 100%)`,
@@ -471,7 +472,7 @@ export function SimpleFarmGrid({
           }}
         />
         <div
-          className="pointer-events-none absolute inset-x-[13%] bottom-[5.8%] z-[11] h-[8%]"
+          className="pointer-events-none absolute inset-x-[13%] bottom-[5.8%] z-[6] h-[8%]"
           aria-hidden="true"
           style={{
             background: 'linear-gradient(180deg, rgba(176,216,122,0) 0%, rgba(159,205,103,0.44) 48%, rgba(144,193,90,0.62) 100%)',

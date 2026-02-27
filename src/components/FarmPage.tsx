@@ -353,7 +353,10 @@ export function FarmPage({
       )}
 
       {/* 农场场景 */}
-      <div className={`farm-page ${compactShell ? 'pt-0' : 'pt-4'}`}>
+      <div
+        className={`farm-page ${compactShell ? 'pt-0' : 'pt-4'}`}
+        style={compactShell ? { backgroundColor: '#5a8c3a' } : undefined}
+      >
           <SimpleFarmGrid
             compactMode={compactShell}
             plots={farm.plots}
