@@ -19,17 +19,24 @@ function FarmHudV2({ compactMode }: { compactMode: boolean }) {
   ];
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-2 z-40 px-2 sm:px-4">
-      <div className="mx-auto flex w-full max-w-[640px] items-center justify-center gap-1.5 sm:gap-2">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
+      <div
+        className="mx-auto flex h-10 w-full items-center justify-center gap-1.5 px-2 sm:h-11 sm:gap-2 sm:px-4"
+        style={{
+          maxWidth: compactMode ? '100%' : '920px',
+          borderBottom: '1px solid rgba(103,146,177,0.36)',
+          background: 'linear-gradient(180deg, rgba(166,219,245,0.72) 0%, rgba(166,219,245,0.26) 100%)',
+        }}
+      >
         {badgeItems.map((badge) => (
           <div
             key={`farm-v2-hud-${badge.label}`}
-            className="flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold sm:px-3 sm:text-xs"
+            className="flex items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold sm:px-3 sm:text-xs"
             style={{
               borderColor: '#b17d49',
               color: '#5d3a1f',
-              background: 'linear-gradient(180deg, rgba(255,243,214,0.95) 0%, rgba(245,222,181,0.92) 100%)',
-              boxShadow: '0 1px 0 rgba(255,255,255,0.45) inset, 0 1px 3px rgba(76,45,21,0.18)',
+              background: 'linear-gradient(180deg, rgba(255,244,216,0.93) 0%, rgba(247,226,188,0.9) 100%)',
+              boxShadow: '0 1px 0 rgba(255,255,255,0.34) inset',
             }}
           >
             <span>{badge.icon}</span>
@@ -113,6 +120,49 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div className="absolute top-2 right-[16%] h-6 w-14 rounded-full bg-white/50" />
 
       <div
+        className="absolute left-[6%] right-[6%] z-[3] rounded-full"
+        style={{
+          top: compactMode ? '35.5%' : '32.5%',
+          height: compactMode ? '14px' : '16px',
+          background: 'linear-gradient(180deg, rgba(204,148,95,0.38) 0%, rgba(165,110,66,0.48) 100%)',
+        }}
+      />
+      <div
+        className="absolute left-[8%] right-[8%] z-[4]"
+        style={{
+          top: compactMode ? '36.3%' : '33.3%',
+          height: compactMode ? '6px' : '7px',
+          opacity: 0.62,
+          background:
+            'repeating-linear-gradient(90deg, rgba(124,73,41,0.85) 0px, rgba(124,73,41,0.85) 5px, rgba(0,0,0,0) 5px, rgba(0,0,0,0) 14px)',
+        }}
+      />
+
+      <div
+        className="absolute z-[2] rounded-[12px]"
+        style={{
+          top: compactMode ? '30.5%' : '27.8%',
+          left: '6%',
+          width: compactMode ? '48px' : '60px',
+          height: compactMode ? '34px' : '42px',
+          opacity: 0.78,
+          background: 'linear-gradient(180deg, rgba(209,151,102,0.65) 0%, rgba(184,119,74,0.74) 100%)',
+          border: '1px solid rgba(136,84,51,0.6)',
+        }}
+      />
+      <div
+        className="absolute z-[2] rounded-full"
+        style={{
+          top: compactMode ? '28%' : '25.2%',
+          right: '7%',
+          width: compactMode ? '64px' : '78px',
+          height: compactMode ? '52px' : '64px',
+          opacity: 0.72,
+          background: 'radial-gradient(circle at 40% 45%, rgba(121,187,84,0.82) 0%, rgba(85,149,62,0.92) 100%)',
+        }}
+      />
+
+      <div
         className="absolute inset-x-0"
         style={{
           top: compactMode ? '36%' : '33%',
@@ -136,50 +186,25 @@ function FarmBoardSceneDecorV2({ compactMode }: { compactMode: boolean }) {
   return (
     <>
       <div
-        className="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2"
+        className="pointer-events-none absolute z-0 rounded-[12px] border"
         style={{
-          top: compactMode ? '-40px' : '-48px',
-          width: compactMode ? 'calc(100% + 26px)' : 'calc(100% + 96px)',
-        }}
-      >
-        <div
-          className="relative h-8 rounded-[16px] border-2"
-          style={{
-            borderColor: '#8e5936',
-            background: 'linear-gradient(180deg, #dca26a 0%, #be7948 100%)',
-            boxShadow: '0 1px 0 rgba(255,255,255,0.3) inset',
-          }}
-        >
-          <div
-            className="absolute inset-x-3 bottom-[6px] h-[10px]"
-            style={{
-              background:
-                'repeating-linear-gradient(90deg, rgba(123,72,43,0.88) 0px, rgba(123,72,43,0.88) 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 18px)',
-            }}
-          />
-        </div>
-      </div>
-
-      <div
-        className="pointer-events-none absolute z-0 rounded-[12px] border-2"
-        style={{
-          top: compactMode ? '-34px' : '-44px',
-          left: compactMode ? '-12px' : '-44px',
-          width: compactMode ? '52px' : '72px',
-          height: compactMode ? '40px' : '54px',
-          borderColor: '#8c5a38',
-          background: 'linear-gradient(180deg, #f2d29a 0%, #d8a668 100%)',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.35) inset',
+          top: compactMode ? '10px' : '2px',
+          left: compactMode ? '-10px' : '-32px',
+          width: compactMode ? '50px' : '62px',
+          height: compactMode ? '36px' : '42px',
+          opacity: 0.72,
+          borderColor: 'rgba(131,81,48,0.62)',
+          background: 'linear-gradient(180deg, rgba(243,211,158,0.72) 0%, rgba(206,149,99,0.78) 100%)',
         }}
       >
         <div
           className="absolute left-1/2 -translate-x-1/2"
           style={{
-            top: compactMode ? '-17px' : '-22px',
-            width: compactMode ? '38px' : '50px',
-            height: compactMode ? '20px' : '26px',
+            top: compactMode ? '-15px' : '-18px',
+            width: compactMode ? '34px' : '42px',
+            height: compactMode ? '18px' : '22px',
             clipPath: 'polygon(0% 100%, 50% 0%, 100% 100%)',
-            background: 'linear-gradient(180deg, #cc7950 0%, #a54d2d 100%)',
+            background: 'linear-gradient(180deg, rgba(204,121,80,0.85) 0%, rgba(165,77,45,0.88) 100%)',
           }}
         />
       </div>
@@ -187,19 +212,20 @@ function FarmBoardSceneDecorV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="pointer-events-none absolute z-0"
         style={{
-          top: compactMode ? '-48px' : '-62px',
-          right: compactMode ? '-14px' : '-40px',
-          width: compactMode ? '58px' : '74px',
-          height: compactMode ? '58px' : '74px',
+          top: compactMode ? '-8px' : '-12px',
+          right: compactMode ? '-10px' : '-30px',
+          width: compactMode ? '56px' : '66px',
+          height: compactMode ? '56px' : '66px',
+          opacity: 0.78,
         }}
       >
         <div
-          className="absolute bottom-0 left-1/2 h-5 w-2 -translate-x-1/2 rounded-full"
+          className="absolute bottom-0 left-1/2 h-4 w-2 -translate-x-1/2 rounded-full"
           style={{ backgroundColor: '#7c5635' }}
         />
-        <div className="absolute left-0 top-0 h-8 w-8 rounded-full bg-[#85c364]" />
-        <div className="absolute right-0 top-1 h-8 w-8 rounded-full bg-[#78b856]" />
-        <div className="absolute left-[14px] top-[15px] h-9 w-9 rounded-full bg-[#69a54a]" />
+        <div className="absolute left-0 top-2 h-7 w-7 rounded-full bg-[#85c364]" />
+        <div className="absolute right-0 top-3 h-7 w-7 rounded-full bg-[#78b856]" />
+        <div className="absolute left-[12px] top-[18px] h-8 w-8 rounded-full bg-[#69a54a]" />
       </div>
 
       <div
@@ -239,8 +265,8 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
       <div
         className="relative z-20 mx-auto flex w-full justify-center px-2 sm:px-4"
         style={{
-          paddingTop: compactMode ? 'clamp(186px, 35vh, 226px)' : 'clamp(134px, 22vh, 190px)',
-          paddingBottom: compactMode ? 'clamp(102px, 14vh, 126px)' : 'clamp(122px, 16vh, 152px)',
+          paddingTop: compactMode ? 'clamp(152px, 31vh, 190px)' : 'clamp(112px, 18vh, 164px)',
+          paddingBottom: compactMode ? 'clamp(102px, 14vh, 126px)' : 'clamp(118px, 16vh, 148px)',
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>
