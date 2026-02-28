@@ -26,6 +26,7 @@ interface PlotShellPalette {
 interface IsometricPlotShellProps {
   size: number;
   state: PlotShellState;
+  flat2d?: boolean;
   children: ReactNode;
 }
 
@@ -104,28 +105,28 @@ const PALETTES: Record<PlotShellState, PlotShellPalette> = {
   },
 };
 
-export function IsometricPlotShell({ size, state, children }: IsometricPlotShellProps) {
+export function IsometricPlotShell({ size, state, flat2d = false, children }: IsometricPlotShellProps) {
   const gradientId = useId().replace(/:/g, '');
   const palette = PALETTES[state];
 
-  // Chunkier near-square bed profile to strengthen the “thick soil” feel.
+  // Flat 2D mode keeps the bed squarer with shallower depth for E-001-T12 style.
   const bedWidth = size;
-  const bedHeight = Math.round(size * 0.84);
-  const depth = Math.max(14, Math.round(size * 0.19));
-  const cornerR = Math.round(size * 0.105);
-  const shadowPad = Math.max(8, Math.round(size * 0.08));
+  const bedHeight = Math.round(size * (flat2d ? 0.82 : 0.84));
+  const depth = flat2d ? Math.max(6, Math.round(size * 0.09)) : Math.max(14, Math.round(size * 0.19));
+  const cornerR = Math.round(size * (flat2d ? 0.08 : 0.105));
+  const shadowPad = flat2d ? Math.max(5, Math.round(size * 0.05)) : Math.max(8, Math.round(size * 0.08));
   const shellHeight = bedHeight + depth + shadowPad;
 
-  const inset = Math.max(8, Math.round(size * 0.095));
+  const inset = Math.max(8, Math.round(size * (flat2d ? 0.085 : 0.095)));
   const innerX = inset;
-  const innerY = Math.max(7, Math.round(inset * 0.78));
+  const innerY = Math.max(6, Math.round(inset * (flat2d ? 0.72 : 0.78)));
   const innerWidth = Math.max(12, bedWidth - innerX * 2);
-  const innerHeight = Math.max(12, bedHeight - innerY - inset * 1.08);
-  const innerR = Math.max(8, Math.round(cornerR * 0.72));
+  const innerHeight = Math.max(12, bedHeight - innerY - inset * (flat2d ? 0.96 : 1.08));
+  const innerR = Math.max(7, Math.round(cornerR * 0.72));
 
-  const contentWidth = Math.round(innerWidth * 0.9);
-  const contentHeight = Math.round(innerHeight * 0.84);
-  const contentTop = Math.round(innerY + (innerHeight - contentHeight) * 0.58);
+  const contentWidth = Math.round(innerWidth * (flat2d ? 0.92 : 0.9));
+  const contentHeight = Math.round(innerHeight * (flat2d ? 0.88 : 0.84));
+  const contentTop = Math.round(innerY + (innerHeight - contentHeight) * (flat2d ? 0.52 : 0.58));
 
   // SVG rounded rect path for the top face
   const topPath = `M ${cornerR} 0 L ${bedWidth - cornerR} 0 Q ${bedWidth} 0 ${bedWidth} ${cornerR} L ${bedWidth} ${bedHeight - cornerR} Q ${bedWidth} ${bedHeight} ${bedWidth - cornerR} ${bedHeight} L ${cornerR} ${bedHeight} Q 0 ${bedHeight} 0 ${bedHeight - cornerR} L 0 ${cornerR} Q 0 0 ${cornerR} 0 Z`;
@@ -173,18 +174,18 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
         <ellipse
           cx={bedWidth * 0.5}
           cy={bedHeight + depth + shadowPad * 0.4}
-          rx={bedWidth * 0.46}
-          ry={shadowPad * 0.6}
+          rx={bedWidth * (flat2d ? 0.42 : 0.46)}
+          ry={shadowPad * (flat2d ? 0.52 : 0.6)}
           fill={palette.shadow}
           filter={`url(#shadow-${gradientId})`}
         />
         <ellipse
           cx={bedWidth * 0.5}
           cy={bedHeight + depth + 1}
-          rx={bedWidth * 0.44}
-          ry={Math.max(3, depth * 0.34)}
+          rx={bedWidth * (flat2d ? 0.4 : 0.44)}
+          ry={Math.max(flat2d ? 2 : 3, depth * (flat2d ? 0.28 : 0.34))}
           fill={palette.contactShadow}
-          opacity="0.78"
+          opacity={flat2d ? '0.64' : '0.78'}
         />
 
         {/* Side face (depth) */}
@@ -192,17 +193,17 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
           d={sidePath}
           fill={`url(#side-${gradientId})`}
           stroke={palette.edge}
-          strokeWidth={Math.max(1.1, size * 0.011)}
+          strokeWidth={Math.max(flat2d ? 0.9 : 1.1, size * (flat2d ? 0.009 : 0.011))}
           strokeLinejoin="round"
         />
-        <path d={sidePath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity="0.14" />
+        <path d={sidePath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity={flat2d ? '0.08' : '0.14'} />
 
         {/* Top face */}
         <path
           d={topPath}
           fill={`url(#top-${gradientId})`}
           stroke={palette.edge}
-          strokeWidth={Math.max(1.4, size * 0.016)}
+          strokeWidth={Math.max(flat2d ? 1.15 : 1.4, size * (flat2d ? 0.013 : 0.016))}
           strokeLinejoin="round"
         />
 
@@ -214,8 +215,8 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
           height={innerHeight}
           rx={innerR}
           fill={`url(#soil-${gradientId})`}
-          stroke="rgba(103,62,33,0.62)"
-          strokeWidth={Math.max(1.1, size * 0.011)}
+          stroke={flat2d ? 'rgba(101,62,35,0.54)' : 'rgba(103,62,33,0.62)'}
+          strokeWidth={Math.max(flat2d ? 0.9 : 1.1, size * (flat2d ? 0.009 : 0.011))}
         />
         <path
           d={`M ${innerX + innerR} ${innerY} L ${innerX + innerWidth - innerR} ${innerY} Q ${innerX + innerWidth} ${innerY} ${innerX + innerWidth} ${innerY + innerR}`}
@@ -226,9 +227,9 @@ export function IsometricPlotShell({ size, state, children }: IsometricPlotShell
         />
 
         {/* Shine overlay */}
-        <path d={topPath} fill={`url(#shine-${gradientId})`} opacity="0.42" />
+        <path d={topPath} fill={`url(#shine-${gradientId})`} opacity={flat2d ? '0.34' : '0.42'} />
         {/* Grain texture */}
-        <path d={topPath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity="0.3" />
+        <path d={topPath} fill="#ffffff" filter={`url(#grain-${gradientId})`} opacity={flat2d ? '0.2' : '0.3'} />
         {/* Top edge highlight */}
         <path
           d={`M ${cornerR} 0 L ${bedWidth - cornerR} 0 Q ${bedWidth} 0 ${bedWidth} ${cornerR}`}

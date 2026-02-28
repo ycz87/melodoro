@@ -239,6 +239,7 @@ export function SimpleFarmGrid({
     () => Array.from({ length: TOTAL_SLOTS }, (_, index) => plots[index] ?? createEmptyPlot(index)),
     [plots],
   );
+  const showReviewHud = compactMode;
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)} style={{ backgroundColor: scenePalette.meadowBottom }}>
@@ -378,7 +379,45 @@ export function SimpleFarmGrid({
           <span className="absolute right-[14%] top-[61.5%] h-[5px] w-[5px] rounded-full" style={{ backgroundColor: 'rgba(246,255,223,0.5)' }} />
         </div>
 
-        <FarmDecorations />
+        {showReviewHud && (
+          <>
+            <div className="pointer-events-none absolute inset-x-2 top-2 z-[22] flex items-center gap-2 text-[11px] font-semibold text-[#4b3c2b]">
+              <div className="rounded-full bg-[#f8df86] px-2.5 py-1 shadow-[0_2px_0_rgba(119,86,44,0.28)]">⭐ 12</div>
+              <div className="rounded-full bg-[#f7c86d] px-2.5 py-1 shadow-[0_2px_0_rgba(119,86,44,0.28)]">🪙 1,580</div>
+              <div className="rounded-full bg-[#b7e2ff] px-2.5 py-1 shadow-[0_2px_0_rgba(52,88,117,0.24)]">💎 75</div>
+              <div className="ml-auto rounded-full bg-[#ff8f95] px-2.5 py-1 text-white shadow-[0_2px_0_rgba(138,56,64,0.26)]">❤</div>
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[22]">
+              <div className="mx-auto mb-1 w-fit rounded-2xl border border-[#8f6945]/35 bg-[#f7e6c6]/92 p-1.5 shadow-[0_4px_10px_rgba(94,68,45,0.2)]">
+                <div className="flex items-center gap-1.5">
+                  {['💧', '🌱', '🧹', '🧺'].map((icon, idx) => (
+                    <span
+                      key={icon}
+                      className="grid h-10 w-10 place-items-center rounded-xl border text-lg"
+                      style={{
+                        backgroundColor: idx === 3 ? '#f3c96d' : '#f8f2e4',
+                        borderColor: idx === 3 ? '#c99939' : '#c9ae84',
+                      }}
+                    >
+                      {icon}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="h-14 border-t border-[#7a5534]/35 bg-[#af7648]/92 px-4">
+                <div className="flex h-full items-center justify-between text-[11px] font-semibold text-[#fff6e8]">
+                  <span>⬅</span>
+                  <span>Shop</span>
+                  <span>Bag</span>
+                  <span>Tasks</span>
+                  <span>Social</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        <FarmDecorations compactMode={compactMode} />
 
         <div
           className="pointer-events-none absolute inset-x-[20%] bottom-[10%] z-[7] h-[18%]"
@@ -419,7 +458,7 @@ export function SimpleFarmGrid({
                     transform: `translate(${Math.round(placement.xOffset * slotOffsetScale)}px, ${Math.round(placement.yOffset * slotOffsetScale)}px)`,
                   }}
                 >
-                  <IsometricPlotShell size={effectivePlotSize} state={plot.state}>
+                  <IsometricPlotShell size={effectivePlotSize} state={plot.state} flat2d={compactMode}>
                     <PlotCard
                       plot={plot}
                       weather={weather}

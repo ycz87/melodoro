@@ -211,7 +211,34 @@ function FlowerPatch({ className = 'h-[12px] w-[28px] sm:h-[14px] sm:w-[32px] md
   );
 }
 
-export function FarmDecorations() {
+export function FarmDecorations({ compactMode = false }: { compactMode?: boolean }) {
+  if (compactMode) {
+    return (
+      <div className="pointer-events-none absolute inset-0 z-[11] overflow-hidden" aria-hidden="true">
+        <div className="absolute left-[-4%] top-[14%] z-[10] opacity-100 drop-shadow-[0_6px_10px_rgba(74,114,56,0.22)]">
+          <TopLeftHouseIcon className="h-[86px] w-[114px]" />
+        </div>
+        <div className="absolute right-[-4%] top-[14%] z-[10] opacity-100 drop-shadow-[0_6px_10px_rgba(74,114,56,0.22)]">
+          <TopRightBarnIcon className="h-[88px] w-[116px]" />
+        </div>
+
+        <div className="absolute left-[10%] top-[45%] z-[9] opacity-72">
+          <FenceSegment />
+        </div>
+        <div className="absolute right-[10%] top-[45%] z-[9] opacity-72">
+          <FenceSegment mirrored />
+        </div>
+
+        <div className="absolute left-[4%] top-[53%] z-[8] opacity-62">
+          <BushIcon className="h-[18px] w-[26px]" />
+        </div>
+        <div className="absolute right-[4%] top-[53%] z-[8] opacity-62">
+          <BushIcon className="h-[18px] w-[26px]" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pointer-events-none absolute inset-0 z-[11] overflow-hidden" aria-hidden="true">
       {/* ── Fences (mid-field) ── */}
