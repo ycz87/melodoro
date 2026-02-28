@@ -11,7 +11,7 @@ import { rollVariety } from '../farm/growth';
 import { getPlotCount } from '../farm/galaxy';
 
 const FARM_KEY = 'watermelon-farm';
-const MAX_PLOT_COUNT = 7;
+const MAX_PLOT_COUNT = 9;
 const SHED_KEY = 'watermelon-shed';
 const RARITY_UPGRADE_MAP: Record<Rarity, Rarity | null> = {
   common: 'rare',
@@ -241,7 +241,7 @@ function migrateFarm(raw: unknown): FarmStorage {
 
   if (result.plots.length > MAX_PLOT_COUNT) {
     const migratedDate = getTodayKeyFromTimestamp(Date.now());
-    const removedPlots = [result.plots[7], result.plots[8]];
+    const removedPlots = result.plots.slice(MAX_PLOT_COUNT);
     const refundedSeeds: SeedCounts = { ...DEFAULT_SEED_COUNTS };
     let nextCollection = result.collection;
 

@@ -1,5 +1,5 @@
 /**
- * SimpleFarmGrid - 7-plot portrait farm scene with centered subject.
+ * SimpleFarmGrid - mobile-first 3x3 (9-plot) farm scene.
  *
  * Reuses PlotCard to keep all plot interactions and state logic unchanged.
  */
@@ -8,6 +8,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useI18n } from '../../i18n';
 import type { ThemeColors } from '../../types';
 import type { Plot, StolenRecord, Weather } from '../../types/farm';
+import { createEmptyPlot } from '../../types/farm';
 import { PlotCard } from '../FarmPage';
 import { FarmDecorations } from './FarmDecorations';
 import { IsometricPlotShell } from './IsometricPlotShell';
@@ -44,7 +45,7 @@ const SMALL_MOBILE_BREAKPOINT = 420;
 const MOBILE_BREAKPOINT = 640;
 const TABLET_BREAKPOINT = 1024;
 const DESKTOP_VIEWPORT_WIDTH = 1024;
-const TOTAL_SLOTS = 7;
+const TOTAL_SLOTS = 9;
 
 const COMPACT_MOBILE_LAYOUT: GridLayout = {
   gap: 1,
@@ -88,7 +89,7 @@ function getGridLayout(viewportWidth: number): GridLayout {
 
 interface SlotPlacement {
   column: 1 | 2 | 3;
-  row: 1 | 2 | 3 | 4 | 5;
+  row: 1 | 2 | 3;
   xOffset: number;
   yOffset: number;
 }
@@ -119,13 +120,15 @@ interface ScenePalette {
 }
 
 const PORTRAIT_SLOT_PLACEMENTS: SlotPlacement[] = [
+  { column: 1, row: 1, xOffset: 0, yOffset: 0 },
   { column: 2, row: 1, xOffset: 0, yOffset: 0 },
-  { column: 1, row: 2, xOffset: 16, yOffset: -6 },
-  { column: 3, row: 2, xOffset: -16, yOffset: -6 },
-  { column: 2, row: 3, xOffset: 0, yOffset: -12 },
-  { column: 1, row: 4, xOffset: 16, yOffset: -18 },
-  { column: 3, row: 4, xOffset: -16, yOffset: -18 },
-  { column: 2, row: 5, xOffset: 0, yOffset: -24 },
+  { column: 3, row: 1, xOffset: 0, yOffset: 0 },
+  { column: 1, row: 2, xOffset: 0, yOffset: 0 },
+  { column: 2, row: 2, xOffset: 0, yOffset: 0 },
+  { column: 3, row: 2, xOffset: 0, yOffset: 0 },
+  { column: 1, row: 3, xOffset: 0, yOffset: 0 },
+  { column: 2, row: 3, xOffset: 0, yOffset: 0 },
+  { column: 3, row: 3, xOffset: 0, yOffset: 0 },
 ];
 
 function buildScenePalette(theme: ThemeColors): ScenePalette {
@@ -201,7 +204,7 @@ export function SimpleFarmGrid({
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
   const plotScale = compactMode
-    ? (isCompactMobile ? 1.34 : isMobile ? 1.38 : 1.48)
+    ? (isCompactMobile ? 1.08 : isMobile ? 1.12 : 1.22)
     : 1;
   const effectivePlotSize = Math.round(layout.plotSize * plotScale);
   const safeSideInset = compactMode ? 0 : (isCompactMobile ? 12 : isMobile ? 10 : 0);
@@ -210,28 +213,32 @@ export function SimpleFarmGrid({
     ? undefined
     : sceneWidth + (isMobile ? 72 : 108);
 
-  // Compact review mode intentionally prioritizes first-screen focus on plots.
+  // Compact review mode focuses on a readable 3x3 board in first screen.
   const sceneTopPadding = compactMode
     ? (isCompactMobile
-      ? Math.round(effectivePlotSize * 1.72)
+      ? Math.round(effectivePlotSize * 1.22)
       : isMobile
-        ? Math.round(effectivePlotSize * 1.66)
-        : Math.round(effectivePlotSize * 1.3))
+        ? Math.round(effectivePlotSize * 1.16)
+        : Math.round(effectivePlotSize * 1.02))
     : (isCompactMobile
       ? Math.round(effectivePlotSize * 1.52)
       : isMobile
         ? Math.round(effectivePlotSize * 1.56)
         : Math.round(effectivePlotSize * 1.42));
   const sceneBottomPadding = compactMode
-    ? 0
+    ? Math.round(effectivePlotSize * 0.05)
     : (isCompactMobile
       ? Math.round(effectivePlotSize * 0.52)
       : isMobile
         ? Math.round(effectivePlotSize * 0.5)
         : Math.round(effectivePlotSize * 0.44));
   const slotOffsetScale = compactMode
-    ? (isCompactMobile ? 0.96 : isMobile ? 0.98 : 0.98)
+    ? 1
     : (isCompactMobile ? 0.96 : isMobile ? 1 : 1.02);
+  const displayPlots = useMemo(
+    () => Array.from({ length: TOTAL_SLOTS }, (_, index) => plots[index] ?? createEmptyPlot(index)),
+    [plots],
+  );
 
   return (
     <div className="relative w-full overflow-visible" onClick={() => onActiveTooltipChange(null)} style={{ backgroundColor: scenePalette.meadowBottom }}>
@@ -395,16 +402,15 @@ export function SimpleFarmGrid({
               width: sceneWidth,
               gap: layout.gap,
               gridTemplateColumns: `repeat(3, minmax(0, ${effectivePlotSize}px))`,
-              gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.8 : 0.7) : 0.56))}px`,
+              gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.9 : 0.88) : 0.56))}px`,
             }}
           >
-            {Array.from({ length: TOTAL_SLOTS }).map((_, slotIndex) => {
-              const plot = slotIndex < plots.length ? plots[slotIndex] : null;
+            {displayPlots.map((plot, slotIndex) => {
               const placement = PORTRAIT_SLOT_PLACEMENTS[slotIndex] ?? PORTRAIT_SLOT_PLACEMENTS[0];
 
               return (
                 <div
-                  key={plot ? `plot-simple-${plot.id}` : `plot-locked-${slotIndex}`}
+                  key={`plot-simple-${plot.id}-${slotIndex}`}
                   className="relative justify-self-center"
                   style={{
                     width: effectivePlotSize,
@@ -413,45 +419,30 @@ export function SimpleFarmGrid({
                     transform: `translate(${Math.round(placement.xOffset * slotOffsetScale)}px, ${Math.round(placement.yOffset * slotOffsetScale)}px)`,
                   }}
                 >
-                  <IsometricPlotShell size={effectivePlotSize} state={plot ? plot.state : 'locked'}>
-                    {plot ? (
-                      <PlotCard
-                        plot={plot}
-                        weather={weather}
-                        stolenRecord={stolenRecordByPlotId?.get(plot.id)}
-                        nowTimestamp={nowTimestamp}
-                        theme={theme}
-                        t={t}
-                        isTooltipOpen={activeTooltipPlotId === plot.id}
-                        onTooltipToggle={() => onActiveTooltipChange(activeTooltipPlotId === plot.id ? null : plot.id)}
-                        onPlantClick={() => onPlant(plot.id)}
-                        onHarvestClick={() => onHarvest(plot.id)}
-                        onClearClick={() => onClear(plot.id)}
-                        mutationGunCount={mutationGunCount}
-                        onUseMutationGun={() => onUseMutationGun(plot.id)}
-                        moonDewCount={moonDewCount}
-                        onUseMoonDew={() => onUseMoonDew(plot.id)}
-                        nectarCount={nectarCount}
-                        onUseNectar={() => onUseNectar(plot.id)}
-                        starTrackerCount={starTrackerCount}
-                        onUseStarTracker={() => onUseStarTracker(plot.id)}
-                        trapNetCount={trapNetCount}
-                        onUseTrapNet={() => onUseTrapNet(plot.id)}
-                      />
-                    ) : (
-                      <div
-                        className="flex aspect-square w-full flex-col items-center justify-center gap-1 border-2 border-dashed"
-                        style={{
-                          borderColor: 'rgba(128,159,95,0.58)',
-                          background: 'linear-gradient(150deg, rgba(255,255,255,0.34) 0%, rgba(190,228,144,0.48) 100%)',
-                        }}
-                      >
-                        <span className="text-2xl leading-none" style={{ color: '#6f8f56' }}>🔒</span>
-                        <span className="text-[9px] font-medium leading-none" style={{ color: '#6f8f56' }}>
-                          {t.marketPlotName(slotIndex)}
-                        </span>
-                      </div>
-                    )}
+                  <IsometricPlotShell size={effectivePlotSize} state={plot.state}>
+                    <PlotCard
+                      plot={plot}
+                      weather={weather}
+                      stolenRecord={stolenRecordByPlotId?.get(plot.id)}
+                      nowTimestamp={nowTimestamp}
+                      theme={theme}
+                      t={t}
+                      isTooltipOpen={activeTooltipPlotId === plot.id}
+                      onTooltipToggle={() => onActiveTooltipChange(activeTooltipPlotId === plot.id ? null : plot.id)}
+                      onPlantClick={() => onPlant(plot.id)}
+                      onHarvestClick={() => onHarvest(plot.id)}
+                      onClearClick={() => onClear(plot.id)}
+                      mutationGunCount={mutationGunCount}
+                      onUseMutationGun={() => onUseMutationGun(plot.id)}
+                      moonDewCount={moonDewCount}
+                      onUseMoonDew={() => onUseMoonDew(plot.id)}
+                      nectarCount={nectarCount}
+                      onUseNectar={() => onUseNectar(plot.id)}
+                      starTrackerCount={starTrackerCount}
+                      onUseStarTracker={() => onUseStarTracker(plot.id)}
+                      trapNetCount={trapNetCount}
+                      onUseTrapNet={() => onUseTrapNet(plot.id)}
+                    />
                   </IsometricPlotShell>
                 </div>
               );

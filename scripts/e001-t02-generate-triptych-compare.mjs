@@ -7,6 +7,7 @@ import { chromium } from 'playwright';
 const DEFAULT_TASK_ID = 'E-001-T02';
 const ROOT_DIR = '/home/ycz87/.openclaw/workspace-coder/cosmelon';
 const BASELINE_DIR = path.join(ROOT_DIR, 'baseline', 'e001-t01');
+const E001_T12_REFERENCE_PATH = '/home/ycz87/.openclaw/media/inbound/file_21---3f96fab5-a32c-497b-ad28-95a0ff5ead39.jpg';
 const DEV_SERVER_PORT = 4173;
 const DEV_SERVER_URL = `http://127.0.0.1:${DEV_SERVER_PORT}`;
 
@@ -68,7 +69,9 @@ function seedFarmStateScript(taskId) {
   return () => {
     const now = Date.UTC(2026, 1, 24, 12, 0, 0, 0);
     const day = new Date(now).toISOString().slice(0, 10);
-    const plotCount = taskId === 'E-001-T11' ? 7 : 4;
+    const isT11 = taskId === 'E-001-T11';
+    const isT12 = taskId === 'E-001-T12';
+    const plotCount = isT11 ? 7 : isT12 ? 9 : 4;
     const basePlots = Array.from({ length: plotCount }, (_, id) => ({
       id,
       state: 'empty',
@@ -81,7 +84,7 @@ function seedFarmStateScript(taskId) {
       hasTracker: false,
     }));
 
-    const plots = taskId === 'E-001-T11'
+    const plots = isT11
       ? basePlots.map((plot, index) => {
         if (index === 2 || index === 3 || index === 6) {
           return {
@@ -108,7 +111,34 @@ function seedFarmStateScript(taskId) {
         }
         return plot;
       })
-      : basePlots;
+      : isT12
+        ? basePlots.map((plot, index) => {
+          if (index === 2 || index === 3 || index === 6 || index === 8) {
+            return {
+              ...plot,
+              state: 'mature',
+              progress: 1,
+              varietyId: 'jade-stripe',
+              seedQuality: 'normal',
+              plantedDate: day,
+              lastUpdateDate: day,
+            };
+          }
+          if (index === 1 || index === 4 || index === 7) {
+            return {
+              ...plot,
+              state: 'growing',
+              progress: 0.46,
+              accumulatedMinutes: 4600,
+              varietyId: 'jade-stripe',
+              seedQuality: 'normal',
+              plantedDate: day,
+              lastUpdateDate: day,
+            };
+          }
+          return plot;
+        })
+        : basePlots;
 
     localStorage.clear();
     localStorage.setItem('pomodoro-guide-seen', '1');
@@ -176,11 +206,14 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
   const leftCenter = Math.round(width * 0.25);
   const rightCenter = Math.round(width * 0.75);
   const dividerX = Math.round(width / 2);
+  const referenceLabel = taskId === 'E-001-T12'
+    ? 'Reference (E-001-T12 new style)'
+    : 'Reference (E-001-T01 baseline)';
   return Buffer.from(`
     <svg width="${width}" height="${headerHeight}" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="${width}" height="${headerHeight}" fill="#0f172a"/>
       <line x1="${dividerX}" y1="10" x2="${dividerX}" y2="${headerHeight - 10}" stroke="#334155" stroke-width="2"/>
-      <text x="${leftCenter}" y="26" font-size="17" font-family="Arial, sans-serif" text-anchor="middle" fill="#e2e8f0">Reference (E-001-T01 baseline)</text>
+      <text x="${leftCenter}" y="26" font-size="17" font-family="Arial, sans-serif" text-anchor="middle" fill="#e2e8f0">${referenceLabel}</text>
       <text x="${rightCenter}" y="26" font-size="17" font-family="Arial, sans-serif" text-anchor="middle" fill="#e2e8f0">Current Implementation</text>
       <text x="${width / 2}" y="48" font-size="14" font-family="Arial, sans-serif" text-anchor="middle" fill="#94a3b8">${taskId} · ${viewportName}</text>
     </svg>
@@ -188,13 +221,14 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
 }
 
 function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, headerHeight) {
-  if (taskId !== 'E-001-T11') {
+  if (taskId !== 'E-001-T11' && taskId !== 'E-001-T12') {
     return null;
   }
 
   const currentLeft = Math.round(totalWidth / 2);
   const markerRadius = viewportName === 'mobile' ? 14 : 16;
-  const points = viewportName === 'mobile'
+
+  const t11Points = viewportName === 'mobile'
     ? [
         { id: 1, x: currentLeft + 92, y: headerHeight + 245 },
         { id: 2, x: currentLeft + 42, y: headerHeight + 102 },
@@ -206,17 +240,39 @@ function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, he
         { id: 3, x: currentLeft + 316, y: headerHeight + 530 },
       ];
 
-  const legendWidth = viewportName === 'mobile' ? 240 : 320;
+  const t12Points = viewportName === 'mobile'
+    ? [
+        { id: 1, x: currentLeft + 194, y: headerHeight + 360 },
+        { id: 2, x: currentLeft + 98, y: headerHeight + 118 },
+        { id: 3, x: currentLeft + 120, y: headerHeight + 545 },
+      ]
+    : [
+        { id: 1, x: currentLeft + 452, y: headerHeight + 430 },
+        { id: 2, x: currentLeft + 160, y: headerHeight + 134 },
+        { id: 3, x: currentLeft + 214, y: headerHeight + 612 },
+      ];
+
+  const points = taskId === 'E-001-T12' ? t12Points : t11Points;
+  const legendWidth = viewportName === 'mobile' ? 260 : 350;
   const legendX = totalWidth - legendWidth - 14;
   const legendY = headerHeight + 16;
+  const line1 = taskId === 'E-001-T12'
+    ? '1. 3x3 board + 9 plots enabled'
+    : '1. Corner props enlarged + rebalanced';
+  const line2 = taskId === 'E-001-T12'
+    ? '2. New 2D reference composition aligned'
+    : '2. Compact review shell (header removed)';
+  const line3 = taskId === 'E-001-T12'
+    ? '3. Mobile-first density + readability tuned'
+    : '3. Ground contact blend strengthened';
 
   return Buffer.from(`
     <svg width="${totalWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
       <rect x="${legendX}" y="${legendY}" width="${legendWidth}" height="${viewportName === 'mobile' ? 108 : 96}" rx="10" fill="rgba(8,15,36,0.78)" stroke="rgba(148,163,184,0.8)" stroke-width="1.5"/>
       <text x="${legendX + 12}" y="${legendY + 22}" font-size="14" font-family="Arial, sans-serif" fill="#f8fafc">Change Markers</text>
-      <text x="${legendX + 12}" y="${legendY + 42}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">1. Corner props enlarged + rebalanced</text>
-      <text x="${legendX + 12}" y="${legendY + 60}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">2. Compact review shell (header removed)</text>
-      <text x="${legendX + 12}" y="${legendY + 78}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">3. Ground contact blend strengthened</text>
+      <text x="${legendX + 12}" y="${legendY + 42}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">${line1}</text>
+      <text x="${legendX + 12}" y="${legendY + 60}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">${line2}</text>
+      <text x="${legendX + 12}" y="${legendY + 78}" font-size="12" font-family="Arial, sans-serif" fill="#cbd5e1">${line3}</text>
       ${points.map((point) => `
         <circle cx="${point.x}" cy="${point.y}" r="${markerRadius}" fill="#ef4444" stroke="#fff" stroke-width="2"/>
         <text x="${point.x}" y="${point.y + 5}" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle" fill="#fff">${point.id}</text>
@@ -291,9 +347,22 @@ async function generateCompareArtifacts(runId, taskId) {
     await captureCurrentScreenshots(outputDir, taskId);
 
     for (const viewport of viewports) {
-      const baselinePath = path.join(BASELINE_DIR, `e001-t01-baseline-${viewport.name}.png`);
+      const baselinePath = taskId === 'E-001-T12'
+        ? path.join(outputDir, `${taskId}-reference-${viewport.name}.png`)
+        : path.join(BASELINE_DIR, `e001-t01-baseline-${viewport.name}.png`);
       const currentPath = path.join(outputDir, `${taskId}-current-${viewport.name}.png`);
       const outputPath = path.join(outputDir, `${taskId}-compare-${viewport.name}.png`);
+
+      if (taskId === 'E-001-T12') {
+        await sharp(E001_T12_REFERENCE_PATH)
+          .resize(viewport.width, viewport.height, {
+            fit: 'contain',
+            position: 'center',
+            background: '#8ad6ef',
+          })
+          .png()
+          .toFile(baselinePath);
+      }
 
       await buildCompareImage({
         viewportName: viewport.name,
