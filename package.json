@@ -23,7 +23,9 @@
     "compare:e001-t13": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T13",
     "compare:e001-t14": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T14",
     "compare:e001-t15": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T15",
-    "compare:e001-t16": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T16"
+    "compare:e001-t16": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T16",
+    "compare:e001-t17": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T17",
+    "capture:e001-t17-entry": "node scripts/e001-t17-capture-entry-flow.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

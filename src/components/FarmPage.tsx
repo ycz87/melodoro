@@ -141,8 +141,9 @@ export function FarmPage({
   const [activeTooltipPlotId, setActiveTooltipPlotId] = useState<number | null>(null);
   const [nowTimestamp, setNowTimestamp] = useState(() => Date.now());
   const useFarmPlotBoardV2 = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return new URLSearchParams(window.location.search).get('farmBoard') === 'v2';
+    if (typeof window === 'undefined') return true;
+    const forcedBoard = new URLSearchParams(window.location.search).get('farmBoard');
+    return forcedBoard !== 'legacy';
   }, []);
 
   // 追踪已揭晓的地块（避免重复触发动画）
