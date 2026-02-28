@@ -76,7 +76,8 @@ function seedFarmStateScript(taskId) {
     const isT15 = taskId === 'E-001-T15';
     const isT16 = taskId === 'E-001-T16';
     const isT17 = taskId === 'E-001-T17';
-    const plotCount = isT11 ? 7 : (isT12 || isT13 || isT14 || isT15 || isT16 || isT17) ? 9 : 4;
+    const isT18 = taskId === 'E-001-T18';
+    const plotCount = isT11 ? 7 : (isT12 || isT13 || isT14 || isT15 || isT16 || isT17 || isT18) ? 9 : 4;
     const basePlots = Array.from({ length: plotCount }, (_, id) => ({
       id,
       state: 'empty',
@@ -116,9 +117,9 @@ function seedFarmStateScript(taskId) {
         }
         return plot;
       })
-      : (isT12 || isT14 || isT15 || isT16 || isT17)
+      : (isT12 || isT14 || isT15 || isT16 || isT17 || isT18)
         ? basePlots.map((plot, index) => {
-          const matureIndexes = (isT14 || isT15 || isT16 || isT17) ? [2, 5, 8] : [2, 3, 6, 8];
+          const matureIndexes = (isT14 || isT15 || isT16 || isT17 || isT18) ? [2, 5, 8] : [2, 3, 6, 8];
           const growingIndexes = [1, 4, 7];
 
           if (matureIndexes.includes(index)) {
@@ -192,7 +193,7 @@ async function captureCurrentScreenshots(outputDir, taskId) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
       const page = await context.newPage();
       await page.addInitScript(seedFarmStateScript(taskId));
-      const reviewUrl = taskId === 'E-001-T17'
+      const reviewUrl = taskId === 'E-001-T17' || taskId === 'E-001-T18'
         ? `${DEV_SERVER_URL}/?farmReview=1`
         : taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16'
           ? `${DEV_SERVER_URL}/?farmReview=1&farmBoard=v2`
@@ -219,7 +220,7 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
   const leftCenter = Math.round(width * 0.25);
   const rightCenter = Math.round(width * 0.75);
   const dividerX = Math.round(width / 2);
-  const referenceLabel = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17'
+  const referenceLabel = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18'
     ? 'Reference (E-001-T12 new style)'
     : 'Reference (E-001-T01 baseline)';
   return Buffer.from(`
@@ -234,7 +235,7 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
 }
 
 function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, headerHeight) {
-  if (taskId !== 'E-001-T11' && taskId !== 'E-001-T12' && taskId !== 'E-001-T13' && taskId !== 'E-001-T14' && taskId !== 'E-001-T15' && taskId !== 'E-001-T16' && taskId !== 'E-001-T17') {
+  if (taskId !== 'E-001-T11' && taskId !== 'E-001-T12' && taskId !== 'E-001-T13' && taskId !== 'E-001-T14' && taskId !== 'E-001-T15' && taskId !== 'E-001-T16' && taskId !== 'E-001-T17' && taskId !== 'E-001-T18') {
     return null;
   }
 
@@ -265,49 +266,55 @@ function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, he
         { id: 3, x: currentLeft + 214, y: headerHeight + 612 },
       ];
 
-  const points = (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17') ? t12Points : t11Points;
+  const points = (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18') ? t12Points : t11Points;
   const legendWidth = viewportName === 'mobile' ? 260 : 350;
   const legendX = totalWidth - legendWidth - 14;
   const legendY = headerHeight + 16;
-  const line1 = taskId === 'E-001-T17'
-    ? '1. Plots entry now opens V2 by default'
-    : taskId === 'E-001-T16'
-      ? '1. Board-ground-scene layering fused'
-      : taskId === 'E-001-T15'
-        ? '1. 3x3 board footprint enlarged + centered'
-        : taskId === 'E-001-T14'
-          ? '1. Reusable V2 single-tile component'
-          : taskId === 'E-001-T13'
-            ? '1. V2 board mounted via minimal wiring'
-            : taskId === 'E-001-T12'
-              ? '1. 3x3 board + 9 plots enabled'
-              : '1. Corner props enlarged + rebalanced';
-  const line2 = taskId === 'E-001-T17'
-    ? '2. Legacy board removed from default path'
-    : taskId === 'E-001-T16'
-      ? '2. HUD + bottom bar converged to 2D style'
-      : taskId === 'E-001-T15'
-        ? '2. Spacing density tuned for 9-tile readability'
-        : taskId === 'E-001-T14'
-          ? '2. Three states: empty / sprout / mature-4'
-          : taskId === 'E-001-T13'
-            ? '2. 3x3 empty skeleton rendered'
-            : taskId === 'E-001-T12'
-              ? '2. New 2D reference composition aligned'
-              : '2. Compact review shell (header removed)';
-  const line3 = taskId === 'E-001-T17'
-    ? '3. Desktop/mobile entry route verified'
-    : taskId === 'E-001-T16'
-      ? '3. Focus remains on 9-tile board'
-      : taskId === 'E-001-T15'
-        ? '3. Desktop/mobile composition kept in sync'
-        : taskId === 'E-001-T14'
-          ? '3. Desktop/mobile state language aligned'
-          : taskId === 'E-001-T13'
-            ? '3. Legacy preserved, V2 runs in parallel'
-            : taskId === 'E-001-T12'
-              ? '3. Mobile-first density + readability tuned'
-              : '3. Ground contact blend strengthened';
+  const line1 = taskId === 'E-001-T18'
+    ? '1. Top blue-cut frame perception removed'
+    : taskId === 'E-001-T17'
+      ? '1. Plots entry now opens V2 by default'
+      : taskId === 'E-001-T16'
+        ? '1. Board-ground-scene layering fused'
+        : taskId === 'E-001-T15'
+          ? '1. 3x3 board footprint enlarged + centered'
+          : taskId === 'E-001-T14'
+            ? '1. Reusable V2 single-tile component'
+            : taskId === 'E-001-T13'
+              ? '1. V2 board mounted via minimal wiring'
+              : taskId === 'E-001-T12'
+                ? '1. 3x3 board + 9 plots enabled'
+                : '1. Corner props enlarged + rebalanced';
+  const line2 = taskId === 'E-001-T18'
+    ? '2. Left-right blue margins narrowed'
+    : taskId === 'E-001-T17'
+      ? '2. Legacy board removed from default path'
+      : taskId === 'E-001-T16'
+        ? '2. HUD + bottom bar converged to 2D style'
+        : taskId === 'E-001-T15'
+          ? '2. Spacing density tuned for 9-tile readability'
+          : taskId === 'E-001-T14'
+            ? '2. Three states: empty / sprout / mature-4'
+            : taskId === 'E-001-T13'
+              ? '2. 3x3 empty skeleton rendered'
+              : taskId === 'E-001-T12'
+                ? '2. New 2D reference composition aligned'
+                : '2. Compact review shell (header removed)';
+  const line3 = taskId === 'E-001-T18'
+    ? '3. 9-tile area ratio increased on both views'
+    : taskId === 'E-001-T17'
+      ? '3. Desktop/mobile entry route verified'
+      : taskId === 'E-001-T16'
+        ? '3. Focus remains on 9-tile board'
+        : taskId === 'E-001-T15'
+          ? '3. Desktop/mobile composition kept in sync'
+          : taskId === 'E-001-T14'
+            ? '3. Desktop/mobile state language aligned'
+            : taskId === 'E-001-T13'
+              ? '3. Legacy preserved, V2 runs in parallel'
+              : taskId === 'E-001-T12'
+                ? '3. Mobile-first density + readability tuned'
+                : '3. Ground contact blend strengthened';
 
   return Buffer.from(`
     <svg width="${totalWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
@@ -390,13 +397,13 @@ async function generateCompareArtifacts(runId, taskId) {
     await captureCurrentScreenshots(outputDir, taskId);
 
     for (const viewport of viewports) {
-      const baselinePath = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17'
+      const baselinePath = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18'
         ? path.join(outputDir, `${taskId}-reference-${viewport.name}.png`)
         : path.join(BASELINE_DIR, `e001-t01-baseline-${viewport.name}.png`);
       const currentPath = path.join(outputDir, `${taskId}-current-${viewport.name}.png`);
       const outputPath = path.join(outputDir, `${taskId}-compare-${viewport.name}.png`);
 
-      if (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17') {
+      if (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18') {
         await sharp(E001_T12_REFERENCE_PATH)
           .resize(viewport.width, viewport.height, {
             fit: 'contain',

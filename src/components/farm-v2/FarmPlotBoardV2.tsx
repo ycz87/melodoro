@@ -24,8 +24,8 @@ function FarmHudV2({ compactMode }: { compactMode: boolean }) {
         className="mx-auto flex h-10 w-full items-center justify-center gap-1.5 px-2 sm:h-11 sm:gap-2 sm:px-4"
         style={{
           maxWidth: compactMode ? '100%' : '920px',
-          borderBottom: '1px solid rgba(103,146,177,0.36)',
-          background: 'linear-gradient(180deg, rgba(166,219,245,0.72) 0%, rgba(166,219,245,0.26) 100%)',
+          borderBottom: '1px solid rgba(103,146,177,0.22)',
+          background: 'linear-gradient(180deg, rgba(166,219,245,0.34) 0%, rgba(166,219,245,0.04) 100%)',
         }}
       >
         {badgeItems.map((badge) => (
@@ -247,8 +247,8 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
   );
 
   const boardWidth = compactMode
-    ? 'min(96vw, calc(100dvh - 286px), 420px)'
-    : 'min(58vw, 520px)';
+    ? 'min(100vw, calc(100dvh - 260px), 446px)'
+    : 'min(66vw, 620px)';
   const boardGap = compactMode ? 'clamp(6px, 1vw, 9px)' : 'clamp(8px, 0.9vw, 12px)';
 
   return (
@@ -263,10 +263,10 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
       <FarmHudV2 compactMode={compactMode} />
 
       <div
-        className="relative z-20 mx-auto flex w-full justify-center px-2 sm:px-4"
+        className="relative z-20 mx-auto flex w-full justify-center px-0 sm:px-2"
         style={{
-          paddingTop: compactMode ? 'clamp(152px, 31vh, 190px)' : 'clamp(112px, 18vh, 164px)',
-          paddingBottom: compactMode ? 'clamp(102px, 14vh, 126px)' : 'clamp(118px, 16vh, 148px)',
+          paddingTop: compactMode ? 'clamp(146px, 30vh, 184px)' : 'clamp(108px, 17vh, 156px)',
+          paddingBottom: compactMode ? 'clamp(100px, 14vh, 124px)' : 'clamp(116px, 15vh, 144px)',
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>
