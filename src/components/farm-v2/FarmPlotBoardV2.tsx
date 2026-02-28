@@ -248,7 +248,7 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
 
   const boardWidth = compactMode
     ? 'min(100vw, calc(100dvh - 260px), 446px)'
-    : 'min(66vw, 620px)';
+    : 'min(86vw, 760px)';
   const boardGap = compactMode ? 'clamp(6px, 1vw, 9px)' : 'clamp(8px, 0.9vw, 12px)';
 
   return (

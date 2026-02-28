@@ -104,7 +104,7 @@ export function FarmPage({
   prismaticSeeds,
   darkMatterSeeds,
   weather,
-  todayFocusMinutes,
+  todayFocusMinutes: _todayFocusMinutes,
   todayKey,
   addSeeds,
   onPlant,
@@ -291,34 +291,6 @@ export function FarmPage({
         <>
           {/* Sub-tab header */}
           <SubTabHeader subTab={subTab} setSubTab={setSubTab} theme={theme} t={t} />
-
-          {/* 今日专注信息 */}
-          <div
-            className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-[var(--radius-card)] border shadow-[var(--shadow-card)]"
-            style={{ backgroundColor: theme.inputBg, borderColor: theme.border }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs" style={{ color: theme.textFaint }}>
-                {t.farmTodayFocus(todayFocusMinutes)}
-              </span>
-              <button
-                onClick={() => setShowFarmHelp(true)}
-                className="h-5 w-5 rounded-full border text-[11px] leading-none flex items-center justify-center"
-                style={{
-                  borderColor: theme.border,
-                  backgroundColor: `${theme.inputBg}cc`,
-                  color: theme.textFaint,
-                }}
-                title={t.farmHelpTitle}
-                aria-label={t.farmHelpTitle}
-              >
-                ℹ️
-              </button>
-            </div>
-            <span className="text-xs sm:whitespace-nowrap" style={{ color: theme.textFaint }}>
-              {`🌱 ${totalBaseSeeds} · 🧬 ${injectedSeeds.length} · 🌈 ${prismaticSeeds.length} · 🌑 ${darkMatterSeeds.length}`}
-            </span>
-          </div>
 
           {/* 道具快捷栏 */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
