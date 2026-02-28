@@ -16,10 +16,10 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
     [plots],
   );
 
-  const boardWidth = compactMode ? 'min(92vw, 620px)' : 'min(76vw, 640px)';
-  const boardGap = compactMode ? 'clamp(8px, 1.2vw, 12px)' : 'clamp(10px, 1vw, 14px)';
+  const boardWidth = compactMode ? 'min(99vw, calc(100dvh - 188px), 720px)' : 'min(82vw, 760px)';
+  const boardGap = compactMode ? 'clamp(6px, 1vw, 10px)' : 'clamp(8px, 0.8vw, 12px)';
   const boardPaddingClass = compactMode
-    ? 'pt-[152px] pb-4 sm:pt-16 sm:pb-6'
+    ? 'pt-[204px] pb-0 sm:pt-28 sm:pb-3'
     : 'pt-12 pb-10 sm:pt-14 sm:pb-12';
 
   return (
