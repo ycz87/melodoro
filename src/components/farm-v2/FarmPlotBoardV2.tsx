@@ -9,6 +9,7 @@ interface FarmPlotBoardV2Props {
 
 const GRID_SIDE = 3;
 const TOTAL_PLOTS = GRID_SIDE * GRID_SIDE;
+const MOTION_CLASS = 'farm-v2-motion';
 
 function FarmHudV2({ compactMode }: { compactMode: boolean }) {
   const badgeItems = [
@@ -24,8 +25,8 @@ function FarmHudV2({ compactMode }: { compactMode: boolean }) {
         className="mx-auto flex h-10 w-full items-center justify-center gap-1.5 px-2 sm:h-11 sm:gap-2 sm:px-4"
         style={{
           maxWidth: compactMode ? '100%' : '920px',
-          borderBottom: '1px solid rgba(103,146,177,0.22)',
-          background: 'linear-gradient(180deg, rgba(166,219,245,0.34) 0%, rgba(166,219,245,0.04) 100%)',
+          borderBottom: '1px solid rgba(103,146,177,0.2)',
+          background: 'linear-gradient(180deg, rgba(171,220,244,0.42) 0%, rgba(171,220,244,0.08) 100%)',
         }}
       >
         {badgeItems.map((badge) => (
@@ -35,7 +36,7 @@ function FarmHudV2({ compactMode }: { compactMode: boolean }) {
             style={{
               borderColor: '#b17d49',
               color: '#5d3a1f',
-              background: 'linear-gradient(180deg, rgba(255,244,216,0.93) 0%, rgba(247,226,188,0.9) 100%)',
+              background: 'linear-gradient(180deg, rgba(255,244,216,0.94) 0%, rgba(247,226,188,0.9) 100%)',
               boxShadow: '0 1px 0 rgba(255,255,255,0.34) inset',
             }}
           >
@@ -111,94 +112,193 @@ function FarmBottomBarV2({ compactMode }: { compactMode: boolean }) {
   );
 }
 
+function CloudCluster({
+  top,
+  left,
+  right,
+  width,
+  height,
+  opacity,
+  duration,
+  delay,
+}: {
+  top: string;
+  left?: string;
+  right?: string;
+  width: string;
+  height: string;
+  opacity: number;
+  duration: string;
+  delay: string;
+}) {
+  return (
+    <div
+      className={`absolute z-[8] ${MOTION_CLASS}`}
+      style={{
+        top,
+        left,
+        right,
+        width,
+        height,
+        opacity,
+        animation: `farmV2CloudDrift ${duration} ease-in-out ${delay} infinite`,
+      }}
+    >
+      <div className="absolute inset-x-[8%] bottom-[6%] top-[32%] rounded-full bg-white/68" />
+      <div className="absolute left-[2%] top-[30%] h-[48%] w-[38%] rounded-full bg-white/76" />
+      <div className="absolute right-[4%] top-[16%] h-[56%] w-[46%] rounded-full bg-white/78" />
+      <div className="absolute left-[32%] top-[2%] h-[54%] w-[40%] rounded-full bg-white/82" />
+    </div>
+  );
+}
+
 function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="absolute -top-3 left-[7%] h-9 w-20 rounded-full bg-white/60" />
-      <div className="absolute top-4 left-[14%] h-7 w-16 rounded-full bg-white/76" />
-      <div className="absolute top-5 right-[10%] h-9 w-20 rounded-full bg-white/70" />
-      <div className="absolute top-1 right-[16%] h-6 w-14 rounded-full bg-white/52" />
-
       <div
-        className="absolute rounded-full"
+        className="absolute inset-x-0 top-0 z-[1]"
         style={{
-          top: compactMode ? '16%' : '14%',
-          right: compactMode ? '18%' : '20%',
-          width: compactMode ? '58px' : '72px',
-          height: compactMode ? '58px' : '72px',
-          background: 'radial-gradient(circle at 35% 35%, #ffe79a 0%, #f8c35a 64%, #e39a3f 100%)',
-          boxShadow: '0 0 0 10px rgba(248,212,118,0.14)',
+          height: compactMode ? '62%' : '58%',
+          background: 'linear-gradient(180deg, #88cef2 0%, #a6e1f7 52%, #c7edf8 100%)',
+        }}
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 z-[1]"
+        style={{
+          height: compactMode ? '52%' : '54%',
+          background: 'linear-gradient(180deg, #afe39f 0%, #99d477 42%, #89c760 100%)',
         }}
       />
 
       <div
-        className="absolute inset-x-0"
+        className={`absolute z-[6] rounded-full ${MOTION_CLASS}`}
         style={{
-          top: compactMode ? '26%' : '24%',
-          height: compactMode ? '20%' : '18%',
+          top: compactMode ? '7.8%' : '7%',
+          right: compactMode ? '11%' : '13%',
+          width: compactMode ? '78px' : '96px',
+          height: compactMode ? '78px' : '96px',
+          background: 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
+          animation: 'farmV2SunHalo 5.6s ease-in-out -0.8s infinite',
+        }}
+      />
+      <div
+        className={`absolute z-[7] rounded-full ${MOTION_CLASS}`}
+        style={{
+          top: compactMode ? '9.6%' : '8.8%',
+          right: compactMode ? '13.2%' : '14.8%',
+          width: compactMode ? '44px' : '54px',
+          height: compactMode ? '44px' : '54px',
+          background: 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
+          boxShadow: '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
+          animation: 'farmV2SunFloat 7.8s ease-in-out -1.2s infinite',
+        }}
+      />
+
+      <CloudCluster top="6%" left="7%" width="22%" height="11%" opacity={0.88} duration="13s" delay="-0.8s" />
+      <CloudCluster top="11%" left="31%" width="20%" height="10%" opacity={0.82} duration="16s" delay="-2.4s" />
+      <CloudCluster top="8%" right="7%" width="24%" height="12%" opacity={0.86} duration="14s" delay="-1.8s" />
+
+      <div
+        className="absolute inset-x-0 z-[3]"
+        style={{
+          top: compactMode ? '23%' : '21%',
+          height: compactMode ? '23%' : '20%',
           background:
-            'linear-gradient(180deg, rgba(177,213,152,0.46) 0%, rgba(142,192,112,0.38) 100%), radial-gradient(circle at 18% 86%, rgba(110,168,83,0.42) 0%, rgba(0,0,0,0) 48%), radial-gradient(circle at 80% 90%, rgba(98,154,74,0.38) 0%, rgba(0,0,0,0) 50%)',
+            'linear-gradient(180deg, rgba(170,221,188,0.16) 0%, rgba(154,204,136,0.42) 100%), radial-gradient(circle at 17% 88%, rgba(117,171,87,0.54) 0%, rgba(0,0,0,0) 52%), radial-gradient(circle at 83% 86%, rgba(107,162,79,0.52) 0%, rgba(0,0,0,0) 52%)',
+        }}
+      />
+      <div
+        className="absolute z-[4] rounded-full"
+        style={{
+          left: compactMode ? '-4%' : '2%',
+          top: compactMode ? '28%' : '26%',
+          width: compactMode ? '48%' : '34%',
+          height: compactMode ? '17%' : '14%',
+          background: 'radial-gradient(circle at 55% 50%, rgba(153,194,116,0.62) 0%, rgba(110,159,82,0.78) 100%)',
+        }}
+      />
+      <div
+        className="absolute z-[4] rounded-full"
+        style={{
+          right: compactMode ? '-5%' : '4%',
+          top: compactMode ? '29%' : '27%',
+          width: compactMode ? '44%' : '30%',
+          height: compactMode ? '16%' : '13%',
+          background: 'radial-gradient(circle at 45% 50%, rgba(155,199,118,0.6) 0%, rgba(113,162,80,0.78) 100%)',
         }}
       />
 
       <div
-        className="absolute left-[6%] right-[6%] z-[3] rounded-full"
+        className="absolute z-[5]"
         style={{
-          top: compactMode ? '41.5%' : '39%',
+          top: compactMode ? '31.2%' : '28.8%',
+          left: '50%',
+          width: compactMode ? '48%' : '34%',
+          height: compactMode ? '18%' : '16%',
+          transform: 'translateX(-50%)',
+          clipPath: 'polygon(45% 0%, 55% 0%, 81% 100%, 19% 100%)',
+          background: 'linear-gradient(180deg, rgba(230,202,141,0.78) 0%, rgba(191,145,96,0.78) 100%)',
+        }}
+      />
+
+      <div
+        className="absolute left-[7%] right-[7%] z-[6] rounded-full"
+        style={{
+          top: compactMode ? '43.6%' : '40.3%',
           height: compactMode ? '14px' : '16px',
-          background: 'linear-gradient(180deg, rgba(206,151,102,0.42) 0%, rgba(167,112,70,0.5) 100%)',
+          background: 'linear-gradient(180deg, rgba(207,149,99,0.46) 0%, rgba(167,111,68,0.52) 100%)',
         }}
       />
       <div
-        className="absolute left-[8%] right-[8%] z-[4]"
+        className="absolute left-[8%] right-[8%] z-[7]"
         style={{
-          top: compactMode ? '42.1%' : '39.7%',
+          top: compactMode ? '44.3%' : '41.2%',
           height: compactMode ? '6px' : '7px',
-          opacity: 0.6,
+          opacity: 0.62,
           background:
-            'repeating-linear-gradient(90deg, rgba(128,75,43,0.84) 0px, rgba(128,75,43,0.84) 5px, rgba(0,0,0,0) 5px, rgba(0,0,0,0) 14px)',
+            'repeating-linear-gradient(90deg, rgba(126,73,41,0.84) 0px, rgba(126,73,41,0.84) 5px, rgba(0,0,0,0) 5px, rgba(0,0,0,0) 14px)',
         }}
       />
 
       <div
-        className="absolute z-[2] rounded-[12px]"
+        className="absolute z-[7] rounded-[12px]"
         style={{
-          top: compactMode ? '35.5%' : '33%',
+          top: compactMode ? '37.3%' : '34.6%',
           left: '6%',
           width: compactMode ? '48px' : '60px',
           height: compactMode ? '34px' : '42px',
           opacity: 0.78,
-          background: 'linear-gradient(180deg, rgba(211,154,104,0.66) 0%, rgba(187,121,75,0.75) 100%)',
+          background: 'linear-gradient(180deg, rgba(212,155,104,0.66) 0%, rgba(188,121,75,0.75) 100%)',
           border: '1px solid rgba(136,84,51,0.62)',
         }}
       />
       <div
-        className="absolute z-[2] rounded-full"
+        className="absolute z-[7] rounded-full"
         style={{
-          top: compactMode ? '33%' : '30%',
+          top: compactMode ? '35.2%' : '31.8%',
           right: '7%',
-          width: compactMode ? '68px' : '82px',
-          height: compactMode ? '56px' : '66px',
+          width: compactMode ? '70px' : '84px',
+          height: compactMode ? '58px' : '68px',
           opacity: 0.76,
-          background: 'radial-gradient(circle at 40% 45%, rgba(124,191,86,0.86) 0%, rgba(88,151,64,0.94) 100%)',
+          background: 'radial-gradient(circle at 40% 45%, rgba(125,194,88,0.86) 0%, rgba(87,150,63,0.94) 100%)',
         }}
       />
 
       <div
-        className="absolute inset-x-0"
+        className="absolute inset-x-0 z-[2]"
         style={{
-          top: compactMode ? '44%' : '41.2%',
-          height: compactMode ? '24%' : '22%',
-          background: 'linear-gradient(180deg, rgba(181,222,155,0.5) 0%, rgba(141,199,104,0.44) 100%)',
+          top: compactMode ? '46%' : '42.8%',
+          height: compactMode ? '25%' : '23%',
+          background: 'linear-gradient(180deg, rgba(182,223,156,0.5) 0%, rgba(141,199,104,0.44) 100%)',
         }}
       />
       <div
-        className="absolute inset-x-0"
+        className="absolute inset-x-0 z-[2]"
         style={{
-          top: compactMode ? '55%' : '52%',
-          height: compactMode ? '45%' : '48%',
+          top: compactMode ? '57%' : '53%',
+          height: compactMode ? '43%' : '47%',
           background:
-            'linear-gradient(180deg, rgba(157,211,118,0.28) 0%, rgba(130,194,86,0.46) 100%), repeating-linear-gradient(0deg, rgba(124,184,79,0.08) 0px, rgba(124,184,79,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+            'linear-gradient(180deg, rgba(158,212,119,0.3) 0%, rgba(131,194,86,0.5) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
         }}
       />
     </div>
@@ -271,15 +371,16 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
 
   const boardWidth = compactMode
     ? 'min(100vw, calc(100dvh - 260px), 446px)'
-    : 'min(90vw, 820px)';
-  const boardGap = compactMode ? 'clamp(6px, 1vw, 9px)' : 'clamp(8px, 0.85vw, 11px)';
+    : 'min(91vw, 840px)';
+  const boardGap = compactMode ? 'clamp(6px, 1vw, 9px)' : 'clamp(8px, 0.8vw, 11px)';
 
   return (
     <div
       className="relative w-full overflow-hidden"
       style={{
         minHeight: compactMode ? '100dvh' : 'min(100dvh, 760px)',
-        background: 'linear-gradient(180deg, #9bd8f6 0%, #a5e8ff 34%, #9ed07a 74%, #8bbd67 100%)',
+        isolation: 'isolate',
+        background: 'linear-gradient(180deg, #8dd1f3 0%, #a8e3f8 34%, #b2e8a5 56%, #99d376 78%, #8bc665 100%)',
       }}
     >
       <FarmBackdropV2 compactMode={compactMode} />
@@ -288,8 +389,8 @@ export function FarmPlotBoardV2({ plots, compactMode = false }: FarmPlotBoardV2P
       <div
         className="relative z-20 mx-auto flex w-full justify-center px-0 sm:px-2"
         style={{
-          paddingTop: compactMode ? 'clamp(146px, 30vh, 184px)' : 'clamp(92px, 15vh, 136px)',
-          paddingBottom: compactMode ? 'clamp(100px, 14vh, 124px)' : 'clamp(104px, 13vh, 132px)',
+          paddingTop: compactMode ? 'clamp(146px, 30vh, 184px)' : 'clamp(94px, 15vh, 134px)',
+          paddingBottom: compactMode ? 'clamp(100px, 14vh, 124px)' : 'clamp(100px, 12vh, 128px)',
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>

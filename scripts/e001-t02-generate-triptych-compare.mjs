@@ -78,7 +78,8 @@ function seedFarmStateScript(taskId) {
     const isT17 = taskId === 'E-001-T17';
     const isT18 = taskId === 'E-001-T18';
     const isT19 = taskId === 'E-001-T19';
-    const plotCount = isT11 ? 7 : (isT12 || isT13 || isT14 || isT15 || isT16 || isT17 || isT18 || isT19) ? 9 : 4;
+    const isT20 = taskId === 'E-001-T20';
+    const plotCount = isT11 ? 7 : (isT12 || isT13 || isT14 || isT15 || isT16 || isT17 || isT18 || isT19 || isT20) ? 9 : 4;
     const basePlots = Array.from({ length: plotCount }, (_, id) => ({
       id,
       state: 'empty',
@@ -118,9 +119,9 @@ function seedFarmStateScript(taskId) {
         }
         return plot;
       })
-      : (isT12 || isT14 || isT15 || isT16 || isT17 || isT18 || isT19)
+      : (isT12 || isT14 || isT15 || isT16 || isT17 || isT18 || isT19 || isT20)
         ? basePlots.map((plot, index) => {
-          const matureIndexes = (isT14 || isT15 || isT16 || isT17 || isT18 || isT19) ? [2, 5, 8] : [2, 3, 6, 8];
+          const matureIndexes = (isT14 || isT15 || isT16 || isT17 || isT18 || isT19 || isT20) ? [2, 5, 8] : [2, 3, 6, 8];
           const growingIndexes = [1, 4, 7];
 
           if (matureIndexes.includes(index)) {
@@ -194,7 +195,7 @@ async function captureCurrentScreenshots(outputDir, taskId) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
       const page = await context.newPage();
       await page.addInitScript(seedFarmStateScript(taskId));
-      const reviewUrl = taskId === 'E-001-T19'
+      const reviewUrl = taskId === 'E-001-T19' || taskId === 'E-001-T20'
         ? `${DEV_SERVER_URL}/`
         : taskId === 'E-001-T17' || taskId === 'E-001-T18'
           ? `${DEV_SERVER_URL}/?farmReview=1`
@@ -223,7 +224,7 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
   const leftCenter = Math.round(width * 0.25);
   const rightCenter = Math.round(width * 0.75);
   const dividerX = Math.round(width / 2);
-  const referenceLabel = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19'
+  const referenceLabel = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19' || taskId === 'E-001-T20'
     ? 'Reference (E-001-T12 new style)'
     : 'Reference (E-001-T01 baseline)';
   return Buffer.from(`
@@ -238,7 +239,7 @@ function buildCompareHeaderSvg(width, headerHeight, viewportName, taskId) {
 }
 
 function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, headerHeight) {
-  if (taskId !== 'E-001-T11' && taskId !== 'E-001-T12' && taskId !== 'E-001-T13' && taskId !== 'E-001-T14' && taskId !== 'E-001-T15' && taskId !== 'E-001-T16' && taskId !== 'E-001-T17' && taskId !== 'E-001-T18' && taskId !== 'E-001-T19') {
+  if (taskId !== 'E-001-T11' && taskId !== 'E-001-T12' && taskId !== 'E-001-T13' && taskId !== 'E-001-T14' && taskId !== 'E-001-T15' && taskId !== 'E-001-T16' && taskId !== 'E-001-T17' && taskId !== 'E-001-T18' && taskId !== 'E-001-T19' && taskId !== 'E-001-T20') {
     return null;
   }
 
@@ -269,12 +270,14 @@ function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, he
         { id: 3, x: currentLeft + 214, y: headerHeight + 612 },
       ];
 
-  const points = (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19') ? t12Points : t11Points;
+  const points = (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19' || taskId === 'E-001-T20') ? t12Points : t11Points;
   const legendWidth = viewportName === 'mobile' ? 260 : 350;
   const legendX = totalWidth - legendWidth - 14;
   const legendY = headerHeight + 16;
-  const line1 = taskId === 'E-001-T19'
-    ? '1. Red info strip removed from plots page'
+  const line1 = taskId === 'E-001-T20'
+    ? '1. Sun now stays fully in sky layer (no field overlap)'
+    : taskId === 'E-001-T19'
+      ? '1. Red info strip removed from plots page'
     : taskId === 'E-001-T18'
       ? '1. Top blue-cut frame perception removed'
       : taskId === 'E-001-T17'
@@ -290,8 +293,10 @@ function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, he
                 : taskId === 'E-001-T12'
                   ? '1. 3x3 board + 9 plots enabled'
                   : '1. Corner props enlarged + rebalanced';
-  const line2 = taskId === 'E-001-T19'
-    ? '2. Left-right board margins narrowed by ~50%'
+  const line2 = taskId === 'E-001-T20'
+    ? '2. Sky + distant background layers rebuilt toward reference'
+    : taskId === 'E-001-T19'
+      ? '2. Left-right board margins narrowed by ~50%'
     : taskId === 'E-001-T18'
       ? '2. Left-right blue margins narrowed'
       : taskId === 'E-001-T17'
@@ -307,8 +312,10 @@ function buildChangeMarkersSvg(totalWidth, totalHeight, viewportName, taskId, he
                 : taskId === 'E-001-T12'
                   ? '2. New 2D reference composition aligned'
                   : '2. Compact review shell (header removed)';
-  const line3 = taskId === 'E-001-T19'
-    ? '3. Plots entry stays default V2 on both views'
+  const line3 = taskId === 'E-001-T20'
+    ? '3. Plot art refined + loop motion with reduced-motion fallback'
+    : taskId === 'E-001-T19'
+      ? '3. Plots entry stays default V2 on both views'
     : taskId === 'E-001-T18'
       ? '3. 9-tile area ratio increased on both views'
       : taskId === 'E-001-T17'
@@ -406,13 +413,13 @@ async function generateCompareArtifacts(runId, taskId) {
     await captureCurrentScreenshots(outputDir, taskId);
 
     for (const viewport of viewports) {
-      const baselinePath = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19'
+      const baselinePath = taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19' || taskId === 'E-001-T20'
         ? path.join(outputDir, `${taskId}-reference-${viewport.name}.png`)
         : path.join(BASELINE_DIR, `e001-t01-baseline-${viewport.name}.png`);
       const currentPath = path.join(outputDir, `${taskId}-current-${viewport.name}.png`);
       const outputPath = path.join(outputDir, `${taskId}-compare-${viewport.name}.png`);
 
-      if (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19') {
+      if (taskId === 'E-001-T12' || taskId === 'E-001-T13' || taskId === 'E-001-T14' || taskId === 'E-001-T15' || taskId === 'E-001-T16' || taskId === 'E-001-T17' || taskId === 'E-001-T18' || taskId === 'E-001-T19' || taskId === 'E-001-T20') {
         await sharp(E001_T12_REFERENCE_PATH)
           .resize(viewport.width, viewport.height, {
             fit: 'contain',
