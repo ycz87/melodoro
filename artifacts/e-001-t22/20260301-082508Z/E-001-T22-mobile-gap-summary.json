@@ -1,0 +1,18 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "lastRowBottomPx": 671.1,
+  "infoCardTopPx": 677.3,
+  "gapPx": 6.1,
+  "targetPx": 24,
+  "tolerancePx": 8,
+  "thresholdPx": 32,
+  "pass": true,
+  "generatedAt": "2026-03-01T08:26:36.008Z",
+  "files": {
+    "current": "E-001-T22-mobile-gap-current.png",
+    "annotation": "E-001-T22-mobile-gap-annotation.png"
+  }
+}

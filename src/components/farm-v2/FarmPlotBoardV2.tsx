@@ -372,16 +372,25 @@ export function FarmPlotBoardV2({
     [plots],
   );
 
-  const boardWidth = compactMode
+  const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
+  const useTightMobileSpacing = isNarrowScreen && !compactMode;
+
+  const boardWidth = compactMode || useTightMobileSpacing
     ? 'min(96vw, 500px)'
     : 'min(92vw, 900px)';
-  const boardGap = compactMode ? 'clamp(6px, 1vw, 9px)' : 'clamp(8px, 0.8vw, 11px)';
+  const boardGap = compactMode || useTightMobileSpacing
+    ? 'clamp(6px, 1vw, 9px)'
+    : 'clamp(8px, 0.8vw, 11px)';
 
   return (
     <div
       className="relative w-full overflow-hidden"
       style={{
-        minHeight: compactMode ? '100dvh' : 'min(100dvh, 760px)',
+        minHeight: compactMode
+          ? 'min(100dvh, 630px)'
+          : useTightMobileSpacing
+            ? 'min(100dvh, 556px)'
+            : 'min(100dvh, 760px)',
         isolation: 'isolate',
         background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
       }}
@@ -398,8 +407,14 @@ export function FarmPlotBoardV2({
       <div
         className="relative z-20 mx-auto flex w-full justify-center px-0 sm:px-2"
         style={{
-          paddingTop: compactMode ? 'clamp(168px, 31vh, 214px)' : 'clamp(146px, 22vh, 200px)',
-          paddingBottom: compactMode ? 'clamp(10px, 1.8vh, 16px)' : 'clamp(12px, 2vh, 20px)',
+          paddingTop: compactMode
+            ? 'clamp(168px, 31vh, 214px)'
+            : useTightMobileSpacing
+              ? 'clamp(150px, 22vh, 182px)'
+              : 'clamp(146px, 22vh, 200px)',
+          paddingBottom: compactMode || useTightMobileSpacing
+            ? 'clamp(6px, 1.1vh, 10px)'
+            : 'clamp(12px, 2vh, 20px)',
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>

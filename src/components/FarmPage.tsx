@@ -391,7 +391,7 @@ export function FarmPage({
 
       {/* 农场场景 */}
       <div
-        className={`farm-page min-h-0 flex-1 ${compactShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
+        className={`farm-page min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
         style={compactShell ? { backgroundColor: '#5a8c3a' } : undefined}
       >
           {useFarmPlotBoardV2 ? (
@@ -446,6 +446,7 @@ export function FarmPage({
 
       {useFarmPlotBoardV2 && activeGrowingPlot && activeGrowingSnapshot && (
         <div
+          data-testid="farm-v2-growth-info-card"
           className="mx-2 rounded-[var(--radius-card)] border px-3 py-2 text-xs shadow-[var(--shadow-card)] sm:mx-0"
           style={{
             backgroundColor: `${theme.surface}e8`,
