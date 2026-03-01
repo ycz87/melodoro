@@ -1,0 +1,10 @@
+{
+  "taskId": "E-001-T22",
+  "scope": "Step B interaction recovery",
+  "outputDir": "/home/ycz87/.openclaw/workspace-coder/cosmelon/artifacts/e-001-t22/20260301-100759Z",
+  "videoFiles": [
+    "E-001-T22-step-b-interaction-desktop.webm",
+    "E-001-T22-step-b-interaction-mobile.webm"
+  ],
+  "generatedAt": "2026-03-01T10:08:43.199Z"
+}

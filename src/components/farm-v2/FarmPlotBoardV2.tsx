@@ -111,11 +111,13 @@ function FruitTree({
   right,
   top,
   scale = 1,
+  testId,
 }: {
   left?: string;
   right?: string;
   top: string;
   scale?: number;
+  testId?: string;
 }) {
   const wrapperStyle = {
     left,
@@ -126,7 +128,7 @@ function FruitTree({
   };
 
   return (
-    <div className="absolute z-[7]" style={wrapperStyle}>
+    <div className="absolute z-[7]" data-testid={testId} style={wrapperStyle}>
       <div
         className="absolute left-1/2 bottom-[2px] -translate-x-1/2 rounded-full"
         style={{
@@ -185,7 +187,7 @@ function FruitTree({
 
 function Cottage({ left, top }: { left: string; top: string }) {
   return (
-    <div className="absolute z-[7]" style={{ left, top, width: '58px', height: '54px' }}>
+    <div className="absolute z-[7]" data-testid="farm-v2-cottage" style={{ left, top, width: '58px', height: '54px' }}>
       <div
         className="absolute left-1/2 bottom-[1px] h-[7px] w-[28px] -translate-x-1/2 rounded-full"
         style={{
@@ -211,6 +213,9 @@ function Cottage({ left, top }: { left: string; top: string }) {
 }
 
 function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
+  const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
+  const useTightBackdrop = isNarrowScreen && !compactMode;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {/* Sky layer */}
@@ -295,7 +300,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="absolute z-[6]"
         style={{
-          top: compactMode ? '31.2%' : '30.5%',
+          top: compactMode ? '30.8%' : useTightBackdrop ? '30.2%' : '29.8%',
           left: '50%',
           width: compactMode ? '38%' : '28%',
           height: compactMode ? '11.5%' : '10.8%',
@@ -305,14 +310,27 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
         }}
       />
 
-      <Cottage left={compactMode ? '4.2%' : '10%'} top={compactMode ? '32.1%' : '31.5%'} />
-      <FruitTree left={compactMode ? '72%' : '77%'} top={compactMode ? '31.1%' : '30.8%'} scale={compactMode ? 0.88 : 0.98} />
-      <FruitTree left={compactMode ? '82.5%' : '86%'} top={compactMode ? '32.2%' : '31.8%'} scale={compactMode ? 0.76 : 0.84} />
+      <FruitTree
+        left={compactMode ? '8.2%' : useTightBackdrop ? '8%' : '9.2%'}
+        top={compactMode ? '30.5%' : useTightBackdrop ? '30.2%' : '29.8%'}
+        scale={compactMode ? 0.84 : useTightBackdrop ? 0.9 : 0.94}
+        testId="farm-v2-tree-left"
+      />
+      <Cottage
+        left={compactMode ? '18%' : useTightBackdrop ? '20%' : '23.5%'}
+        top={compactMode ? '31%' : useTightBackdrop ? '30.6%' : '30.2%'}
+      />
+      <FruitTree
+        right={compactMode ? '7.8%' : useTightBackdrop ? '7.2%' : '8.8%'}
+        top={compactMode ? '30.6%' : useTightBackdrop ? '30.3%' : '29.9%'}
+        scale={compactMode ? 0.86 : useTightBackdrop ? 0.92 : 0.98}
+        testId="farm-v2-tree-right"
+      />
 
       {/* Clear fence: posts + 2 rails */}
       <div
         className="absolute left-[7%] right-[7%] z-[8]"
-        style={{ top: compactMode ? '40.4%' : '39.5%', height: compactMode ? '14px' : '15px' }}
+        style={{ top: compactMode ? '39.3%' : useTightBackdrop ? '38.5%' : '38.2%', height: compactMode ? '14px' : '15px' }}
       >
         <div
           className="absolute left-0 right-0 top-[1px] h-[3px] rounded-full"
@@ -412,8 +430,8 @@ export function FarmPlotBoardV2({
           paddingTop: compactMode
             ? 'clamp(168px, 31vh, 214px)'
             : useTightMobileSpacing
-              ? 'clamp(150px, 22vh, 182px)'
-              : 'clamp(146px, 22vh, 200px)',
+              ? 'clamp(132px, 19vh, 164px)'
+              : 'clamp(132px, 20vh, 186px)',
           paddingBottom: compactMode
             ? 'clamp(6px, 1.1vh, 10px)'
             : useTightMobileSpacing

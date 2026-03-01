@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-03-01T10:50:33.851Z",
+  "checks": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768,
+        "name": "desktop"
+      },
+      "relations": {
+        "cottageLeftOfBoardCenter": true,
+        "cottageAboveBoardCenter": true,
+        "leftTreeLeftOfCottage": true,
+        "rightTreeRightOfBoardCenter": true
+      },
+      "pass": true,
+      "centers": {
+        "board": {
+          "x": 683,
+          "y": 742.8
+        },
+        "cottage": {
+          "x": 358.5,
+          "y": 465.8
+        },
+        "treeLeft": {
+          "x": 167.9,
+          "y": 467.4
+        },
+        "treeRight": {
+          "x": 1202.2,
+          "y": 469.9
+        }
+      },
+      "files": {
+        "screenshot": "E-001-T22-R5-position-desktop.png",
+        "annotation": "E-001-T22-R5-position-annotation-desktop.png"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "name": "mobile"
+      },
+      "relations": {
+        "cottageLeftOfBoardCenter": true,
+        "cottageAboveBoardCenter": true,
+        "leftTreeLeftOfCottage": true,
+        "rightTreeRightOfBoardCenter": true
+      },
+      "pass": true,
+      "centers": {
+        "board": {
+          "x": 195,
+          "y": 464.8
+        },
+        "cottage": {
+          "x": 107,
+          "y": 309.1
+        },
+        "treeLeft": {
+          "x": 59.1,
+          "y": 311.4
+        },
+        "treeRight": {
+          "x": 333.4,
+          "y": 312.6
+        }
+      },
+      "files": {
+        "screenshot": "E-001-T22-R5-position-mobile.png",
+        "annotation": "E-001-T22-R5-position-annotation-mobile.png"
+      }
+    }
+  ]
+}
