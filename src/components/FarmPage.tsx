@@ -178,6 +178,53 @@ export function FarmPage({
     return () => window.clearInterval(timerId);
   }, []);
 
+  const activeGrowingPlot = useMemo(() => {
+    if (activeTooltipPlotId === null) return null;
+    const match = farm.plots.find((plot) => plot.id === activeTooltipPlotId);
+    return match?.state === 'growing' ? match : null;
+  }, [activeTooltipPlotId, farm.plots]);
+
+  const activeGrowingSnapshot = useMemo(() => {
+    if (!activeGrowingPlot) return null;
+
+    const matureMinutes = activeGrowingPlot.varietyId
+      ? (VARIETY_DEFS[activeGrowingPlot.varietyId]?.matureMinutes ?? 10000)
+      : 10000;
+
+    const hasTimeComponent = typeof activeGrowingPlot.lastUpdateDate === 'string'
+      && activeGrowingPlot.lastUpdateDate.includes('T');
+    const parsedLastUpdateTs = hasTimeComponent
+      ? new Date(activeGrowingPlot.lastUpdateDate as string).getTime()
+      : NaN;
+    const elapsedMinutes = Number.isFinite(parsedLastUpdateTs)
+      ? Math.max(0, Math.floor((nowTimestamp - parsedLastUpdateTs) / 60000))
+      : 0;
+
+    const displayAccumulatedMinutes = Math.min(
+      matureMinutes,
+      hasTimeComponent ? activeGrowingPlot.accumulatedMinutes + elapsedMinutes : activeGrowingPlot.accumulatedMinutes,
+    );
+    const displayProgress = Math.min(
+      0.999,
+      Math.max(activeGrowingPlot.progress, matureMinutes > 0 ? displayAccumulatedMinutes / matureMinutes : 0),
+    );
+
+    return {
+      stage: getGrowthStage(displayProgress),
+      progressPercent: Math.min(99, Math.floor(displayProgress * 100)),
+      accumulatedMinutes: displayAccumulatedMinutes,
+      matureMinutes,
+      hasTracker: activeGrowingPlot.hasTracker,
+      needsFocusHint: displayProgress < 0.5,
+    };
+  }, [activeGrowingPlot, nowTimestamp]);
+
+  useEffect(() => {
+    if (activeTooltipPlotId !== null && !activeGrowingPlot) {
+      setActiveTooltipPlotId(null);
+    }
+  }, [activeTooltipPlotId, activeGrowingPlot]);
+
   const totalBaseSeeds = seeds.normal + seeds.epic + seeds.legendary;
   const totalPlantableSeeds = totalBaseSeeds + injectedSeeds.length + hybridSeeds.length + prismaticSeeds.length + darkMatterSeeds.length;
   const harvestablePlotCount = useMemo(
@@ -355,6 +402,18 @@ export function FarmPage({
               coinBalance={coinBalance}
               plantableSeedCount={totalPlantableSeeds}
               harvestablePlotCount={harvestablePlotCount}
+              onPlotClick={(plotId, state) => {
+                if (state === 'empty') {
+                  setActiveTooltipPlotId(null);
+                  if (totalPlantableSeeds > 0) setPlantingPlotId(plotId);
+                  else onGoWarehouse();
+                } else if (state === 'growing') {
+                  setActiveTooltipPlotId(activeTooltipPlotId === plotId ? null : plotId);
+                } else if (state === 'mature') {
+                  setActiveTooltipPlotId(null);
+                  handleHarvest(plotId);
+                }
+              }}
             />
           ) : (
             <SimpleFarmGrid
@@ -384,6 +443,49 @@ export function FarmPage({
             />
           )}
       </div>
+
+      {useFarmPlotBoardV2 && activeGrowingPlot && activeGrowingSnapshot && (
+        <div
+          className="mx-2 rounded-[var(--radius-card)] border px-3 py-2 text-xs shadow-[var(--shadow-card)] sm:mx-0"
+          style={{
+            backgroundColor: `${theme.surface}e8`,
+            borderColor: `${theme.accent}44`,
+            color: theme.text,
+          }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-semibold" style={{ color: theme.accent }}>
+              🌱 {t.farmStage(activeGrowingSnapshot.stage)} · {activeGrowingSnapshot.progressPercent}%
+            </div>
+            <button
+              onClick={() => setActiveTooltipPlotId(null)}
+              className="rounded px-1.5 py-0.5 text-[11px]"
+              style={{ backgroundColor: `${theme.text}14`, color: theme.textMuted }}
+              aria-label="Close growth tooltip"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>
+            {t.farmGrowthTime(activeGrowingSnapshot.accumulatedMinutes, activeGrowingSnapshot.matureMinutes)}
+          </div>
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: `${theme.text}1f` }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${activeGrowingSnapshot.progressPercent}%`,
+                background: 'linear-gradient(90deg, #6bc15a 0%, #86db68 100%)',
+              }}
+            />
+          </div>
+          {activeGrowingSnapshot.hasTracker && (
+            <div className="mt-1 text-[11px]" style={{ color: '#f59e0b' }}>📡 {t.itemStarTrackerActive}</div>
+          )}
+          {activeGrowingSnapshot.needsFocusHint && (
+            <div className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>{t.farmFocusBoostHint}</div>
+          )}
+        </div>
+      )}
 
       {/* 没有种子提示 */}
       {totalPlantableSeeds === 0 && farm.plots.every(p => p.state === 'empty') && (

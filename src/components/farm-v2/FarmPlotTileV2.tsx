@@ -5,6 +5,7 @@ export type FarmPlotTileState = 'empty' | 'growing' | 'mature';
 
 interface FarmPlotTileV2Props {
   state: FarmPlotTileState;
+  onClick?: () => void;
 }
 
 const MOTION_CLASS = 'farm-v2-motion';
@@ -171,11 +172,15 @@ function MatureCanopy() {
   );
 }
 
-export function FarmPlotTileV2({ state }: FarmPlotTileV2Props) {
+export function FarmPlotTileV2({ state, onClick }: FarmPlotTileV2Props) {
   return (
     <div
-      className="relative overflow-hidden"
+      className={`relative overflow-hidden${onClick ? ' cursor-pointer' : ''}`}
       data-state={state}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
       style={{
         width: '100%',
         aspectRatio: '1 / 1',

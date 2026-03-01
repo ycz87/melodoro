@@ -31,7 +31,8 @@
     "compare:e001-t21": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T21",
     "compare:e001-t22": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T22",
     "capture:e001-t17-entry": "node scripts/e001-t17-capture-entry-flow.mjs",
-    "capture:e001-t20-motion": "node scripts/e001-t20-capture-motion.mjs"
+    "capture:e001-t20-motion": "node scripts/e001-t20-capture-motion.mjs",
+    "capture:e001-t22-interactions": "node scripts/e001-t22-capture-interactions.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

@@ -9,6 +9,7 @@ interface FarmPlotBoardV2Props {
   coinBalance: number;
   plantableSeedCount: number;
   harvestablePlotCount: number;
+  onPlotClick?: (plotId: number, state: 'empty' | 'growing' | 'mature') => void;
 }
 
 const GRID_SIDE = 3;
@@ -364,6 +365,7 @@ export function FarmPlotBoardV2({
   coinBalance,
   plantableSeedCount,
   harvestablePlotCount,
+  onPlotClick,
 }: FarmPlotBoardV2Props) {
   const displaySlots = useMemo(
     () => Array.from({ length: TOTAL_PLOTS }, (_, index) => plots[index] ?? null),
@@ -415,16 +417,26 @@ export function FarmPlotBoardV2({
               filter: 'drop-shadow(0 11px 14px rgba(46,72,27,0.24))',
             }}
           >
-            {displaySlots.map((plot, index) => (
-              <div
-                key={`farm-v2-slot-${plot?.id ?? index}`}
-                style={{
-                  transform: `translateY(${Math.floor(index / GRID_SIDE) * (compactMode ? 2.4 : 3.2)}px)`,
-                }}
-              >
-                <FarmPlotTileV2 state={mapPlotStateToTileState(plot)} />
-              </div>
-            ))}
+            {displaySlots.map((plot, index) => {
+              const tileState = mapPlotStateToTileState(plot);
+              return (
+                <div
+                  key={`farm-v2-slot-${plot?.id ?? index}`}
+                  style={{
+                    transform: `translateY(${Math.floor(index / GRID_SIDE) * (compactMode ? 2.4 : 3.2)}px)`,
+                  }}
+                >
+                  <FarmPlotTileV2
+                    state={tileState}
+                    onClick={
+                      onPlotClick && plot
+                        ? () => onPlotClick(plot.id, tileState)
+                        : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
