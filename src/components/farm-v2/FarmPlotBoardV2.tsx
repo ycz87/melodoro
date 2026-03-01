@@ -437,7 +437,7 @@ export function FarmPlotBoardV2({
             : useTightMobileSpacing
               ? 'clamp(8px, 1.3vh, 12px)'
               : 'clamp(12px, 2vh, 20px)',
-          transform: useTightMobileSpacing ? 'translateY(clamp(168px, 20vh, 184px))' : undefined,
+          transform: useTightMobileSpacing ? 'translateY(clamp(156px, calc(26.7vw + 63px), 170px))' : undefined,
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>

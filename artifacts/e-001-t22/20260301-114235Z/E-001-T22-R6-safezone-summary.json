@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-03-01T11:43:41.552Z",
+  "checks": [
+    {
+      "viewport": {
+        "name": "mobile-390x844",
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "visualHeight": 844
+      },
+      "maxBottom": 829,
+      "bottomGap": 15,
+      "minLeft": 0.6,
+      "maxRight": 389.4,
+      "leftSafe": true,
+      "rightSafe": true,
+      "bottomSafe": true,
+      "gapRangeCheck": true,
+      "pass": true,
+      "files": {
+        "screenshot": "E-001-T22-R6-mobile-390x844.png",
+        "annotation": "E-001-T22-R6-safezone-mobile-390x844.png"
+      }
+    },
+    {
+      "viewport": {
+        "name": "narrow-360x800",
+        "width": 360,
+        "height": 800
+      },
+      "cssViewport": {
+        "width": 424,
+        "height": 943,
+        "visualHeight": 800
+      },
+      "maxBottom": 781.7,
+      "bottomGap": 18.3,
+      "minLeft": 1.4,
+      "maxRight": 358.6,
+      "leftSafe": true,
+      "rightSafe": true,
+      "bottomSafe": true,
+      "gapRangeCheck": true,
+      "pass": true,
+      "files": {
+        "screenshot": "E-001-T22-R6-narrow-360x800.png",
+        "annotation": "E-001-T22-R6-safezone-narrow-360x800.png"
+      }
+    }
+  ]
+}
