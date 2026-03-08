@@ -256,6 +256,7 @@ function App() {
   const farmPlotsRef = useRef(farm.plots);
   const previousFarmPlotsRef = useRef<Plot[] | null>(null);
   const updatePlotsRef = useRef(updatePlots);
+  const growthCarryMinutesRef = useRef(0);
   const sellingRef = useRef(false);
   const mutationGunMutexRef = useRef(false);
   const cosmicHeartUnlockingRef = useRef(false);
@@ -282,6 +283,7 @@ function App() {
   // ─── Farm daily update ───
   const todayKey = getTodayKey();
   const todayFocusMinutes = useMemo(() => getDayMinutes(records, todayKey), [records, todayKey]);
+  const appliedFocusMinutesRef = useRef(todayFocusMinutes);
   const farmUpdatedRef = useRef(false);
   const activeMutationToast = mutationToastQueue[0] ?? null;
   const activeRecoveryToast = recoveryToastQueue[0] ?? null;
@@ -419,6 +421,35 @@ function App() {
   }), [todayKey, todayFocusMinutes, farm.guardianBarrierDate]);
 
   useEffect(() => {
+    const previousFocusMinutes = appliedFocusMinutesRef.current;
+    if (todayFocusMinutes <= previousFocusMinutes) {
+      appliedFocusMinutesRef.current = todayFocusMinutes;
+      return;
+    }
+
+    if (!farmUpdatedRef.current) {
+      appliedFocusMinutesRef.current = todayFocusMinutes;
+      return;
+    }
+
+    const deltaFocusMinutes = todayFocusMinutes - previousFocusMinutes;
+    appliedFocusMinutesRef.current = todayFocusMinutes;
+
+    const focusBoostMinutes = calculateFocusBoost(deltaFocusMinutes);
+    if (focusBoostMinutes <= 0) return;
+
+    const nowTimestamp = Date.now();
+    const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
+      farmPlotsRef.current,
+      focusBoostMinutes * timeMultiplierRef.current,
+      nowTimestamp,
+    );
+    updatePlotsRef.current(newPlots);
+    enqueueMutationToasts(mutationToasts);
+    stolenRecords.forEach(addStolenRecord);
+  }, [todayFocusMinutes, runFarmGrowth, enqueueMutationToasts, addStolenRecord]);
+
+  useEffect(() => {
     const nowTimestamp = Date.now();
     if (farmUpdatedRef.current) return;
     if (!farm.lastActiveDate || farm.lastActiveDate === todayKey) {
@@ -469,16 +500,19 @@ function App() {
   }, [todayKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (timeMultiplier <= 1) return;
-
     const TICK_INTERVAL_MS = 5000; // 每 5 秒 tick 一次
     const intervalId = window.setInterval(() => {
-      const minutesPerTick = (TICK_INTERVAL_MS / 60000) * timeMultiplier;
+      const rawMinutesPerTick = (TICK_INTERVAL_MS / 60000) * timeMultiplier + growthCarryMinutesRef.current;
+      const minutesPerTick = Math.floor(rawMinutesPerTick);
+      growthCarryMinutesRef.current = rawMinutesPerTick - minutesPerTick;
+      if (minutesPerTick <= 0) return;
+
       const nowTimestamp = Date.now();
       const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
         farmPlotsRef.current,
         minutesPerTick,
         nowTimestamp,
+        false,
       );
       updatePlotsRef.current(newPlots);
       enqueueMutationToasts(mutationToasts);
