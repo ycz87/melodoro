@@ -409,8 +409,7 @@ export function FarmPage({
               onPlotClick={(plotId, state) => {
                 if (state === 'empty') {
                   setActiveTooltipPlotId(null);
-                  if (totalPlantableSeeds > 0) setPlantingPlotId(plotId);
-                  else onGoWarehouse();
+                  setPlantingPlotId(plotId);
                 } else if (state === 'growing') {
                   setActiveTooltipPlotId(activeTooltipPlotId === plotId ? null : plotId);
                 } else if (state === 'mature') {
@@ -434,8 +433,7 @@ export function FarmPage({
               trapNetCount={trapNetCount}
               onActiveTooltipChange={setActiveTooltipPlotId}
               onPlant={(plotId) => {
-                if (totalPlantableSeeds > 0) setPlantingPlotId(plotId);
-                else onGoWarehouse();
+                setPlantingPlotId(plotId);
               }}
               onHarvest={handleHarvest}
               onClear={onClear}

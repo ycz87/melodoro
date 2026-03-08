@@ -19,7 +19,7 @@
     {
       "name": "no-seed-boundary",
       "status": "pass",
-      "detail": "Plant modal shows all seed options as ×0 and disabled when shed seeds are empty."
+      "detail": "After rework, clicking an empty plot with zero seeds opens PlantModal instead of redirecting to Warehouse; all three seed options display ×0 and remain disabled. Proof: no-seed-modal-fix.png"
     },
     {
       "name": "mobile-regression-smoke",
