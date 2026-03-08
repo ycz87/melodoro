@@ -481,7 +481,7 @@ export function FarmPlotBoardV2({
       style={{
         minHeight: compactMode
           ? useCompactMobilePolish
-            ? 'min(100dvh, 720px)'
+            ? '100dvh'
             : 'min(100dvh, 630px)'
           : useTightMobileSpacing
             ? 'min(100dvh, 556px)'
