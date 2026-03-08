@@ -621,9 +621,11 @@ function App() {
     if (result.varietyId) {
       const variety = VARIETY_DEFS[result.varietyId];
       addFragment(variety.galaxy, result.varietyId, variety.rarity);
-      const basePrice = variety.sellPrice ?? 0;
-      const finalPrice = basePrice * (result.isMutant ? 3 : 1);
-      addCoins(finalPrice);
+      if (result.isNew) {
+        const basePrice = variety.sellPrice ?? 0;
+        const firstHarvestBonus = basePrice * (result.isMutant ? 3 : 1);
+        addCoins(firstHarvestBonus);
+      }
     }
     return result;
   }, [addCoins, addFragment, harvestPlot, todayKey]);
