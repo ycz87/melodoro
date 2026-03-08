@@ -2,6 +2,8 @@
 
 - Issue: #10 `农场手机竖屏底部遮挡修复`
 - Version: `v0.61.7`
+- Latest commit hash: `724e17c`
+- Core fix commit hash: `8f02bc3`
 - Branch: `feature/issue10-mobile-bottom-occlusion`
 - PR: #11
 
@@ -31,4 +33,4 @@
 ## Regression note
 
 - This rework only adds the required version bump for delivery completeness.
-- App version is now `v0.61.7`, satisfying the Issue #10 requirement that delivery must include version + commit hash + proof + regression note.
+- App version is now `v0.61.7`; this proof now explicitly records the latest commit `724e17c` and the core fix commit `8f02bc3`, satisfying the Issue #10 requirement that delivery must include version + commit hash + proof + regression note.
