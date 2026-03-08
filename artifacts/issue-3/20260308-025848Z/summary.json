@@ -1,0 +1,20 @@
+[
+  {
+    "name": "mobile-390x844-fix2",
+    "width": 390,
+    "height": 844,
+    "file": "artifacts/issue-3/20260308-025848Z/mobile-390x844-fix2.png"
+  },
+  {
+    "name": "mobile-360x800-fix2",
+    "width": 360,
+    "height": 800,
+    "file": "artifacts/issue-3/20260308-025848Z/mobile-360x800-fix2.png"
+  },
+  {
+    "name": "desktop-1440x900-fix2",
+    "width": 1440,
+    "height": 900,
+    "file": "artifacts/issue-3/20260308-025848Z/desktop-1440x900-fix2.png"
+  }
+]

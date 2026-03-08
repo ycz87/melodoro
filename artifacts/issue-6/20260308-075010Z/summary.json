@@ -1,0 +1,30 @@
+{
+  "runId": "20260308-075010Z",
+  "checks": [
+    {
+      "name": "harvest-linkage",
+      "status": "pass",
+      "detail": "After fix, coin balance increased from 20 to 28, harvested plot returned to empty, and mature count decreased from 4 to 3."
+    },
+    {
+      "name": "refresh-persistence",
+      "status": "pass",
+      "detail": "A growing plot preserved state, varietyId, seedQuality, plantedDate, lastUpdateDate and progress across refresh."
+    },
+    {
+      "name": "no-seed-boundary",
+      "status": "pass",
+      "detail": "Plant modal shows all three seed buttons as ×0 and disabled, with no erroneous planting state created."
+    },
+    {
+      "name": "mobile-regression-smoke",
+      "status": "pass",
+      "detail": "390x844 farm first-screen composition remains aligned with Issue #3 acceptance baseline."
+    },
+    {
+      "name": "locked-plot-scope-note",
+      "status": "not-applicable-on-farm-page",
+      "detail": "Current product renders unlocked plots only on the farm page; lock gating remains in Market plot expansion cards."
+    }
+  ]
+}
