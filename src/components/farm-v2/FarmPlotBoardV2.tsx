@@ -477,7 +477,7 @@ export function FarmPlotBoardV2({
 
   return (
     <div
-      className={`relative w-full ${useTightMobileSpacing ? 'overflow-visible' : 'overflow-hidden'}`}
+      className="relative w-full overflow-hidden"
       style={{
         minHeight: compactMode
           ? useCompactMobilePolish
