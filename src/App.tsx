@@ -621,9 +621,9 @@ function App() {
     if (result.varietyId) {
       const variety = VARIETY_DEFS[result.varietyId];
       addFragment(variety.galaxy, result.varietyId, variety.rarity);
-      if (result.isNew) {
-        addCoins(variety.sellPrice);
-      }
+      const basePrice = variety.sellPrice ?? 0;
+      const finalPrice = basePrice * (result.isMutant ? 3 : 1);
+      addCoins(finalPrice);
     }
     return result;
   }, [addCoins, addFragment, harvestPlot, todayKey]);
