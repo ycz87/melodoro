@@ -216,6 +216,25 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;
+  // Keep the mobile horizon stable while the extra viewport height becomes usable foreground.
+  const tightBackdropMetrics = useTightBackdrop
+    ? {
+      skyHeight: 'clamp(184px, 23vh, 198px)',
+      hillTop: 'clamp(184px, 23vh, 198px)',
+      hillHeight: 'clamp(84px, 10.4vh, 90px)',
+      backHillTop: 'clamp(198px, 24.4vh, 208px)',
+      frontHillTop: 'clamp(212px, 26vh, 222px)',
+      grassTop: 'clamp(282px, 34.8vh, 296px)',
+      sunHaloTop: '4.5%',
+      sunTop: '6.8%',
+      pathTop: 'clamp(214px, 26.5vh, 224px)',
+      leftTreeTop: 'clamp(214px, 26.4vh, 224px)',
+      cottageTop: 'clamp(218px, 27vh, 228px)',
+      rightTreeTop: 'clamp(214px, 26.5vh, 224px)',
+      fenceTop: 'clamp(258px, 31.8vh, 272px)',
+      foregroundTop: 'clamp(338px, 41.5vh, 352px)',
+    }
+    : null;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -228,7 +247,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '23.8%'
               : '28%'
             : useTightBackdrop
-              ? '35%'
+              ? (tightBackdropMetrics?.skyHeight ?? '27%')
               : '27%',
           background: useTightBackdrop
             ? 'linear-gradient(180deg, #8ed3f5 0%, #b8e8fa 58%, #d1ebc7 100%)'
@@ -245,9 +264,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '23.8%'
               : '28%'
             : useTightBackdrop
-              ? '35%'
+              ? (tightBackdropMetrics?.hillTop ?? '27%')
               : '27%',
-          height: compactMode ? '16%' : '16%',
+          height: compactMode
+            ? '16%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.hillHeight ?? '16%')
+              : '16%',
           background: 'linear-gradient(180deg, #d1ebc7 0%, #bbdea9 44%, #9fcc88 100%)',
         }}
       />
@@ -262,9 +285,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '24.6%'
               : '28.8%'
             : useTightBackdrop
-              ? '35.6%'
+              ? (tightBackdropMetrics?.backHillTop ?? '28%')
               : '28%',
-          height: compactMode ? '17.6%' : '17.2%',
+          height: compactMode
+            ? '17.6%'
+            : useTightBackdrop
+              ? 'clamp(92px, 11.6vh, 102px)'
+              : '17.2%',
           borderRadius: '50% 50% 0 0 / 78% 78% 0 0',
           background: 'linear-gradient(180deg, rgba(151,198,115,0.9) 0%, rgba(116,171,86,0.94) 100%)',
         }}
@@ -279,9 +306,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '26.2%'
               : '30.2%'
             : useTightBackdrop
-              ? '37%'
+              ? (tightBackdropMetrics?.frontHillTop ?? '29.5%')
               : '29.5%',
-          height: compactMode ? '13.6%' : '13.2%',
+          height: compactMode
+            ? '13.6%'
+            : useTightBackdrop
+              ? 'clamp(72px, 9.2vh, 82px)'
+              : '13.2%',
           borderRadius: '54% 46% 0 0 / 100% 100% 0 0',
           background: 'linear-gradient(180deg, rgba(171,212,132,0.86) 0%, rgba(126,182,94,0.88) 100%)',
         }}
@@ -296,7 +327,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '39.2%'
               : '44%'
             : useTightBackdrop
-              ? '51%'
+              ? (tightBackdropMetrics?.grassTop ?? '43%')
               : '43%',
           background: 'linear-gradient(180deg, #a8de90 0%, #95d06f 45%, #89c761 100%)',
         }}
@@ -338,7 +369,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '26.4%'
               : '30.8%'
             : useTightBackdrop
-              ? '38.2%'
+              ? (tightBackdropMetrics?.pathTop ?? '29.8%')
               : '29.8%',
           left: '50%',
           width: compactMode ? '38%' : '28%',
@@ -356,7 +387,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
             ? '26%'
             : '30.5%'
           : useTightBackdrop
-            ? '38.2%'
+            ? (tightBackdropMetrics?.leftTreeTop ?? '29.8%')
             : '29.8%'}
         scale={compactMode ? 0.84 : useTightBackdrop ? 0.9 : 0.94}
         testId="farm-v2-tree-left"
@@ -368,7 +399,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
             ? '26.7%'
             : '31%'
           : useTightBackdrop
-            ? '38.6%'
+            ? (tightBackdropMetrics?.cottageTop ?? '30.2%')
             : '30.2%'}
       />
       <FruitTree
@@ -378,7 +409,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
             ? '26.1%'
             : '30.6%'
           : useTightBackdrop
-            ? '38.3%'
+            ? (tightBackdropMetrics?.rightTreeTop ?? '29.9%')
             : '29.9%'}
         scale={compactMode ? 0.86 : useTightBackdrop ? 0.92 : 0.98}
         testId="farm-v2-tree-right"
@@ -393,7 +424,7 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '35.6%'
               : '39.3%'
             : useTightBackdrop
-              ? '47.8%'
+              ? (tightBackdropMetrics?.fenceTop ?? '38.2%')
               : '38.2%',
           height: compactMode ? '14px' : '15px',
         }}
@@ -424,9 +455,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
               ? '51.8%'
               : '56%'
             : useTightBackdrop
-              ? '62%'
+              ? (tightBackdropMetrics?.foregroundTop ?? '54%')
               : '54%',
-          height: compactMode ? '44%' : '46%',
+          height: compactMode
+            ? '44%'
+            : useTightBackdrop
+              ? 'calc(100% - clamp(338px, 41.5vh, 352px))'
+              : '46%',
           background:
             'linear-gradient(180deg, rgba(161,215,124,0.34) 0%, rgba(130,194,86,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
         }}
@@ -469,7 +504,7 @@ export function FarmPlotBoardV2({
   const boardWidth = compactMode
     ? 'min(96vw, 500px)'
     : useTightMobileSpacing
-      ? 'min(calc(100% - 4px), 500px)'
+      ? 'min(calc(100% - 18px), 480px)'
       : 'min(82vw, calc(100dvh - 290px), 620px)';
   const boardGap = compactMode || useTightMobileSpacing
     ? 'clamp(6px, 1vw, 9px)'
@@ -484,7 +519,7 @@ export function FarmPlotBoardV2({
             ? '100dvh'
             : 'min(100dvh, 630px)'
           : useTightMobileSpacing
-            ? 'min(100dvh, 556px)'
+            ? '100dvh'
             : 'min(76dvh, 660px)',
         isolation: 'isolate',
         background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
@@ -500,21 +535,21 @@ export function FarmPlotBoardV2({
       />
 
       <div
-        className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-1 sm:px-2' : 'px-0 sm:px-2'}`}
+        className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-2 sm:px-2' : 'px-0 sm:px-2'}`}
         style={{
           paddingTop: compactMode
             ? useCompactMobilePolish
               ? 'clamp(162px, 29vh, 204px)'
               : 'clamp(168px, 31vh, 214px)'
             : useTightMobileSpacing
-              ? 'clamp(132px, 19vh, 164px)'
+              ? 'clamp(188px, 24vh, 214px)'
               : 'clamp(96px, 14.5vh, 132px)',
           paddingBottom: compactMode
             ? useCompactMobilePolish
               ? 'clamp(4px, 0.8vh, 8px)'
               : 'clamp(6px, 1.1vh, 10px)'
             : useTightMobileSpacing
-              ? 'clamp(8px, 1.3vh, 12px)'
+              ? 'clamp(18px, 3vh, 28px)'
               : 'clamp(18px, 2.5vh, 28px)',
         }}
       >
