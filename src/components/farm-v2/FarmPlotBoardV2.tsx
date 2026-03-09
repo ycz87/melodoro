@@ -470,12 +470,23 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
   );
 }
 
-function FarmBoardSceneDecorV2({ compactMode }: { compactMode: boolean }) {
+function FarmBoardSceneDecorV2({
+  compactMode,
+  useTightMobileSpacing,
+}: {
+  compactMode: boolean;
+  useTightMobileSpacing: boolean;
+}) {
+  if (useTightMobileSpacing) {
+    return null;
+  }
+
   return (
     <div
-      className="pointer-events-none absolute left-1/2 z-10 h-10 -translate-x-1/2 rounded-[999px]"
+      className="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-[999px]"
       style={{
         bottom: compactMode ? '-18px' : '-20px',
+        height: '40px',
         width: compactMode ? 'calc(100% + 56px)' : 'calc(100% + 140px)',
         background: 'radial-gradient(circle at center, rgba(83,128,55,0.58) 0%, rgba(88,128,54,0.22) 56%, rgba(88,128,54,0) 100%)',
       }}
@@ -504,7 +515,7 @@ export function FarmPlotBoardV2({
   const boardWidth = compactMode
     ? 'min(96vw, 500px)'
     : useTightMobileSpacing
-      ? 'min(calc(100% - 18px), 480px)'
+      ? 'min(calc(100% - 26px), 470px)'
       : 'min(82vw, calc(100dvh - 290px), 620px)';
   const boardGap = compactMode || useTightMobileSpacing
     ? 'clamp(6px, 1vw, 9px)'
@@ -542,19 +553,19 @@ export function FarmPlotBoardV2({
               ? 'clamp(162px, 29vh, 204px)'
               : 'clamp(168px, 31vh, 214px)'
             : useTightMobileSpacing
-              ? 'clamp(188px, 24vh, 214px)'
+              ? 'clamp(214px, 27vh, 238px)'
               : 'clamp(96px, 14.5vh, 132px)',
           paddingBottom: compactMode
             ? useCompactMobilePolish
               ? 'clamp(4px, 0.8vh, 8px)'
               : 'clamp(6px, 1.1vh, 10px)'
             : useTightMobileSpacing
-              ? 'clamp(18px, 3vh, 28px)'
+              ? 'clamp(24px, 3.8vh, 34px)'
               : 'clamp(18px, 2.5vh, 28px)',
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>
-          <FarmBoardSceneDecorV2 compactMode={compactMode} />
+          <FarmBoardSceneDecorV2 compactMode={compactMode} useTightMobileSpacing={useTightMobileSpacing} />
           <div
             className="relative z-20 grid grid-cols-3"
             data-testid="farm-plot-board-v2"
