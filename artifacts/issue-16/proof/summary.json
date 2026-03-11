@@ -1,0 +1,72 @@
+{
+  "url": "http://127.0.0.1:4173/",
+  "generatedAt": "2026-03-11T14:09:53.739Z",
+  "checks": [
+    {
+      "name": "language-picker-visible",
+      "screenshot": "artifacts/issue-16/proof/01-language-picker-zh-tw-visible.png",
+      "locale": "en-US",
+      "containsTraditionalOption": true,
+      "containsEnglishOption": true
+    },
+    {
+      "name": "manual-switch-zh-tw",
+      "screenshot": "artifacts/issue-16/proof/02-main-page-manual-zh-tw.png",
+      "locale": "manual-from-en-US",
+      "contains": {
+        "appName": true,
+        "focus": true,
+        "settings": false,
+        "taskPlaceholder": false
+      }
+    },
+    {
+      "name": "auto-detect-zh-TW",
+      "screenshot": "artifacts/issue-16/proof/03-auto-detect-zh-tw.png",
+      "locale": "zh-TW",
+      "matchedAllExpectedText": false,
+      "expected": [
+        "西瓜時鐘",
+        "專注",
+        "設定"
+      ],
+      "bodyPreview": "西瓜時鐘 🍉 專注 🏠 瓜棚 🌱 農場 🏪 商城 🏆 📅 🍉 番茄模式 📋 專案模式 25:00 種一顆西瓜，收穫專注 🍉 v0.61.9"
+    },
+    {
+      "name": "auto-detect-zh-HK",
+      "screenshot": "artifacts/issue-16/proof/04-auto-detect-zh-hk.png",
+      "locale": "zh-HK",
+      "matchedAllExpectedText": false,
+      "expected": [
+        "西瓜時鐘",
+        "專注",
+        "設定"
+      ],
+      "bodyPreview": "西瓜時鐘 🍉 專注 🏠 瓜棚 🌱 農場 🏪 商城 🏆 📅 🍉 番茄模式 📋 專案模式 25:00 種一顆西瓜，收穫專注 🍉 v0.61.9"
+    },
+    {
+      "name": "auto-detect-zh-Hant",
+      "screenshot": "artifacts/issue-16/proof/05-auto-detect-zh-hant.png",
+      "locale": "zh-Hant",
+      "matchedAllExpectedText": false,
+      "expected": [
+        "西瓜時鐘",
+        "專注",
+        "設定"
+      ],
+      "bodyPreview": "西瓜時鐘 🍉 專注 🏠 瓜棚 🌱 農場 🏪 商城 🏆 📅 🍉 番茄模式 📋 專案模式 25:00 種一顆西瓜，收穫專注 🍉 v0.61.9"
+    },
+    {
+      "name": "auto-detect-zh-CN",
+      "screenshot": "artifacts/issue-16/proof/06-auto-detect-zh-cn.png",
+      "locale": "zh-CN",
+      "matchedAllExpectedText": false,
+      "expected": [
+        "西瓜时钟",
+        "专注",
+        "设置"
+      ],
+      "bodyPreview": "西瓜时钟 🍉 专注 🏠 瓜棚 🌱 农场 🏪 商城 🏆 📅 🍉 番茄模式 📋 项目模式 25:00 种一颗西瓜，收获专注 🍉 v0.61.9"
+    }
+  ]
+}

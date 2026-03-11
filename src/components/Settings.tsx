@@ -140,6 +140,7 @@ function VolumeSlider({ label, value, onChange }: {
 const REPEAT_OPTIONS = [1, 3, 5, 0];
 const LANGUAGE_DISPLAY: Record<Locale, { flag: string; name: string }> = {
   zh: { flag: '🇨🇳', name: '中文' },
+  'zh-TW': { flag: '🇹🇼', name: '繁體中文' },
   en: { flag: '🇺🇸', name: 'English' },
   ja: { flag: '🇯🇵', name: '日本語' },
   ko: { flag: '🇰🇷', name: '한국어' },
