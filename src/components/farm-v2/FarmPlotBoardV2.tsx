@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import type { Plot } from '../../types/farm';
+import type { Plot, Weather } from '../../types/farm';
 import { FarmPlotTileV2, mapPlotStateToTileState } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
+  weather: Weather | null;
   compactMode?: boolean;
   todayFocusMinutes: number;
   coinBalance: number;
@@ -212,10 +213,11 @@ function Cottage({ left, top }: { left: string; top: string }) {
   );
 }
 
-function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
+function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weather: Weather | null }) {
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;
+  const isNight = weather === 'night';
   // Keep the mobile horizon stable while the extra viewport height becomes usable foreground.
   const tightBackdropMetrics = useTightBackdrop
     ? {
@@ -337,25 +339,58 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
         className={`absolute z-[6] rounded-full ${MOTION_CLASS}`}
         style={{
           top: compactMode ? '5%' : '4.5%',
-          right: compactMode ? '12%' : '14%',
-          width: compactMode ? '84px' : '98px',
-          height: compactMode ? '84px' : '98px',
-          background: 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
+          right: compactMode ? (isNight ? '14%' : '12%') : (isNight ? '18.5%' : '14%'),
+          width: compactMode ? (isNight ? '82px' : '84px') : (isNight ? '98px' : '98px'),
+          height: compactMode ? (isNight ? '82px' : '84px') : (isNight ? '98px' : '98px'),
+          background: isNight
+            ? 'radial-gradient(circle at 50% 50%, rgba(238,245,255,0.2) 0%, rgba(215,229,255,0.38) 44%, rgba(186,204,236,0) 100%)'
+            : 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
           animation: 'farmV2SunHalo 5.6s ease-in-out -0.8s infinite',
         }}
       />
       <div
-        className={`absolute z-[7] rounded-full ${MOTION_CLASS}`}
+        className={`absolute ${isNight ? 'z-[9]' : 'z-[7]'} rounded-full ${MOTION_CLASS}`}
+        data-testid="farm-v2-celestial-body"
+        aria-label={isNight ? 'moon' : 'sun'}
         style={{
-          top: compactMode ? '7.2%' : '6.8%',
-          right: compactMode ? '14.4%' : '16%',
-          width: compactMode ? '46px' : '56px',
-          height: compactMode ? '46px' : '56px',
-          background: 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
-          boxShadow: '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
+          top: compactMode ? (isNight ? '7.4%' : '7.2%') : (isNight ? '7%' : '6.8%'),
+          right: compactMode ? (isNight ? '16.6%' : '14.4%') : (isNight ? '21%' : '16%'),
+          width: compactMode ? (isNight ? '42px' : '46px') : (isNight ? '54px' : '56px'),
+          height: compactMode ? (isNight ? '42px' : '46px') : (isNight ? '54px' : '56px'),
+          background: isNight
+            ? 'radial-gradient(circle at 35% 30%, #fcfdff 0%, #e6efff 58%, #b8cae3 100%)'
+            : 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
+          boxShadow: isNight
+            ? '0 0 0 2px rgba(233,242,255,0.34), 0 0 24px rgba(211,224,249,0.42)'
+            : '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
           animation: 'farmV2SunFloat 7.8s ease-in-out -1.2s infinite',
         }}
-      />
+      >
+        {isNight && (
+          <>
+            <div
+              className="absolute rounded-full"
+              style={{
+                left: '24%',
+                top: '24%',
+                width: '18%',
+                height: '18%',
+                background: 'rgba(178,194,219,0.32)',
+              }}
+            />
+            <div
+              className="absolute rounded-full"
+              style={{
+                right: '26%',
+                bottom: '22%',
+                width: '14%',
+                height: '14%',
+                background: 'rgba(178,194,219,0.26)',
+              }}
+            />
+          </>
+        )}
+      </div>
 
       <CloudCluster top="3%" left="6%" width="22%" height="10%" opacity={0.9} duration="13s" delay="-0.8s" />
       <CloudCluster top="8%" left="34%" width="20%" height="10%" opacity={0.84} duration="16s" delay="-2.4s" />
@@ -496,6 +531,7 @@ function FarmBoardSceneDecorV2({
 
 export function FarmPlotBoardV2({
   plots,
+  weather,
   compactMode = false,
   todayFocusMinutes,
   coinBalance,
@@ -551,7 +587,7 @@ export function FarmPlotBoardV2({
         background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
       }}
     >
-      <FarmBackdropV2 compactMode={compactMode} />
+      <FarmBackdropV2 compactMode={compactMode} weather={weather} />
       <FarmHudV2
         compactMode={compactMode}
         todayFocusMinutes={todayFocusMinutes}

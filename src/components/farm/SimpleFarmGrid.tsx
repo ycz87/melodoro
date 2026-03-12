@@ -200,6 +200,7 @@ export function SimpleFarmGrid({
 
   const layout = useMemo(() => getGridLayout(viewportWidth), [viewportWidth]);
   const scenePalette = useMemo(() => buildScenePalette(theme), [theme]);
+  const isNight = weather === 'night';
   const isCompactMobile = viewportWidth < SMALL_MOBILE_BREAKPOINT;
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 
@@ -293,6 +294,10 @@ export function SimpleFarmGrid({
                 <stop offset="0%" stopColor={scenePalette.sunGlow} />
                 <stop offset="100%" stopColor="rgba(255,226,121,0)" />
               </radialGradient>
+              <radialGradient id={`farm-moon-glow-${sceneId}`} cx="50%" cy="50%" r="62%">
+                <stop offset="0%" stopColor="rgba(233,243,255,0.42)" />
+                <stop offset="100%" stopColor="rgba(233,243,255,0)" />
+              </radialGradient>
               <radialGradient id={`farm-horizon-mist-${sceneId}`} cx="50%" cy="50%" r="68%">
                 <stop offset="0%" stopColor={scenePalette.horizonMist} />
                 <stop offset="100%" stopColor="rgba(222,247,255,0)" />
@@ -313,14 +318,28 @@ export function SimpleFarmGrid({
             <rect x="0" y="0" width="1000" height="640" fill={`url(#farm-sky-haze-${sceneId})`} />
             <ellipse cx="500" cy="660" rx="620" ry="160" fill={`url(#farm-horizon-mist-${sceneId})`} opacity="0.76" />
 
-            <ellipse cx="156" cy="128" rx="106" ry="106" fill={`url(#farm-sun-glow-${sceneId})`} />
-            <g transform="translate(156 128)">
-              <circle cx="0" cy="0" r="42" fill={scenePalette.sunRing} opacity="0.54" />
-              <circle cx="0" cy="0" r="32" fill={scenePalette.sunCore} />
-              <circle cx="-14" cy="-6" r="3.2" fill="#cd8a41" />
-              <circle cx="14" cy="-6" r="3.2" fill="#cd8a41" />
-              <path d="M -12 11 Q 0 20 12 11" stroke="#cd8a41" strokeWidth="3" fill="none" strokeLinecap="round" />
-            </g>
+            {isNight ? (
+              <>
+                <ellipse cx="156" cy="128" rx="102" ry="102" fill={`url(#farm-moon-glow-${sceneId})`} />
+                <g transform="translate(156 128)">
+                  <circle cx="0" cy="0" r="34" fill="#eef4ff" />
+                  <circle cx="-10" cy="-12" r="4.4" fill="#cad8ef" opacity="0.58" />
+                  <circle cx="11" cy="10" r="3.8" fill="#cad8ef" opacity="0.48" />
+                  <circle cx="-7" cy="15" r="3" fill="#cad8ef" opacity="0.42" />
+                </g>
+              </>
+            ) : (
+              <>
+                <ellipse cx="156" cy="128" rx="106" ry="106" fill={`url(#farm-sun-glow-${sceneId})`} />
+                <g transform="translate(156 128)">
+                  <circle cx="0" cy="0" r="42" fill={scenePalette.sunRing} opacity="0.54" />
+                  <circle cx="0" cy="0" r="32" fill={scenePalette.sunCore} />
+                  <circle cx="-14" cy="-6" r="3.2" fill="#cd8a41" />
+                  <circle cx="14" cy="-6" r="3.2" fill="#cd8a41" />
+                  <path d="M -12 11 Q 0 20 12 11" stroke="#cd8a41" strokeWidth="3" fill="none" strokeLinecap="round" />
+                </g>
+              </>
+            )}
 
             <g opacity="0.87" filter={`url(#farm-cloud-soft-${sceneId})`}>
               <g transform="translate(264 154)">

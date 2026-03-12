@@ -402,6 +402,7 @@ export function FarmPage({
             <FarmPlotBoardV2
               compactMode={compactShell}
               plots={farm.plots}
+              weather={weather}
               todayFocusMinutes={todayFocusMinutes}
               coinBalance={coinBalance}
               plantableSeedCount={totalPlantableSeeds}
