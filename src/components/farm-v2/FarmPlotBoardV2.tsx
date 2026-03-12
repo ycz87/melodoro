@@ -520,18 +520,33 @@ export function FarmPlotBoardV2({
   const boardGap = compactMode || useTightMobileSpacing
     ? 'clamp(6px, 1vw, 9px)'
     : 'clamp(8px, 0.8vw, 11px)';
+  const sceneMinHeight = compactMode
+    ? useCompactMobilePolish
+      ? '100dvh'
+      : 'min(100dvh, 630px)'
+    : useTightMobileSpacing
+      ? 'clamp(620px, calc(100dvh - 112px - env(safe-area-inset-bottom, 0px)), 732px)'
+      : 'min(76dvh, 660px)';
+  const boardPaddingTop = compactMode
+    ? useCompactMobilePolish
+      ? 'clamp(162px, 29vh, 204px)'
+      : 'clamp(168px, 31vh, 214px)'
+    : useTightMobileSpacing
+      ? 'clamp(282px, 35.5vh, 304px)'
+      : 'clamp(96px, 14.5vh, 132px)';
+  const boardPaddingBottom = compactMode
+    ? useCompactMobilePolish
+      ? 'clamp(4px, 0.8vh, 8px)'
+      : 'clamp(6px, 1.1vh, 10px)'
+    : useTightMobileSpacing
+      ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.5vh, 16px))'
+      : 'clamp(18px, 2.5vh, 28px)';
 
   return (
     <div
       className="relative w-full overflow-hidden"
       style={{
-        minHeight: compactMode
-          ? useCompactMobilePolish
-            ? '100dvh'
-            : 'min(100dvh, 630px)'
-          : useTightMobileSpacing
-            ? '100dvh'
-            : 'min(76dvh, 660px)',
+        minHeight: sceneMinHeight,
         isolation: 'isolate',
         background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
       }}
@@ -548,20 +563,8 @@ export function FarmPlotBoardV2({
       <div
         className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-2 sm:px-2' : 'px-0 sm:px-2'}`}
         style={{
-          paddingTop: compactMode
-            ? useCompactMobilePolish
-              ? 'clamp(162px, 29vh, 204px)'
-              : 'clamp(168px, 31vh, 214px)'
-            : useTightMobileSpacing
-              ? 'clamp(214px, 27vh, 238px)'
-              : 'clamp(96px, 14.5vh, 132px)',
-          paddingBottom: compactMode
-            ? useCompactMobilePolish
-              ? 'clamp(4px, 0.8vh, 8px)'
-              : 'clamp(6px, 1.1vh, 10px)'
-            : useTightMobileSpacing
-              ? 'clamp(24px, 3.8vh, 34px)'
-              : 'clamp(18px, 2.5vh, 28px)',
+          paddingTop: boardPaddingTop,
+          paddingBottom: boardPaddingBottom,
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>
