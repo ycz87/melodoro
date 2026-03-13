@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import type { FarmStorage, Plot, CollectedVariety, VarietyId, GalaxyId, StolenRecord, Rarity } from '../types/farm';
 import type { SeedCounts, SeedQuality } from '../types/slicing';
-import { DEFAULT_FARM_STORAGE, createEmptyPlot, VARIETY_DEFS } from '../types/farm';
+import { DEFAULT_FARM_STORAGE, DEFAULT_UNLOCKED_PLOT_COUNT, createEmptyPlot, VARIETY_DEFS } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { rollVariety } from '../farm/growth';
 import { getPlotCount } from '../farm/galaxy';
@@ -82,6 +82,39 @@ function ensurePlotCapacity(plots: Plot[], requiredCount: number): Plot[] {
     nextPlots.push(createEmptyPlot(nextPlots.length));
   }
   return nextPlots;
+}
+
+function cloneDefaultPlots(): Plot[] {
+  return DEFAULT_FARM_STORAGE.plots.map((plot) => ({ ...plot }));
+}
+
+function isLegacyDefaultShowcaseLayout(plots: Plot[]): boolean {
+  if (plots.length !== MAX_PLOT_COUNT) return false;
+
+  return plots.every((plot, index) => {
+    if (plot.id !== index) return false;
+
+    if (index === 2 || index === 3 || index === 8) {
+      return plot.state === 'mature' && plot.varietyId === 'jade-stripe' && plot.progress >= 1;
+    }
+
+    if (index === 1 || index === 4 || index === 7) {
+      return plot.state === 'growing' && plot.varietyId === 'jade-stripe';
+    }
+
+    return plot.state === 'empty';
+  });
+}
+
+function shouldResetLegacyPlotBaseline(collection: CollectedVariety[], plots: Plot[]): boolean {
+  if (collection.length > 0) return false;
+  if (plots.length !== MAX_PLOT_COUNT) return false;
+
+  const legacyExtraPlotsAreEmpty = plots
+    .slice(DEFAULT_UNLOCKED_PLOT_COUNT)
+    .every((plot) => plot.state === 'empty');
+
+  return legacyExtraPlotsAreEmpty || isLegacyDefaultShowcaseLayout(plots);
 }
 
 function isPagesPreviewHost(): boolean {
@@ -261,6 +294,10 @@ function migrateFarm(raw: unknown): FarmStorage {
     result.collection = nextCollection;
     syncRefundedSeedsToShed(refundedSeeds);
     result.plots = result.plots.slice(0, MAX_PLOT_COUNT);
+  }
+
+  if (shouldResetLegacyPlotBaseline(result.collection, result.plots)) {
+    result.plots = cloneDefaultPlots();
   }
 
   const usePreviewShowcase = shouldSeedPreviewShowcase(result.collection, result.plots);

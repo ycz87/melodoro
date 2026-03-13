@@ -8,7 +8,6 @@ import { useTheme } from '../../hooks/useTheme';
 import { useI18n } from '../../i18n';
 import type { ThemeColors } from '../../types';
 import type { Plot, StolenRecord, Weather } from '../../types/farm';
-import { createEmptyPlot } from '../../types/farm';
 import { PlotCard } from '../FarmPage';
 import { FarmDecorations } from './FarmDecorations';
 import { IsometricPlotShell } from './IsometricPlotShell';
@@ -158,6 +157,54 @@ function buildScenePalette(theme: ThemeColors): ScenePalette {
   };
 }
 
+function LockedPlotCard() {
+  return (
+    <div
+      className="relative h-full w-full select-none"
+      data-state="locked"
+      data-locked="true"
+      aria-label="Locked plot"
+    >
+      <div
+        className="absolute inset-[8%] rounded-[18px]"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(91,78,64,0.12) 100%)',
+          border: '1px solid rgba(104,89,73,0.32)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+        }}
+      />
+      <div
+        className="absolute inset-[10%] rounded-[16px] opacity-55"
+        style={{
+          background: 'repeating-linear-gradient(135deg, rgba(90,75,60,0.16) 0px, rgba(90,75,60,0.16) 8px, rgba(255,255,255,0) 8px, rgba(255,255,255,0) 16px)',
+        }}
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#56493d]">
+        <div
+          className="grid h-11 w-11 place-items-center rounded-full border text-[1.2rem]"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.68) 0%, rgba(223,212,198,0.94) 100%)',
+            borderColor: 'rgba(102,86,71,0.42)',
+            boxShadow: '0 4px 10px rgba(72,60,50,0.12)',
+          }}
+        >
+          🔒
+        </div>
+        <span
+          className="rounded-full px-2.5 py-1 text-[10px] font-bold tracking-[0.18em]"
+          style={{
+            color: '#5e5145',
+            background: 'rgba(255,248,239,0.78)',
+            border: '1px solid rgba(101,87,73,0.26)',
+          }}
+        >
+          锁定
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function SimpleFarmGrid({
   plots,
   weather,
@@ -236,8 +283,11 @@ export function SimpleFarmGrid({
   const slotOffsetScale = compactMode
     ? 1
     : (isCompactMobile ? 0.96 : isMobile ? 1 : 1.02);
-  const displayPlots = useMemo(
-    () => Array.from({ length: TOTAL_SLOTS }, (_, index) => plots[index] ?? createEmptyPlot(index)),
+  const displaySlots = useMemo(
+    () => Array.from({ length: TOTAL_SLOTS }, (_, index) => ({
+      plot: plots[index] ?? null,
+      isLocked: index >= plots.length,
+    })),
     [plots],
   );
   const showReviewHud = compactMode;
@@ -463,13 +513,15 @@ export function SimpleFarmGrid({
               gridAutoRows: `${Math.round(effectivePlotSize * (compactMode ? (isMobile ? 0.9 : 0.88) : 0.56))}px`,
             }}
           >
-            {displayPlots.map((plot, slotIndex) => {
+            {displaySlots.map(({ plot, isLocked }, slotIndex) => {
               const placement = PORTRAIT_SLOT_PLACEMENTS[slotIndex] ?? PORTRAIT_SLOT_PLACEMENTS[0];
+              const slotId = plot?.id ?? slotIndex;
 
               return (
                 <div
-                  key={`plot-simple-${plot.id}-${slotIndex}`}
+                  key={`plot-simple-${slotId}-${slotIndex}`}
                   className="relative justify-self-center"
+                  data-slot-state={isLocked ? 'locked' : plot?.state ?? 'empty'}
                   style={{
                     width: effectivePlotSize,
                     gridColumnStart: placement.column,
@@ -477,30 +529,34 @@ export function SimpleFarmGrid({
                     transform: `translate(${Math.round(placement.xOffset * slotOffsetScale)}px, ${Math.round(placement.yOffset * slotOffsetScale)}px)`,
                   }}
                 >
-                  <IsometricPlotShell size={effectivePlotSize} state={plot.state} flat2d={compactMode}>
-                    <PlotCard
-                      plot={plot}
-                      weather={weather}
-                      stolenRecord={stolenRecordByPlotId?.get(plot.id)}
-                      nowTimestamp={nowTimestamp}
-                      theme={theme}
-                      t={t}
-                      isTooltipOpen={activeTooltipPlotId === plot.id}
-                      onTooltipToggle={() => onActiveTooltipChange(activeTooltipPlotId === plot.id ? null : plot.id)}
-                      onPlantClick={() => onPlant(plot.id)}
-                      onHarvestClick={() => onHarvest(plot.id)}
-                      onClearClick={() => onClear(plot.id)}
-                      mutationGunCount={mutationGunCount}
-                      onUseMutationGun={() => onUseMutationGun(plot.id)}
-                      moonDewCount={moonDewCount}
-                      onUseMoonDew={() => onUseMoonDew(plot.id)}
-                      nectarCount={nectarCount}
-                      onUseNectar={() => onUseNectar(plot.id)}
-                      starTrackerCount={starTrackerCount}
-                      onUseStarTracker={() => onUseStarTracker(plot.id)}
-                      trapNetCount={trapNetCount}
-                      onUseTrapNet={() => onUseTrapNet(plot.id)}
-                    />
+                  <IsometricPlotShell size={effectivePlotSize} state={isLocked ? 'locked' : (plot?.state ?? 'empty')} flat2d={compactMode}>
+                    {isLocked || !plot ? (
+                      <LockedPlotCard />
+                    ) : (
+                      <PlotCard
+                        plot={plot}
+                        weather={weather}
+                        stolenRecord={stolenRecordByPlotId?.get(plot.id)}
+                        nowTimestamp={nowTimestamp}
+                        theme={theme}
+                        t={t}
+                        isTooltipOpen={activeTooltipPlotId === plot.id}
+                        onTooltipToggle={() => onActiveTooltipChange(activeTooltipPlotId === plot.id ? null : plot.id)}
+                        onPlantClick={() => onPlant(plot.id)}
+                        onHarvestClick={() => onHarvest(plot.id)}
+                        onClearClick={() => onClear(plot.id)}
+                        mutationGunCount={mutationGunCount}
+                        onUseMutationGun={() => onUseMutationGun(plot.id)}
+                        moonDewCount={moonDewCount}
+                        onUseMoonDew={() => onUseMoonDew(plot.id)}
+                        nectarCount={nectarCount}
+                        onUseNectar={() => onUseNectar(plot.id)}
+                        starTrackerCount={starTrackerCount}
+                        onUseStarTracker={() => onUseStarTracker(plot.id)}
+                        trapNetCount={trapNetCount}
+                        onUseTrapNet={() => onUseTrapNet(plot.id)}
+                      />
+                    )}
                   </IsometricPlotShell>
                 </div>
               );

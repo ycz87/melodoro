@@ -677,9 +677,11 @@ export interface FarmStorage {
   stolenRecords: StolenRecord[]; // 用于追回机制
 }
 
-const DEFAULT_SHOWCASE_PLOTS: Plot[] = Array.from({ length: 9 }, (_, id) => {
+export const DEFAULT_UNLOCKED_PLOT_COUNT = 4;
+
+const DEFAULT_SHOWCASE_PLOTS: Plot[] = Array.from({ length: DEFAULT_UNLOCKED_PLOT_COUNT }, (_, id) => {
   const base = createEmptyPlot(id);
-  if (id === 2 || id === 3 || id === 8) {
+  if (id === 2 || id === 3) {
     return {
       ...base,
       state: 'mature',
@@ -688,7 +690,7 @@ const DEFAULT_SHOWCASE_PLOTS: Plot[] = Array.from({ length: 9 }, (_, id) => {
       progress: 1,
     };
   }
-  if (id === 1 || id === 4 || id === 7) {
+  if (id === 1) {
     return {
       ...base,
       state: 'growing',
@@ -712,5 +714,5 @@ export const DEFAULT_FARM_STORAGE: FarmStorage = {
 };
 
 export const PLOT_MILESTONES = [
-  { requiredVarieties: 0, totalPlots: 9 },
+  { requiredVarieties: 0, totalPlots: DEFAULT_UNLOCKED_PLOT_COUNT },
 ];

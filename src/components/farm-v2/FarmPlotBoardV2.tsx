@@ -540,7 +540,10 @@ export function FarmPlotBoardV2({
   onPlotClick,
 }: FarmPlotBoardV2Props) {
   const displaySlots = useMemo(
-    () => Array.from({ length: TOTAL_PLOTS }, (_, index) => plots[index] ?? null),
+    () => Array.from({ length: TOTAL_PLOTS }, (_, index) => ({
+      plot: plots[index] ?? null,
+      isLocked: index >= plots.length,
+    })),
     [plots],
   );
 
@@ -618,11 +621,13 @@ export function FarmPlotBoardV2({
               filter: 'drop-shadow(0 11px 14px rgba(46,72,27,0.24))',
             }}
           >
-            {displaySlots.map((plot, index) => {
-              const tileState = mapPlotStateToTileState(plot);
+            {displaySlots.map(({ plot, isLocked }, index) => {
+              const tileState = isLocked ? 'locked' : mapPlotStateToTileState(plot);
+              const interactiveState = tileState === 'locked' ? null : tileState;
               return (
                 <div
                   key={`farm-v2-slot-${plot?.id ?? index}`}
+                  data-slot-state={tileState}
                   style={{
                     transform: `translateY(${Math.floor(index / GRID_SIDE) * (compactMode ? 2.4 : 3.2)}px)`,
                   }}
@@ -630,8 +635,8 @@ export function FarmPlotBoardV2({
                   <FarmPlotTileV2
                     state={tileState}
                     onClick={
-                      onPlotClick && plot
-                        ? () => onPlotClick(plot.id, tileState)
+                      onPlotClick && plot && interactiveState
+                        ? () => onPlotClick(plot.id, interactiveState)
                         : undefined
                     }
                   />
