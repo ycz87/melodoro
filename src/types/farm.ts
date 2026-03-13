@@ -669,6 +669,7 @@ export const DEFAULT_FUSION_HISTORY: FusionHistory = {
 // ─── 农场存储 ───
 export interface FarmStorage {
   plots: Plot[];
+  unlockedPlotCount: number;
   collection: CollectedVariety[];
   lastActiveDate: string; // YYYY-MM-DD
   consecutiveInactiveDays: number; // 连续未活跃天数（用于枯萎检测）
@@ -705,6 +706,7 @@ const DEFAULT_SHOWCASE_PLOTS: Plot[] = Array.from({ length: DEFAULT_UNLOCKED_PLO
 
 export const DEFAULT_FARM_STORAGE: FarmStorage = {
   plots: DEFAULT_SHOWCASE_PLOTS,
+  unlockedPlotCount: DEFAULT_UNLOCKED_PLOT_COUNT,
   collection: [],
   lastActiveDate: '',
   consecutiveInactiveDays: 0,

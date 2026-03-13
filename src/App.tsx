@@ -658,7 +658,7 @@ function App() {
   const handleBuyPlot = useCallback((plotIndex: number) => {
     const price = PLOT_PRICES[plotIndex];
     if (!price) return;
-    if (farm.plots.length > plotIndex) return;
+    if (plotIndex !== farm.plots.length) return;
     const spent = spendCoins(price);
     if (!spent) return;
     const bought = buyPlot(plotIndex);

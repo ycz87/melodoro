@@ -1,14 +1,13 @@
 /**
  * useFarmStorage — 农场数据持久化 hook
  */
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import type { FarmStorage, Plot, CollectedVariety, VarietyId, GalaxyId, StolenRecord, Rarity } from '../types/farm';
 import type { SeedCounts, SeedQuality } from '../types/slicing';
 import { DEFAULT_FARM_STORAGE, DEFAULT_UNLOCKED_PLOT_COUNT, createEmptyPlot, VARIETY_DEFS } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { rollVariety } from '../farm/growth';
-import { getPlotCount } from '../farm/galaxy';
 
 const FARM_KEY = 'watermelon-farm';
 const MAX_PLOT_COUNT = 9;
@@ -229,6 +228,7 @@ function migrateFarm(raw: unknown): FarmStorage {
   const s = raw as Record<string, unknown>;
   const result: FarmStorage = {
     plots: [...DEFAULT_FARM_STORAGE.plots],
+    unlockedPlotCount: DEFAULT_UNLOCKED_PLOT_COUNT,
     collection: [],
     lastActiveDate: '',
     consecutiveInactiveDays: 0,
@@ -236,6 +236,9 @@ function migrateFarm(raw: unknown): FarmStorage {
     guardianBarrierDate: '',
     stolenRecords: [],
   };
+  const storedUnlockedPlotCount = typeof s.unlockedPlotCount === 'number' && Number.isFinite(s.unlockedPlotCount)
+    ? Math.max(DEFAULT_UNLOCKED_PLOT_COUNT, Math.min(MAX_PLOT_COUNT, Math.floor(s.unlockedPlotCount)))
+    : null;
 
   if (Array.isArray(s.collection)) {
     result.collection = (s.collection as CollectedVariety[]).map((record) => ({
@@ -296,18 +299,21 @@ function migrateFarm(raw: unknown): FarmStorage {
     result.plots = result.plots.slice(0, MAX_PLOT_COUNT);
   }
 
-  if (shouldResetLegacyPlotBaseline(result.collection, result.plots)) {
+  if (storedUnlockedPlotCount === null && shouldResetLegacyPlotBaseline(result.collection, result.plots)) {
     result.plots = cloneDefaultPlots();
   }
 
   const usePreviewShowcase = shouldSeedPreviewShowcase(result.collection, result.plots);
-  const targetPlotCount = usePreviewShowcase
-    ? DEFAULT_FARM_STORAGE.plots.length
-    : Math.min(getPlotCount(result.collection), MAX_PLOT_COUNT);
-  result.plots = ensurePlotCapacity(result.plots, targetPlotCount);
+  result.unlockedPlotCount = Math.max(
+    DEFAULT_UNLOCKED_PLOT_COUNT,
+    storedUnlockedPlotCount ?? 0,
+    Math.min(result.plots.length, MAX_PLOT_COUNT),
+  );
+  result.plots = ensurePlotCapacity(result.plots, result.unlockedPlotCount);
 
   if (usePreviewShowcase) {
     result.plots = DEFAULT_FARM_STORAGE.plots.map((plot) => ({ ...plot }));
+    result.unlockedPlotCount = DEFAULT_UNLOCKED_PLOT_COUNT;
   }
 
   if (typeof s.lastActiveDate === 'string') result.lastActiveDate = s.lastActiveDate;
@@ -325,6 +331,11 @@ function migrateFarm(raw: unknown): FarmStorage {
 
 export function useFarmStorage() {
   const [farm, setFarm] = useLocalStorage<FarmStorage>(FARM_KEY, DEFAULT_FARM_STORAGE, migrateFarm);
+  const farmRef = useRef(farm);
+
+  useEffect(() => {
+    farmRef.current = farm;
+  }, [farm]);
 
   /** 种植种子到指定地块 */
   const plantSeed = useCallback((plotId: number, unlockedGalaxies: GalaxyId[], seedQuality: SeedQuality, todayKey: string) => {
@@ -439,12 +450,11 @@ export function useFarmStorage() {
               count: 1,
             },
           ];
-      const targetPlotCount = getPlotCount(newCollection);
       const nextPlots = prev.plots.map(p => (p.id === plotId ? createEmptyPlot(plotId) : p));
 
       return {
         ...prev,
-        plots: ensurePlotCapacity(nextPlots, targetPlotCount),
+        plots: nextPlots,
         collection: newCollection,
       };
     });
@@ -529,18 +539,19 @@ export function useFarmStorage() {
 
   /** 购买地块并扩容（返回是否成功） */
   const buyPlot = useCallback((plotIndex: number): boolean => {
-    if (plotIndex < 0) return false;
-    let success = false;
-    setFarm(prev => {
-      if (prev.plots.length > plotIndex) return prev;
-      const nextPlots = [...prev.plots];
-      while (nextPlots.length <= plotIndex) {
-        nextPlots.push(createEmptyPlot(nextPlots.length));
-      }
-      success = true;
-      return { ...prev, plots: nextPlots };
-    });
-    return success;
+    if (plotIndex < DEFAULT_UNLOCKED_PLOT_COUNT || plotIndex >= MAX_PLOT_COUNT) return false;
+    const currentFarm = farmRef.current;
+    if (plotIndex !== currentFarm.plots.length) return false;
+
+    const nextFarm: FarmStorage = {
+      ...currentFarm,
+      plots: [...currentFarm.plots, createEmptyPlot(currentFarm.plots.length)],
+      unlockedPlotCount: currentFarm.plots.length + 1,
+    };
+
+    farmRef.current = nextFarm;
+    setFarm(nextFarm);
+    return true;
   }, [setFarm]);
 
   /** 更新活跃日信息 */

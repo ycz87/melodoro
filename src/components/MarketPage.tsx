@@ -122,7 +122,7 @@ export function MarketPage(props: MarketPageProps) {
     }
 
     const { plotIndex, price } = pendingPurchase;
-    if (balance < price || unlockedPlotCount > plotIndex) {
+    if (balance < price || plotIndex !== unlockedPlotCount) {
       setPendingPurchase(null);
       return;
     }
@@ -206,8 +206,9 @@ export function MarketPage(props: MarketPageProps) {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {buyablePlots.map((plot) => {
                 const unlocked = unlockedPlotCount > plot.plotIndex;
+                const isNextUnlock = unlockedPlotCount === plot.plotIndex;
                 const affordable = balance >= plot.price;
-                const disabled = unlocked || !affordable;
+                const disabled = unlocked || !isNextUnlock || !affordable;
                 return (
                   <MarketItemCard
                     key={plot.plotIndex}
