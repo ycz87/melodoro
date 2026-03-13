@@ -124,9 +124,21 @@ function isPagesPreviewHost(): boolean {
   }
 }
 
-function shouldSeedPreviewShowcase(collection: CollectedVariety[], plots: Plot[]): boolean {
+function shouldSeedPreviewShowcase(
+  collection: CollectedVariety[],
+  plots: Plot[],
+  storedUnlockedPlotCount: number | null,
+): boolean {
   if (!isPagesPreviewHost()) return false;
   if (collection.length > 0) return false;
+
+  const hasPersistedUnlockState = storedUnlockedPlotCount !== null;
+  const hasPurchasedOrExpandedPlots = (storedUnlockedPlotCount ?? DEFAULT_UNLOCKED_PLOT_COUNT) > DEFAULT_UNLOCKED_PLOT_COUNT
+    || plots.length > DEFAULT_UNLOCKED_PLOT_COUNT;
+
+  // Only coerce very old preview saves with no explicit unlock metadata.
+  // Never overwrite current-schema saves or any farm that already expanded beyond the 4-plot baseline.
+  if (hasPersistedUnlockState || hasPurchasedOrExpandedPlots) return false;
 
   const matureCount = plots.filter((plot) => plot.state === 'mature').length;
   const growingCount = plots.filter((plot) => plot.state === 'growing').length;
@@ -303,7 +315,11 @@ function migrateFarm(raw: unknown): FarmStorage {
     result.plots = cloneDefaultPlots();
   }
 
-  const usePreviewShowcase = shouldSeedPreviewShowcase(result.collection, result.plots);
+  const usePreviewShowcase = shouldSeedPreviewShowcase(
+    result.collection,
+    result.plots,
+    storedUnlockedPlotCount,
+  );
   result.unlockedPlotCount = Math.max(
     DEFAULT_UNLOCKED_PLOT_COUNT,
     storedUnlockedPlotCount ?? 0,
