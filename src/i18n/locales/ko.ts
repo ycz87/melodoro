@@ -536,6 +536,7 @@ export const ko: Messages = {
   marketPlotSection: '🏗️ 구획 확장',
   marketPlotName: (index) => `제 ${index + 1} 구획`,
   marketPlotUnlocked: '✅ 해제됨',
+  marketPlotFreeUnlockHint: (required, current) => `무료 조건: 품종 ${required}개 수집 (${current}/${required})`,
   marketPlotConfirmTitle: '확장 확인',
   marketPlotConfirmMessage: (name, price, balance) => `${name}을(를) 구매하시겠습니까? ${price} 💰 소모, 현재 잔액 ${balance} 💰`,
   marketSellEmpty: '판매할 수박이 없습니다',

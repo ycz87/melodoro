@@ -536,6 +536,7 @@ export const es: Messages = {
   marketPlotSection: '🏗️ Expansión de parcelas',
   marketPlotName: (index) => `Parcela ${index + 1}`,
   marketPlotUnlocked: '✅ Desbloqueada',
+  marketPlotFreeUnlockHint: (required, current) => `Gratis al reunir ${required} variedades (${current}/${required})`,
   marketPlotConfirmTitle: 'Confirmar expansión',
   marketPlotConfirmMessage: (name, price, balance) => `¿Comprar ${name}? Coste ${price} 💰, saldo actual ${balance} 💰`,
   marketSellEmpty: 'No hay sandías para vender',

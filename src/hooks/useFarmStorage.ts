@@ -7,6 +7,7 @@ import type { FarmStorage, Plot, CollectedVariety, VarietyId, GalaxyId, StolenRe
 import type { SeedCounts, SeedQuality } from '../types/slicing';
 import { DEFAULT_FARM_STORAGE, DEFAULT_UNLOCKED_PLOT_COUNT, createEmptyPlot, VARIETY_DEFS } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
+import { getPlotCount } from '../farm/galaxy';
 import { rollVariety } from '../farm/growth';
 
 const FARM_KEY = 'watermelon-farm';
@@ -81,6 +82,20 @@ function ensurePlotCapacity(plots: Plot[], requiredCount: number): Plot[] {
     nextPlots.push(createEmptyPlot(nextPlots.length));
   }
   return nextPlots;
+}
+
+// Plot availability is monotonic: keep the highest purchased or milestone-expanded count.
+function resolveUnlockedPlotCount(
+  collection: CollectedVariety[],
+  storedUnlockedPlotCount: number,
+  currentPlotCount: number,
+): number {
+  return Math.max(
+    DEFAULT_UNLOCKED_PLOT_COUNT,
+    storedUnlockedPlotCount,
+    getPlotCount(collection),
+    Math.min(currentPlotCount, MAX_PLOT_COUNT),
+  );
 }
 
 function cloneDefaultPlots(): Plot[] {
@@ -320,10 +335,10 @@ function migrateFarm(raw: unknown): FarmStorage {
     result.plots,
     storedUnlockedPlotCount,
   );
-  result.unlockedPlotCount = Math.max(
-    DEFAULT_UNLOCKED_PLOT_COUNT,
+  result.unlockedPlotCount = resolveUnlockedPlotCount(
+    result.collection,
     storedUnlockedPlotCount ?? 0,
-    Math.min(result.plots.length, MAX_PLOT_COUNT),
+    result.plots.length,
   );
   result.plots = ensurePlotCapacity(result.plots, result.unlockedPlotCount);
 
@@ -352,6 +367,30 @@ export function useFarmStorage() {
   useEffect(() => {
     farmRef.current = farm;
   }, [farm]);
+
+  useEffect(() => {
+    const targetUnlockedPlotCount = resolveUnlockedPlotCount(
+      farm.collection,
+      farm.unlockedPlotCount,
+      farm.plots.length,
+    );
+    if (farm.unlockedPlotCount === targetUnlockedPlotCount && farm.plots.length === targetUnlockedPlotCount) return;
+
+    setFarm((prev) => {
+      const nextUnlockedPlotCount = resolveUnlockedPlotCount(
+        prev.collection,
+        prev.unlockedPlotCount,
+        prev.plots.length,
+      );
+      const nextPlots = ensurePlotCapacity(prev.plots, nextUnlockedPlotCount);
+      if (prev.unlockedPlotCount === nextUnlockedPlotCount && prev.plots.length === nextPlots.length) return prev;
+      return {
+        ...prev,
+        plots: nextPlots,
+        unlockedPlotCount: nextUnlockedPlotCount,
+      };
+    });
+  }, [farm.collection, farm.plots.length, farm.unlockedPlotCount, setFarm]);
 
   /** 种植种子到指定地块 */
   const plantSeed = useCallback((plotId: number, unlockedGalaxies: GalaxyId[], seedQuality: SeedQuality, todayKey: string) => {
@@ -557,12 +596,13 @@ export function useFarmStorage() {
   const buyPlot = useCallback((plotIndex: number): boolean => {
     if (plotIndex < DEFAULT_UNLOCKED_PLOT_COUNT || plotIndex >= MAX_PLOT_COUNT) return false;
     const currentFarm = farmRef.current;
-    if (plotIndex !== currentFarm.plots.length) return false;
+    if (plotIndex !== currentFarm.unlockedPlotCount) return false;
 
+    const nextUnlockedPlotCount = plotIndex + 1;
     const nextFarm: FarmStorage = {
       ...currentFarm,
-      plots: [...currentFarm.plots, createEmptyPlot(currentFarm.plots.length)],
-      unlockedPlotCount: currentFarm.plots.length + 1,
+      plots: ensurePlotCapacity(currentFarm.plots, nextUnlockedPlotCount),
+      unlockedPlotCount: nextUnlockedPlotCount,
     };
 
     farmRef.current = nextFarm;

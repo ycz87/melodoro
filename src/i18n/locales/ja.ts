@@ -536,6 +536,7 @@ export const ja: Messages = {
   marketPlotSection: '🏗️ 区画拡張',
   marketPlotName: (index) => `第 ${index + 1} 区画`,
   marketPlotUnlocked: '✅ 解放済み',
+  marketPlotFreeUnlockHint: (required, current) => `無料条件：品種を ${required} 種集める（${current}/${required}）`,
   marketPlotConfirmTitle: '拡張確認',
   marketPlotConfirmMessage: (name, price, balance) => `本当に${name}を購入しますか？${price} 💰 を消費し、現在の残高は ${balance} 💰 です`,
   marketSellEmpty: '売れるスイカがありません',

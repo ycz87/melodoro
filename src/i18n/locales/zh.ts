@@ -536,6 +536,7 @@ export const zh: Messages = {
   marketPlotSection: '🏗️ 地块扩展',
   marketPlotName: (index) => `第 ${index + 1} 块地`,
   marketPlotUnlocked: '✅ 已解锁',
+  marketPlotFreeUnlockHint: (required, current) => `免费条件：收集 ${required} 个品种（${current}/${required}）`,
   marketPlotConfirmTitle: '确认扩展',
   marketPlotConfirmMessage: (name, price, balance) => `确定购买${name}？花费 ${price} 💰，当前余额 ${balance} 💰`,
   marketSellEmpty: '暂无可卖出的西瓜',

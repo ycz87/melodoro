@@ -536,6 +536,7 @@ export const en: Messages = {
   marketPlotSection: '🏗️ Plot Expansion',
   marketPlotName: (index) => `Plot ${index + 1}`,
   marketPlotUnlocked: '✅ Unlocked',
+  marketPlotFreeUnlockHint: (required, current) => `Free unlock at ${required} varieties (${current}/${required})`,
   marketPlotConfirmTitle: 'Confirm Expansion',
   marketPlotConfirmMessage: (name, price, balance) => `Buy ${name}? Cost ${price} 💰, current balance ${balance} 💰`,
   marketSellEmpty: 'No melons to sell',

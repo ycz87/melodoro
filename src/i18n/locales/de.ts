@@ -536,6 +536,7 @@ export const de: Messages = {
   marketPlotSection: '🏗️ Beet-Erweiterung',
   marketPlotName: (index) => `Beet ${index + 1}`,
   marketPlotUnlocked: '✅ Freigeschaltet',
+  marketPlotFreeUnlockHint: (required, current) => `Gratis bei ${required} Sorten (${current}/${required})`,
   marketPlotConfirmTitle: 'Erweiterung bestätigen',
   marketPlotConfirmMessage: (name, price, balance) => `${name} kaufen? Kosten: ${price} 💰, aktuelles Guthaben: ${balance} 💰`,
   marketSellEmpty: 'Keine Wassermelonen zum Verkaufen',

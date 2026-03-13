@@ -536,6 +536,7 @@ export const zhTW: Messages = {
   marketPlotSection: '🏗️ 地塊擴充',
   marketPlotName: (index) => `第 ${index + 1} 塊地`,
   marketPlotUnlocked: '✅ 已解鎖',
+  marketPlotFreeUnlockHint: (required, current) => `免費條件：收集 ${required} 個品種（${current}/${required}）`,
   marketPlotConfirmTitle: '確認擴充',
   marketPlotConfirmMessage: (name, price, balance) => `確定購買 ${name}？花費 ${price} 💰，目前餘額 ${balance} 💰`,
   marketSellEmpty: '目前沒有可賣出的西瓜',

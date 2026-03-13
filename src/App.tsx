@@ -658,14 +658,14 @@ function App() {
   const handleBuyPlot = useCallback((plotIndex: number) => {
     const price = PLOT_PRICES[plotIndex];
     if (!price) return;
-    if (plotIndex !== farm.plots.length) return;
+    if (plotIndex !== farm.unlockedPlotCount) return;
     const spent = spendCoins(price);
     if (!spent) return;
     const bought = buyPlot(plotIndex);
     if (!bought) {
       addCoins(price);
     }
-  }, [farm.plots.length, spendCoins, buyPlot, addCoins]);
+  }, [farm.unlockedPlotCount, spendCoins, buyPlot, addCoins]);
 
   const handleUseMutationGun = useCallback((plotId: number) => {
     if (mutationGunMutexRef.current) return;
@@ -1836,7 +1836,7 @@ function App() {
             onBuyItem={handleBuyItem}
             onBuyWeeklyItem={buyWeeklyItem}
             onBuyPlot={handleBuyPlot}
-            unlockedPlotCount={farm.plots.length}
+            unlockedPlotCount={farm.unlockedPlotCount}
             weeklyShop={weeklyShop}
             messages={t}
           />

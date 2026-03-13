@@ -536,6 +536,7 @@ export const fr: Messages = {
   marketPlotSection: '🏗️ Extension des parcelles',
   marketPlotName: (index) => `Parcelle ${index + 1}`,
   marketPlotUnlocked: '✅ Débloquée',
+  marketPlotFreeUnlockHint: (required, current) => `Gratuit à ${required} variétés (${current}/${required})`,
   marketPlotConfirmTitle: "Confirmer l'extension",
   marketPlotConfirmMessage: (name, price, balance) => `Acheter ${name} ? Coût ${price} 💰, solde actuel ${balance} 💰`,
   marketSellEmpty: 'Aucune pastèque à vendre',

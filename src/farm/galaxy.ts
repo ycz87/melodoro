@@ -25,11 +25,8 @@ function getCollectedVarietyCountByGalaxy(collection: CollectedVariety[]): Map<G
   return result;
 }
 
-function getCollectedUniqueVarietyCount(collection: CollectedVariety[]): number {
-  const ids = new Set(collection.map((record) => (
-    `${record.varietyId}:${record.isMutant === true ? 'mutant' : 'normal'}`
-  )));
-  return ids.size;
+export function getCollectedUniqueVarietyCount(collection: CollectedVariety[]): number {
+  return new Set(collection.map((record) => record.varietyId)).size;
 }
 
 // 根据图鉴 collection 计算已解锁的星系
@@ -48,7 +45,7 @@ export function getUnlockedGalaxies(collection: CollectedVariety[]): GalaxyId[] 
   return unlocked;
 }
 
-// 根据图鉴品种数计算当前地块数
+// 根据图鉴品种数计算当前地块数（按 varietyId 去重，mutant 不额外加成）
 export function getPlotCount(collection: CollectedVariety[]): number {
   const collectedCount = getCollectedUniqueVarietyCount(collection);
   let totalPlots = PLOT_MILESTONES[0]?.totalPlots ?? 4;

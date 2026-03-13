@@ -715,6 +715,16 @@ export const DEFAULT_FARM_STORAGE: FarmStorage = {
   stolenRecords: [],
 };
 
-export const PLOT_MILESTONES = [
+export interface PlotMilestone {
+  requiredVarieties: number;
+  totalPlots: number;
+}
+
+export const PLOT_MILESTONES: PlotMilestone[] = [
   { requiredVarieties: 0, totalPlots: DEFAULT_UNLOCKED_PLOT_COUNT },
+  { requiredVarieties: 3, totalPlots: 5 },
+  { requiredVarieties: 5, totalPlots: 6 },
+  { requiredVarieties: 8, totalPlots: 7 },
+  { requiredVarieties: 15, totalPlots: 8 },
+  { requiredVarieties: 22, totalPlots: 9 },
 ];

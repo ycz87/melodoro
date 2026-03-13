@@ -347,6 +347,7 @@ export interface Messages {
   marketPlotSection: string;
   marketPlotName: (index: number) => string;
   marketPlotUnlocked: string;
+  marketPlotFreeUnlockHint: (required: number, current: number) => string;
   marketPlotConfirmTitle: string;
   marketPlotConfirmMessage: (name: string, price: number, balance: number) => string;
   marketSellEmpty: string;
