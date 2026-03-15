@@ -18,7 +18,7 @@ import {
   VARIETY_DEFS,
   RARITY_COLOR, RARITY_STARS,
 } from '../types/farm';
-import { getUnlockedGalaxies } from '../farm/galaxy';
+import { getGalaxyProgressSnapshot } from '../farm/galaxy';
 
 interface CollectionPageProps {
   collection: CollectedVariety[];
@@ -40,7 +40,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
   );
 
   const collectedIds = new Set(collectionMap.keys());
-  const unlockedGalaxies = getUnlockedGalaxies(collection);
+  const galaxyProgress = useMemo(() => getGalaxyProgressSnapshot(collection), [collection]);
   const selectedVariety = selectedVarietyId ? collectionMap.get(selectedVarietyId) : undefined;
 
   const pureGalaxyDefs = useMemo(
@@ -63,13 +63,15 @@ export function CollectionPage({ collection }: CollectionPageProps) {
     ), 0);
     const totalInGalaxy = varieties.length;
     const percent = totalInGalaxy > 0 ? Math.round((collectedInGalaxy / totalInGalaxy) * 100) : 0;
+    const unlockState = galaxyProgress.unlockStateByGalaxy[galaxy.id];
 
     return {
       galaxy,
       collectedInGalaxy,
       totalInGalaxy,
       percent,
-      isUnlocked: unlockedGalaxies.includes(galaxy.id) || collectedInGalaxy > 0 || galaxy.id === 'thick-earth',
+      isUnlocked: unlockState.isUnlocked,
+      progressSegments: unlockState.progressSegments,
     };
   });
 
@@ -84,7 +86,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
   const prismaticCollectedCount = PRISMATIC_VARIETIES.filter((id) => collectedIds.has(id)).length;
   const prismaticTotalCount = PRISMATIC_VARIETIES.length;
   const prismaticPercent = prismaticTotalCount > 0 ? Math.round((prismaticCollectedCount / prismaticTotalCount) * 100) : 0;
-  const isPrismaticUnlocked = unlockedGalaxies.includes('rainbow') || prismaticCollectedCount > 0;
+  const isPrismaticUnlocked = galaxyProgress.unlockStateByGalaxy.rainbow.isUnlocked;
 
   const darkMatterCollectedCount = DARK_MATTER_VARIETIES.filter((id) => collectedIds.has(id)).length;
   const darkMatterTotalCount = DARK_MATTER_VARIETIES.length;
@@ -134,7 +136,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {pureStarJourneyProgress.map(({ galaxy, collectedInGalaxy, totalInGalaxy, percent, isUnlocked }) => (
+              {pureStarJourneyProgress.map(({ galaxy, collectedInGalaxy, totalInGalaxy, percent, isUnlocked, progressSegments }) => (
                 <div
                   key={galaxy.id}
                   className="rounded-xl border px-3 py-2"
@@ -157,7 +159,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
                       </span>
                     ) : (
                       <span className="text-[11px] shrink-0" style={{ color: theme.textFaint }}>
-                        🔒 {t.collectionLocked}
+                        🔒 {progressSegments.map(seg => `${seg.current}/${seg.target}`).join(' · ')}
                       </span>
                     )}
                   </div>
@@ -176,8 +178,8 @@ export function CollectionPage({ collection }: CollectionPageProps) {
 
           {pureGalaxyDefs.map(galaxy => {
             const varieties = GALAXY_VARIETIES[galaxy.id] ?? [];
-            const collectedInGalaxy = varieties.filter((id) => collectedIds.has(id)).length;
-            const isUnlocked = unlockedGalaxies.includes(galaxy.id) || collectedInGalaxy > 0 || galaxy.id === 'thick-earth';
+            const unlockState = galaxyProgress.unlockStateByGalaxy[galaxy.id];
+            const isUnlocked = unlockState.isUnlocked;
             return (
               <div key={galaxy.id} className="mb-5">
                 <div className="flex items-center gap-2 mb-3">

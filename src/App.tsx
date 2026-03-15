@@ -76,7 +76,7 @@ import {
   type MutationOutcome,
   witherPlots,
 } from './farm/growth';
-import { getUnlockedGalaxies } from './farm/galaxy';
+import { getUnlockedSeedPoolGalaxies, getCollectedHybridVarietyCount } from './farm/galaxy';
 import {
   rollInjectedVariety,
   createInjectedSeedId,
@@ -287,16 +287,7 @@ function App() {
   const farmUpdatedRef = useRef(false);
   const activeMutationToast = mutationToastQueue[0] ?? null;
   const activeRecoveryToast = recoveryToastQueue[0] ?? null;
-  const harvestedHybridVarietyCount = useMemo(() => {
-    const hybridVarietySet = new Set<VarietyId>();
-    for (const record of farm.collection) {
-      if (record.count <= 0) continue;
-      const varietyDef = VARIETY_DEFS[record.varietyId];
-      if (!varietyDef || varietyDef.breedType !== 'hybrid') continue;
-      hybridVarietySet.add(record.varietyId);
-    }
-    return hybridVarietySet.size;
-  }, [farm.collection]);
+  const harvestedHybridVarietyCount = useMemo(() => getCollectedHybridVarietyCount(farm.collection), [farm.collection]);
   const collectedNormalVarietySet = useMemo(() => {
     const ids = new Set<VarietyId>();
     for (const record of farm.collection) {
@@ -608,7 +599,7 @@ function App() {
     plotId: number,
     quality: import('./types/slicing').SeedQuality,
   ) => {
-    const unlockedGalaxies = getUnlockedGalaxies(farm.collection);
+    const unlockedGalaxies = getUnlockedSeedPoolGalaxies(farm.collection);
     const varietyId = plantSeed(plotId, unlockedGalaxies, quality, todayKey);
     if (varietyId) {
       consumeSeed(quality);
@@ -964,7 +955,7 @@ function App() {
   const handleFarmPlantInjected = useCallback((plotId: number, seedId: string) => {
     const seed = shed.injectedSeeds.find(s => s.id === seedId);
     if (!seed) return;
-    const unlockedGalaxies = getUnlockedGalaxies(farm.collection);
+    const unlockedGalaxies = getUnlockedSeedPoolGalaxies(farm.collection);
     const varietyId = rollInjectedVariety(seed.targetGalaxyId, unlockedGalaxies, seed.quality);
     const success = plantSeedWithVariety(plotId, varietyId, seed.quality, todayKey);
     if (success) {
