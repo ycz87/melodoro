@@ -17,11 +17,53 @@ interface AchievementCelebrationProps {
   language: string;
 }
 
+interface CelebrationParticle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  delay: number;
+  angle: number;
+  dist: number;
+}
+
+function hashSeed(seed: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function createSeededRandom(seed: string) {
+  let state = hashSeed(seed) || 1;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function createAchievementParticles(seed: string): CelebrationParticle[] {
+  const random = createSeededRandom(seed);
+  return Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: 50 + (random() - 0.5) * 60,
+    y: 40 + (random() - 0.5) * 40,
+    size: 2 + random() * 4,
+    delay: 0.3 + random() * 0.8,
+    angle: random() * 360,
+    dist: 40 + random() * 60,
+  }));
+}
+
 function SingleCelebration({ achievementId, language, onDone }: {
   achievementId: string; language: string; onDone: () => void;
 }) {
   const theme = useTheme();
   const i18n = useI18n();
+  // Keep one random seed per celebration mount so the effect stays stable until dismissal.
+  const [instanceNonce] = useState(() => Math.random().toString(36).slice(2));
   const [phase, setPhase] = useState<'gray' | 'reveal' | 'show' | 'exit'>('gray');
   const [imageError, setImageError] = useState(false);
   const def = getAchievementById(achievementId);
@@ -35,9 +77,10 @@ function SingleCelebration({ achievementId, language, onDone }: {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, [onDone]);
 
-  useEffect(() => {
-    setImageError(false);
-  }, [achievementId]);
+  const particles = useMemo(
+    () => createAchievementParticles(`${achievementId}-${instanceNonce}`),
+    [achievementId, instanceNonce],
+  );
 
   if (!def) return null;
 
@@ -47,19 +90,6 @@ function SingleCelebration({ achievementId, language, onDone }: {
   const isRevealed = phase === 'reveal' || phase === 'show';
   const badgeUrl = getBadgeUrl(def.id);
   const canShowImage = !imageError && badgeUrl.length > 0;
-
-  // Generate gold particles
-  const particles = useMemo(() =>
-    Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      x: 50 + (Math.random() - 0.5) * 60,
-      y: 40 + (Math.random() - 0.5) * 40,
-      size: 2 + Math.random() * 4,
-      delay: 0.3 + Math.random() * 0.8,
-      angle: Math.random() * 360,
-      dist: 40 + Math.random() * 60,
-    })),
-  []);
 
   return (
     <div
