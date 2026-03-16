@@ -1,8 +1,8 @@
 # Issue #32 Proof — App shell 与定时器 hooks 依赖/refs 清理
 
-**Branch:** `feature/issue32-app-shell-hooks`  
-**Commit:** (pending)  
-**Date:** 2026-03-16 12:37 UTC
+- **Branch:** `feature/issue32-app-shell-hooks`
+- **Commit:** see PR #33 branch history
+- **Date:** 2026-03-16 12:37 UTC
 
 ## 1. Targeted Lint Proof (8 files → 0 errors)
 
@@ -18,9 +18,9 @@ $ npx eslint src/App.tsx src/hooks/useTimer.ts src/hooks/useProjectTimer.ts \
 
 ## 2. Repo-wide Lint Delta Proof
 
-**Before (baseline from Issue #30 merge):** 23 problems  
-**After (this PR):** 8 problems  
-**Delta:** -15 problems ✅
+- **Before (baseline from Issue #30 merge):** 23 problems
+- **After (this PR):** 8 problems
+- **Delta:** -15 problems ✅
 
 ```bash
 $ npx eslint . 2>&1 | tail -20
@@ -52,7 +52,17 @@ dist/assets/index-0ckhyYud.js   1,004.27 kB │ gzip: 295.57 kB
 
 ✅ Build successful, no TypeScript or runtime errors.
 
-## 4. Changed Files
+## 4. Diff Check Proof
+
+```bash
+$ git diff --check
+
+(no output)
+```
+
+✅ No trailing whitespace or patch formatting issues.
+
+## 5. Changed Files
 
 ```
 src/App.tsx
@@ -67,12 +77,12 @@ src/hooks/useWarehouse.ts
 
 All 8 files are within the agreed scope.
 
-## 5. Fix Strategy Summary
+## 6. Fix Strategy Summary
 
 ### react-hooks/refs (5 fixes)
 
 **AmbienceMixerModal.tsx (2):**
-- Moved `localRef.current = local` and `keepOnCloseRef.current = keepOnClose` from render body into separate `useEffect` hooks
+- Moved `localRef.current = local` and `keepOnCloseRef.current = keepOnClose` from render body into separate `useLayoutEffect` hooks so unmount cleanup always reads the latest mixer config
 
 **CodeInput.tsx (1):**
 - Replaced render-time `document.activeElement === inputRefs.current[i]` check with `focusedIndex` state
@@ -111,13 +121,13 @@ All 8 files are within the agreed scope.
 **useProjectTimer.ts (1):**
 - Replaced mount effect that called `setHasSavedProject(true)` with lazy initializer: `useState(() => { const saved = loadState(); return !!(saved && ...); })`
 
-## 6. Regression Notes
+## 7. Regression Notes
 
 - No functional changes to timer behavior, warehouse sync, gene storage, alien visits, or ambience mixer
 - Idle timer now derives display values from settings instead of syncing internal state
 - All existing user flows (start/pause/resume/skip/abandon) remain unchanged
 - CodeInput focus ring now driven by React state instead of DOM query
 
-## 7. Known Issues
+## 8. Known Issues
 
 None. All target lint messages resolved without introducing new problems.
