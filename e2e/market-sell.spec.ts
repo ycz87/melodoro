@@ -85,11 +85,6 @@ async function bootWithSeed(page: Page, payload: DebugState) {
   await page.reload();
 }
 
-async function goToFarm(page: Page) {
-  await page.getByRole('button', { name: '🌱' }).click();
-  await expect(page.locator('.farm-grid-perspective')).toBeVisible();
-}
-
 async function goToMarket(page: Page) {
   await page.getByRole('button', { name: '🏪' }).click();
   await expect(page.getByRole('heading', { name: zh.marketTitle })).toBeVisible();
