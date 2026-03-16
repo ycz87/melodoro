@@ -128,7 +128,6 @@ export function FarmPage({
   onUseStarTracker,
   onUseGuardianBarrier,
   onUseTrapNet,
-  mutationDoctorSignal: _mutationDoctorSignal,
   onGoWarehouse,
   compactShell = false,
 }: FarmPageProps) {
@@ -151,6 +150,19 @@ export function FarmPage({
 
   // 追踪已揭晓的地块（避免重复触发动画）
   const revealedRef = useRef<Set<number>>(new Set());
+  const revealAnimFrameRef = useRef<number | null>(null);
+  const revealAnimTimerRef = useRef<number | null>(null);
+
+  const clearRevealAnimSchedule = useCallback(() => {
+    if (revealAnimFrameRef.current !== null) {
+      window.cancelAnimationFrame(revealAnimFrameRef.current);
+      revealAnimFrameRef.current = null;
+    }
+    if (revealAnimTimerRef.current !== null) {
+      window.clearTimeout(revealAnimTimerRef.current);
+      revealAnimTimerRef.current = null;
+    }
+  }, []);
 
   // 检测品种揭晓
   useEffect(() => {
@@ -162,16 +174,30 @@ export function FarmPage({
         !revealedRef.current.has(plot.id)
       ) {
         revealedRef.current.add(plot.id);
-        setRevealAnim({ varietyId: plot.varietyId, plotId: plot.id });
-        const rarityStars = RARITY_STARS[VARIETY_DEFS[plot.varietyId].rarity];
+        const varietyId = plot.varietyId;
+        const plotId = plot.id;
+        const rarityStars = RARITY_STARS[VARIETY_DEFS[varietyId].rarity];
         const revealDuration = rarityStars >= REVEAL_RARE_PLUS_MIN_STARS
           ? REVEAL_DURATION_RARE_PLUS_MS
           : REVEAL_DURATION_MS;
-        const timer = setTimeout(() => setRevealAnim(null), revealDuration);
-        return () => clearTimeout(timer);
+
+        clearRevealAnimSchedule();
+        revealAnimFrameRef.current = window.requestAnimationFrame(() => {
+          revealAnimFrameRef.current = null;
+          setRevealAnim({ varietyId, plotId });
+          revealAnimTimerRef.current = window.setTimeout(() => {
+            setRevealAnim(null);
+            revealAnimTimerRef.current = null;
+          }, revealDuration);
+        });
+        break;
       }
     }
-  }, [farm.plots]);
+  }, [clearRevealAnimSchedule, farm.plots]);
+
+  useEffect(() => () => {
+    clearRevealAnimSchedule();
+  }, [clearRevealAnimSchedule]);
 
   useEffect(() => {
     const timerId = window.setInterval(() => setNowTimestamp(Date.now()), 1000);
@@ -183,6 +209,8 @@ export function FarmPage({
     const match = farm.plots.find((plot) => plot.id === activeTooltipPlotId);
     return match?.state === 'growing' ? match : null;
   }, [activeTooltipPlotId, farm.plots]);
+
+  const effectiveActiveTooltipPlotId = activeGrowingPlot ? activeTooltipPlotId : null;
 
   const activeGrowingSnapshot = useMemo(() => {
     if (!activeGrowingPlot) return null;
@@ -218,12 +246,6 @@ export function FarmPage({
       needsFocusHint: displayProgress < 0.5,
     };
   }, [activeGrowingPlot, nowTimestamp]);
-
-  useEffect(() => {
-    if (activeTooltipPlotId !== null && !activeGrowingPlot) {
-      setActiveTooltipPlotId(null);
-    }
-  }, [activeTooltipPlotId, activeGrowingPlot]);
 
   const totalBaseSeeds = seeds.normal + seeds.epic + seeds.legendary;
   const totalPlantableSeeds = totalBaseSeeds + injectedSeeds.length + hybridSeeds.length + prismaticSeeds.length + darkMatterSeeds.length;
@@ -425,7 +447,7 @@ export function FarmPage({
               plots={farm.plots}
               weather={weather}
               nowTimestamp={nowTimestamp}
-              activeTooltipPlotId={activeTooltipPlotId}
+              activeTooltipPlotId={effectiveActiveTooltipPlotId}
               stolenRecordByPlotId={latestStolenRecordByPlotId}
               mutationGunCount={mutationGunCount}
               moonDewCount={moonDewCount}
@@ -661,7 +683,7 @@ export interface PlotCardProps {
   onUseTrapNet: () => void;
 }
 
-export function PlotCard({ plot, weather: _weather, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
+export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
   const variety = plot.varietyId ? VARIETY_DEFS[plot.varietyId] : null;
   const varietyLabel = plot.varietyId
     ? `${t.varietyName(plot.varietyId)}${plot.isMutant ? ` · ${t.mutationPositive}` : ''}`
@@ -697,35 +719,49 @@ export function PlotCard({ plot, weather: _weather, stolenRecord, nowTimestamp, 
   const [isPlantFxActive, setIsPlantFxActive] = useState(false);
   const [harvestFxEmoji, setHarvestFxEmoji] = useState<string | null>(null);
   const previousPlotStateRef = useRef<Plot['state']>(plot.state);
+  const plantFxFrameRef = useRef<number | null>(null);
   const plantFxTimerRef = useRef<number | null>(null);
   const harvestFxTimerRef = useRef<number | null>(null);
+
+  const clearPlantFxSchedule = useCallback(() => {
+    if (plantFxFrameRef.current !== null) {
+      window.cancelAnimationFrame(plantFxFrameRef.current);
+      plantFxFrameRef.current = null;
+    }
+    if (plantFxTimerRef.current !== null) {
+      window.clearTimeout(plantFxTimerRef.current);
+      plantFxTimerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const previousState = previousPlotStateRef.current;
     if (previousState === 'empty' && plot.state === 'growing') {
-      setIsPlantFxActive(true);
-      if (plantFxTimerRef.current !== null) {
-        window.clearTimeout(plantFxTimerRef.current);
-      }
-      plantFxTimerRef.current = window.setTimeout(() => {
+      clearPlantFxSchedule();
+      plantFxFrameRef.current = window.requestAnimationFrame(() => {
+        plantFxFrameRef.current = null;
+        setIsPlantFxActive(true);
+        plantFxTimerRef.current = window.setTimeout(() => {
+          setIsPlantFxActive(false);
+          plantFxTimerRef.current = null;
+        }, 680);
+      });
+    } else if (plot.state !== 'growing') {
+      clearPlantFxSchedule();
+      plantFxFrameRef.current = window.requestAnimationFrame(() => {
+        plantFxFrameRef.current = null;
         setIsPlantFxActive(false);
-        plantFxTimerRef.current = null;
-      }, 680);
-    }
-    if (plot.state !== 'growing') {
-      setIsPlantFxActive(false);
+      });
     }
     previousPlotStateRef.current = plot.state;
-  }, [plot.state]);
+  }, [clearPlantFxSchedule, plot.state]);
 
   useEffect(() => () => {
-    if (plantFxTimerRef.current !== null) {
-      window.clearTimeout(plantFxTimerRef.current);
-    }
+    clearPlantFxSchedule();
     if (harvestFxTimerRef.current !== null) {
       window.clearTimeout(harvestFxTimerRef.current);
     }
-  }, []);
+  }, [clearPlantFxSchedule]);
 
   const triggerHarvestFx = useCallback((emoji: string) => {
     if (harvestFxTimerRef.current !== null) {

@@ -2,7 +2,7 @@
  * AchievementsPage — full-screen achievement gallery
  * Shows all 44 achievements grouped by series with progress bars.
  */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
@@ -29,10 +29,6 @@ function BadgeIcon({ def, unlocked, series, size = 64 }: {
   const [imageError, setImageError] = useState(false);
   const badgeUrl = getBadgeUrl(def.id);
   const canShowImage = !imageError && badgeUrl.length > 0;
-
-  useEffect(() => {
-    setImageError(false);
-  }, [def.id]);
 
   if (!unlocked) {
     if (isHidden) {
