@@ -640,8 +640,8 @@ export function GeneLabPage({
           ) : (
             <div className="flex flex-wrap gap-2">
               {fusionGalaxyGroups.map((group) => {
-                const disabled = selectedFusionGalaxy1 === group.galaxyId;
-                const isSelected = selectedFusionGalaxy2 === group.galaxyId;
+                const disabled = effectiveSelectedFusionGalaxy1 === group.galaxyId;
+                const isSelected = effectiveSelectedFusionGalaxy2 === group.galaxyId;
                 return (
                   <button
                     key={`fusion-second-${group.galaxyId}`}

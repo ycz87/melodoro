@@ -150,6 +150,19 @@ export function FarmPage({
 
   // 追踪已揭晓的地块（避免重复触发动画）
   const revealedRef = useRef<Set<number>>(new Set());
+  const revealAnimFrameRef = useRef<number | null>(null);
+  const revealAnimTimerRef = useRef<number | null>(null);
+
+  const clearRevealAnimSchedule = useCallback(() => {
+    if (revealAnimFrameRef.current !== null) {
+      window.cancelAnimationFrame(revealAnimFrameRef.current);
+      revealAnimFrameRef.current = null;
+    }
+    if (revealAnimTimerRef.current !== null) {
+      window.clearTimeout(revealAnimTimerRef.current);
+      revealAnimTimerRef.current = null;
+    }
+  }, []);
 
   // 检测品种揭晓
   useEffect(() => {
@@ -163,18 +176,28 @@ export function FarmPage({
         revealedRef.current.add(plot.id);
         const varietyId = plot.varietyId;
         const plotId = plot.id;
-        requestAnimationFrame(() => {
-          setRevealAnim({ varietyId, plotId });
-        });
-        const rarityStars = RARITY_STARS[VARIETY_DEFS[plot.varietyId].rarity];
+        const rarityStars = RARITY_STARS[VARIETY_DEFS[varietyId].rarity];
         const revealDuration = rarityStars >= REVEAL_RARE_PLUS_MIN_STARS
           ? REVEAL_DURATION_RARE_PLUS_MS
           : REVEAL_DURATION_MS;
-        const timer = setTimeout(() => setRevealAnim(null), revealDuration);
-        return () => clearTimeout(timer);
+
+        clearRevealAnimSchedule();
+        revealAnimFrameRef.current = window.requestAnimationFrame(() => {
+          revealAnimFrameRef.current = null;
+          setRevealAnim({ varietyId, plotId });
+          revealAnimTimerRef.current = window.setTimeout(() => {
+            setRevealAnim(null);
+            revealAnimTimerRef.current = null;
+          }, revealDuration);
+        });
+        break;
       }
     }
-  }, [farm.plots]);
+  }, [clearRevealAnimSchedule, farm.plots]);
+
+  useEffect(() => () => {
+    clearRevealAnimSchedule();
+  }, [clearRevealAnimSchedule]);
 
   useEffect(() => {
     const timerId = window.setInterval(() => setNowTimestamp(Date.now()), 1000);
@@ -696,39 +719,49 @@ export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltip
   const [isPlantFxActive, setIsPlantFxActive] = useState(false);
   const [harvestFxEmoji, setHarvestFxEmoji] = useState<string | null>(null);
   const previousPlotStateRef = useRef<Plot['state']>(plot.state);
+  const plantFxFrameRef = useRef<number | null>(null);
   const plantFxTimerRef = useRef<number | null>(null);
   const harvestFxTimerRef = useRef<number | null>(null);
+
+  const clearPlantFxSchedule = useCallback(() => {
+    if (plantFxFrameRef.current !== null) {
+      window.cancelAnimationFrame(plantFxFrameRef.current);
+      plantFxFrameRef.current = null;
+    }
+    if (plantFxTimerRef.current !== null) {
+      window.clearTimeout(plantFxTimerRef.current);
+      plantFxTimerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const previousState = previousPlotStateRef.current;
     if (previousState === 'empty' && plot.state === 'growing') {
-      requestAnimationFrame(() => {
+      clearPlantFxSchedule();
+      plantFxFrameRef.current = window.requestAnimationFrame(() => {
+        plantFxFrameRef.current = null;
         setIsPlantFxActive(true);
+        plantFxTimerRef.current = window.setTimeout(() => {
+          setIsPlantFxActive(false);
+          plantFxTimerRef.current = null;
+        }, 680);
       });
-      if (plantFxTimerRef.current !== null) {
-        window.clearTimeout(plantFxTimerRef.current);
-      }
-      plantFxTimerRef.current = window.setTimeout(() => {
-        setIsPlantFxActive(false);
-        plantFxTimerRef.current = null;
-      }, 680);
-    }
-    if (plot.state !== 'growing') {
-      requestAnimationFrame(() => {
+    } else if (plot.state !== 'growing') {
+      clearPlantFxSchedule();
+      plantFxFrameRef.current = window.requestAnimationFrame(() => {
+        plantFxFrameRef.current = null;
         setIsPlantFxActive(false);
       });
     }
     previousPlotStateRef.current = plot.state;
-  }, [plot.state]);
+  }, [clearPlantFxSchedule, plot.state]);
 
   useEffect(() => () => {
-    if (plantFxTimerRef.current !== null) {
-      window.clearTimeout(plantFxTimerRef.current);
-    }
+    clearPlantFxSchedule();
     if (harvestFxTimerRef.current !== null) {
       window.clearTimeout(harvestFxTimerRef.current);
     }
-  }, []);
+  }, [clearPlantFxSchedule]);
 
   const triggerHarvestFx = useCallback((emoji: string) => {
     if (harvestFxTimerRef.current !== null) {
