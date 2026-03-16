@@ -167,36 +167,6 @@ async function waitForMutationRoll(page: Page, plotId: number) {
   }, plotId, { timeout: 15_000 });
 }
 
-async function markFarmInactiveForOfflineGrowth(page: Page, inactiveMs: number) {
-  await page.evaluate((offlineMs: number) => {
-    const raw = localStorage.getItem('watermelon-farm');
-    if (!raw) return;
-
-    const farm = JSON.parse(raw) as {
-      lastActiveDate?: string;
-      lastActivityTimestamp?: number;
-      plots?: Array<Record<string, unknown>>;
-    };
-    const now = Date.now();
-    const inactiveAt = now - offlineMs;
-    const yesterday = new Date(now - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-    farm.lastActiveDate = yesterday;
-    farm.lastActivityTimestamp = inactiveAt;
-    if (Array.isArray(farm.plots)) {
-      farm.plots = farm.plots.map((plot) => {
-        if (plot.state !== 'growing' && plot.state !== 'mature') return plot;
-        return {
-          ...plot,
-          lastActivityTimestamp: inactiveAt,
-          lastUpdateDate: yesterday,
-        };
-      });
-    }
-    localStorage.setItem('watermelon-farm', JSON.stringify(farm));
-  }, inactiveMs);
-}
-
 async function useMutationGunOnce(page: Page, expectedChance: number) {
   const mutationButton = page.locator('button').filter({ hasText: zh.mutationGunUse }).first();
   if (!(await mutationButton.isVisible().catch(() => false))) {

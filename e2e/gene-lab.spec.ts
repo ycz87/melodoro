@@ -56,20 +56,6 @@ async function goToFarm(page: import('@playwright/test').Page) {
   await expect(page.locator('.farm-grid-perspective')).toBeVisible();
 }
 
-async function activateDebugToolbar(page: import('@playwright/test').Page) {
-  const settingsButton = page.getByRole('button', { name: /settings|设置/i });
-  await settingsButton.click();
-  const settingsPanel = page.locator('.settings-scrollbar').first();
-  await expect(settingsPanel).toBeVisible();
-  const versionBadge = settingsPanel.locator('span').filter({ hasText: /^v\d+\.\d+\.\d+$/ });
-  await expect(versionBadge).toBeVisible();
-  for (let i = 0; i < 7; i += 1) {
-    await versionBadge.click();
-  }
-  await expect(page.getByText('🧪 Debug Toolbar')).toBeVisible();
-  await settingsButton.click();
-}
-
 async function openDebugPanel(page: import('@playwright/test').Page) {
   const debugTitle = page.getByText('🧪 Debug Toolbar');
   const resetButton = page.getByRole('button', { name: '🔄 重置所有数据' });
