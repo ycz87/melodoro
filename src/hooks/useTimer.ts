@@ -78,13 +78,46 @@ export function useTimer({ settings, onComplete, onSkipWork }: UseTimerOptions):
   useEffect(() => { onSkipWorkRef.current = onSkipWork; }, [onSkipWork]);
   useEffect(() => { settingsRef.current = settings; }, [settings]);
 
-  // Sync timeLeft with settings when idle (user changed work/break duration in settings)
-  useEffect(() => {
-    if (status === 'idle') {
-      setTimeLeft(getDuration(phase, settings));
+  const handlePhaseElapsed = useCallback((completedPhase: Exclude<TimerPhase, 'overtime'>) => {
+    try {
+      const s = settingsRef.current;
+
+      if (completedPhase === 'work') {
+        // >25min: enter overtime mode, don't auto-complete
+        if (s.workMinutes > 25) {
+          setPhase('overtime');
+          setOvertimeSeconds(0);
+          setGeneration((g) => g + 1); // restart interval for count-up
+          return;
+        }
+
+        // <=25min: normal completion
+        setCelebrating(true);
+        setCelebrationStage(completedPhase);
+      }
+
+      // Transition to next phase
+      const nextPhase: TimerPhase = completedPhase === 'work' ? 'break' : 'work';
+      setPhase(nextPhase);
+      setTimeLeft(getDuration(nextPhase, s));
       setOvertimeSeconds(0);
+
+      // Auto-start logic (autoStartBreak disabled for >25min, but we only reach here for <=25min work)
+      const shouldAutoStart = completedPhase === 'work'
+        ? s.autoStartBreak
+        : s.autoStartWork;
+
+      if (shouldAutoStart) {
+        setGeneration((g) => g + 1);
+      } else {
+        setStatus('idle');
+      }
+
+      onCompleteRef.current(completedPhase);
+    } catch (err) {
+      console.error('[useTimer] phase completion error:', err);
     }
-  }, [settings, status, phase]);
+  }, []);
 
   // Core countdown interval — ticks every 1s while running.
   useEffect(() => {
@@ -108,54 +141,27 @@ export function useTimer({ settings, onComplete, onSkipWork }: UseTimerOptions):
     return () => clearInterval(interval);
   }, [status, generation, phase]);
 
-  // Phase completion handler — triggers when timeLeft hits 0 during running.
+  // Phase completion handler — schedule transition when timeLeft hits 0 during running.
   useEffect(() => {
-    if (timeLeft === 0 && status === 'running' && phase !== 'overtime') {
-      try {
-        const completedPhase = phase;
-        const s = settingsRef.current;
+    if (timeLeft !== 0 || status !== 'running' || phase === 'overtime') return;
 
-        if (completedPhase === 'work') {
-          // >25min: enter overtime mode, don't auto-complete
-          if (s.workMinutes > 25) {
-            setPhase('overtime');
-            setOvertimeSeconds(0);
-            setGeneration((g) => g + 1); // restart interval for count-up
-            return;
-          }
+    const completedPhase = phase;
+    const timeoutId = window.setTimeout(() => {
+      handlePhaseElapsed(completedPhase);
+    }, 0);
 
-          // ≤25min: normal completion
-          setCelebrating(true);
-          setCelebrationStage(completedPhase);
-        }
-
-        // Transition to next phase
-        const nextPhase: TimerPhase = completedPhase === 'work' ? 'break' : 'work';
-        setPhase(nextPhase);
-        setTimeLeft(getDuration(nextPhase, s));
-
-        // Auto-start logic (autoStartBreak disabled for >25min, but we only reach here for ≤25min work)
-        const shouldAutoStart = completedPhase === 'work'
-          ? s.autoStartBreak
-          : s.autoStartWork;
-
-        if (shouldAutoStart) {
-          setGeneration((g) => g + 1);
-        } else {
-          setStatus('idle');
-        }
-
-        onCompleteRef.current(completedPhase);
-      } catch (err) {
-        console.error('[useTimer] phase completion error:', err);
-      }
-    }
-  }, [timeLeft, status, phase]);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [timeLeft, status, phase, handlePhaseElapsed]);
 
   const start = useCallback(() => {
+    const s = settingsRef.current;
+    setTimeLeft(getDuration(phase, s));
+    setOvertimeSeconds(0);
     setGeneration((g) => g + 1);
     setStatus('running');
-  }, []);
+  }, [phase]);
 
   const pause = useCallback(() => {
     setStatus('paused');
@@ -231,5 +237,22 @@ export function useTimer({ settings, onComplete, onSkipWork }: UseTimerOptions):
     setCelebrationStage(null);
   }, []);
 
-  return { timeLeft, phase, status, celebrating, celebrationStage, overtimeSeconds, dismissCelebration, start, pause, resume, skip, abandon, reset };
+  const effectiveTimeLeft = status === 'idle' ? getDuration(phase, settings) : timeLeft;
+  const effectiveOvertimeSeconds = status === 'idle' ? 0 : overtimeSeconds;
+
+  return {
+    timeLeft: effectiveTimeLeft,
+    phase,
+    status,
+    celebrating,
+    celebrationStage,
+    overtimeSeconds: effectiveOvertimeSeconds,
+    dismissCelebration,
+    start,
+    pause,
+    resume,
+    skip,
+    abandon,
+    reset,
+  };
 }

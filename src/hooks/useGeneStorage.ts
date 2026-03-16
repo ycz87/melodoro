@@ -110,8 +110,12 @@ export function useGeneStorage(onSync?: (inventory: GeneInventory) => void) {
 
   // Sync gene inventory to cloud on changes (skip initial mount)
   const onSyncRef = useRef(onSync);
-  onSyncRef.current = onSync;
   const mountedRef = useRef(false);
+
+  useEffect(() => {
+    onSyncRef.current = onSync;
+  }, [onSync]);
+
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;

@@ -1238,6 +1238,7 @@ function App() {
     setRecords,
     settings.alertSound,
     settings.alertRepeatCount,
+    settings.ambienceMixer,
     settings.workMinutes,
     t,
     resolveStageAndStore,
@@ -1289,9 +1290,15 @@ function App() {
     } catch (err) {
       console.error('[Timer] onSkipWork error:', err);
     }
-  }, [currentTask, records, setRecords, settings.alertSound, settings.workMinutes, t, resolveStageAndStore, syncRecord, achievements]);
+  }, [currentTask, records, setRecords, settings.alertSound, settings.ambienceMixer, settings.workMinutes, t, resolveStageAndStore, syncRecord, achievements]);
 
   const timer = useTimer({ settings, onComplete: handleTimerComplete, onSkipWork: handleSkipWork });
+  const timerPhase = timer.phase;
+  const timerStatus = timer.status;
+  const timerTimeLeft = timer.timeLeft;
+  const timerOvertimeSeconds = timer.overtimeSeconds;
+  const timerCelebrating = timer.celebrating;
+  const dismissTimerCelebration = timer.dismissCelebration;
 
   // ─── Pomodoro abandon with confirm ───
   // Shows a ConfirmModal before abandoning; records partial work (≥1min) as 'abandoned'
@@ -1390,7 +1397,7 @@ function App() {
         setTimeout(() => setAchievementCelebrationIds(newAchievements), 3000);
       }
     }
-  }, [setRecords, settings.alertSound, t, resolveStageAndStore, syncRecord, achievements]);
+  }, [setRecords, settings.alertSound, settings.ambienceMixer, t, resolveStageAndStore, syncRecord, achievements]);
 
   const handleProjectComplete = useCallback((record: ProjectRecord) => {
     setProjectRecords((prev) => [record, ...prev]);
@@ -1404,6 +1411,7 @@ function App() {
   }, [settings.alertSound, settings.alertRepeatCount, t]);
 
   const project = useProjectTimer(handleProjectTaskComplete, handleProjectComplete, handleProjectOvertimeStart, settings.autoStartWork);
+  const projectState = project.state;
 
   // ─── Project exit flow ───
   const handleProjectExitClick = useCallback(() => {
@@ -1444,8 +1452,8 @@ function App() {
   // "12:34 ☕ 西瓜时钟" during break, "+01:23 ⏰" during overtime.
   // Project mode uses 📋 emoji to distinguish from pomodoro mode.
   useEffect(() => {
-    if (project.state && (project.state.phase === 'running' || project.state.phase === 'overtime' || project.state.phase === 'break' || project.state.phase === 'paused')) {
-      const ps = project.state;
+    if (projectState && (projectState.phase === 'running' || projectState.phase === 'overtime' || projectState.phase === 'break' || projectState.phase === 'paused')) {
+      const ps = projectState;
       if (ps.phase === 'break') {
         const m = Math.floor(ps.timeLeft / 60);
         const s = ps.timeLeft % 60;
@@ -1461,24 +1469,24 @@ function App() {
       }
       return;
     }
-    if (timer.status === 'running' || timer.status === 'paused') {
-      if (timer.phase === 'overtime') {
-        const m = Math.floor(timer.overtimeSeconds / 60);
-        const s = timer.overtimeSeconds % 60;
+    if (timerStatus === 'running' || timerStatus === 'paused') {
+      if (timerPhase === 'overtime') {
+        const m = Math.floor(timerOvertimeSeconds / 60);
+        const s = timerOvertimeSeconds % 60;
         document.title = `+${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ⏰ ${t.appName}`;
       } else {
-        const minutes = Math.floor(timer.timeLeft / 60);
-        const seconds = timer.timeLeft % 60;
+        const minutes = Math.floor(timerTimeLeft / 60);
+        const seconds = timerTimeLeft % 60;
         const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        const phaseEmoji = timer.phase === 'work' ? '🍉' : '☕';
+        const phaseEmoji = timerPhase === 'work' ? '🍉' : '☕';
         document.title = `${timeStr} ${phaseEmoji} ${t.appName}`;
       }
-    } else if (timer.phase !== 'work') {
+    } else if (timerPhase !== 'work') {
       document.title = `${t.phaseShortBreak} · ${t.appName}`;
     } else {
       document.title = t.appName;
     }
-  }, [timer.timeLeft, timer.phase, timer.status, t, project.state]);
+  }, [timerTimeLeft, timerPhase, timerStatus, timerOvertimeSeconds, t, projectState]);
 
   const handleUpdateRecord = useCallback((id: string, task: string) => {
     setRecords((prev) => prev.map((r) => r.id === id ? { ...r, task } : r));
@@ -1519,12 +1527,12 @@ function App() {
   // Celebration — use lastRolledStage if available (includes legendary), fallback to getGrowthStage
   // null lastRolledStage = overtime 2x, suppress celebration
   useEffect(() => {
-    if (timer.celebrating && suppressCelebrationRef.current) {
+    if (timerCelebrating && suppressCelebrationRef.current) {
       suppressCelebrationRef.current = false;
-      timer.dismissCelebration();
+      dismissTimerCelebration();
     }
-  }, [timer.celebrating, timer.dismissCelebration]);
-  const celebrationGrowthStage: GrowthStage | null = timer.celebrating && lastRolledStage
+  }, [timerCelebrating, dismissTimerCelebration]);
+  const celebrationGrowthStage: GrowthStage | null = timerCelebrating && lastRolledStage
     ? lastRolledStage
     : null;
   const celebrationIsRipe = celebrationGrowthStage === 'ripe' || celebrationGrowthStage === 'legendary';
