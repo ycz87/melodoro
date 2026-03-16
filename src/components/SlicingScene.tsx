@@ -44,6 +44,25 @@ const GOLD_JUICE_COLORS = ['#fbbf24', '#f59e0b', '#fde68a', '#d97706', '#fef3c7'
 const SEED_QUALITY_EMOJI = { normal: '🌱', epic: '💎', legendary: '🌟' } as const;
 const SEED_QUALITY_COLOR = { normal: '#a3a3a3', epic: '#a78bfa', legendary: '#fbbf24' } as const;
 
+function WholeMelonSvg({ size = 120, isGold }: { size?: number; isGold: boolean }) {
+  const baseColor = isGold ? '#fbbf24' : '#2d8a4e';
+  const stripeColor = isGold ? '#d97706' : '#1a5c32';
+  const highlight = isGold ? '#fde68a' : '#4ade80';
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="56" fill={baseColor} />
+      <path d="M60 4 C62 40, 68 80, 60 116" stroke={stripeColor} strokeWidth="5" fill="none" opacity="0.7" />
+      <path d="M30 10 C38 40, 44 80, 30 110" stroke={stripeColor} strokeWidth="4" fill="none" opacity="0.5" />
+      <path d="M90 10 C82 40, 76 80, 90 110" stroke={stripeColor} strokeWidth="4" fill="none" opacity="0.5" />
+      <path d="M15 30 C28 50, 28 70, 15 90" stroke={stripeColor} strokeWidth="3" fill="none" opacity="0.35" />
+      <path d="M105 30 C92 50, 92 70, 105 90" stroke={stripeColor} strokeWidth="3" fill="none" opacity="0.35" />
+      <ellipse cx="42" cy="35" rx="18" ry="12" fill={highlight} opacity="0.25" transform="rotate(-20 42 35)" />
+      <path d="M58 6 C56 0, 62 -2, 64 4" stroke={isGold ? '#92400e' : '#166534'} strokeWidth="2.5" fill="none" />
+    </svg>
+  );
+}
+
 export function SlicingScene({ melonType, comboCount, canContinue, pity, onComplete, onContinue, onCancel }: SlicingSceneProps) {
   const theme = useTheme();
   const t = useI18n();
@@ -72,30 +91,8 @@ export function SlicingScene({ melonType, comboCount, canContinue, pity, onCompl
     return () => { document.body.style.overscrollBehavior = prev; };
   }, []);
 
-  const juiceColors = melonType === 'legendary' ? GOLD_JUICE_COLORS : JUICE_COLORS;
-
-  // SVG whole watermelon for ready phase
-  const WholeMelonSVG = ({ size = 120 }: { size?: number }) => {
-    const isGold = melonType === 'legendary';
-    const baseColor = isGold ? '#fbbf24' : '#2d8a4e';
-    const stripeColor = isGold ? '#d97706' : '#1a5c32';
-    const highlight = isGold ? '#fde68a' : '#4ade80';
-    return (
-      <svg width={size} height={size} viewBox="0 0 120 120">
-        <circle cx="60" cy="60" r="56" fill={baseColor} />
-        {/* Stripes */}
-        <path d="M60 4 C62 40, 68 80, 60 116" stroke={stripeColor} strokeWidth="5" fill="none" opacity="0.7" />
-        <path d="M30 10 C38 40, 44 80, 30 110" stroke={stripeColor} strokeWidth="4" fill="none" opacity="0.5" />
-        <path d="M90 10 C82 40, 76 80, 90 110" stroke={stripeColor} strokeWidth="4" fill="none" opacity="0.5" />
-        <path d="M15 30 C28 50, 28 70, 15 90" stroke={stripeColor} strokeWidth="3" fill="none" opacity="0.35" />
-        <path d="M105 30 C92 50, 92 70, 105 90" stroke={stripeColor} strokeWidth="3" fill="none" opacity="0.35" />
-        {/* Highlight */}
-        <ellipse cx="42" cy="35" rx="18" ry="12" fill={highlight} opacity="0.25" transform="rotate(-20 42 35)" />
-        {/* Stem */}
-        <path d="M58 6 C56 0, 62 -2, 64 4" stroke={isGold ? '#92400e' : '#166534'} strokeWidth="2.5" fill="none" />
-      </svg>
-    );
-  };
+  const isGoldMelon = melonType === 'legendary';
+  const juiceColors = isGoldMelon ? GOLD_JUICE_COLORS : JUICE_COLORS;
 
   // 生成汁水粒子
   const spawnParticles = useCallback((cx: number, cy: number, angle: number) => {
@@ -347,7 +344,7 @@ export function SlicingScene({ melonType, comboCount, canContinue, pity, onCompl
         opacity: phase === 'result' ? 0 : 1,
         transition: phase === 'slicing' ? 'transform 0.15s ease-out' : 'transform 0.6s ease-in, opacity 0.3s',
       }}>
-        {(phase === 'ready' || phase === 'slicing') && <WholeMelonSVG size={120} />}
+        {(phase === 'ready' || phase === 'slicing') && <WholeMelonSvg size={120} isGold={isGoldMelon} />}
         {(phase === 'split' || phase === 'drops') && (
           <div className="relative" style={{ fontSize: 100 }}>
             <span className="absolute" style={{
