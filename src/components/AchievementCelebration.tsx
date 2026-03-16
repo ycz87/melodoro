@@ -3,7 +3,7 @@
  * Badge transitions from gray → color with glow + gold particles.
  * Multiple unlocks shown sequentially. Click to dismiss.
  */
-import { useState, useEffect, useCallback, useMemo, useId } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
@@ -62,7 +62,8 @@ function SingleCelebration({ achievementId, language, onDone }: {
 }) {
   const theme = useTheme();
   const i18n = useI18n();
-  const celebrationId = useId().replace(/:/g, '');
+  // Keep one random seed per celebration mount so the effect stays stable until dismissal.
+  const [instanceNonce] = useState(() => Math.random().toString(36).slice(2));
   const [phase, setPhase] = useState<'gray' | 'reveal' | 'show' | 'exit'>('gray');
   const [imageError, setImageError] = useState(false);
   const def = getAchievementById(achievementId);
@@ -77,8 +78,8 @@ function SingleCelebration({ achievementId, language, onDone }: {
   }, [onDone]);
 
   const particles = useMemo(
-    () => createAchievementParticles(`${achievementId}-${celebrationId}`),
-    [achievementId, celebrationId],
+    () => createAchievementParticles(`${achievementId}-${instanceNonce}`),
+    [achievementId, instanceNonce],
   );
 
   if (!def) return null;

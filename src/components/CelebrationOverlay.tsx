@@ -7,7 +7,7 @@
  * 所有动效纯 CSS animation，用 transform/opacity 做 GPU 加速。
  * 点击任意位置可提前关闭。
  */
-import { useEffect, useState, useMemo, useCallback, useId } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import type { GrowthStage } from '../types';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
@@ -519,7 +519,8 @@ export function CelebrationOverlay({ stage, isRipe, onComplete }: CelebrationOve
   const [phase, setPhase] = useState<'enter' | 'show' | 'exit'>('enter');
   const theme = useTheme();
   const t = useI18n();
-  const celebrationId = useId().replace(/:/g, '');
+  // Keep one random seed per overlay mount so a single celebration is stable, but the next trigger re-rolls.
+  const [instanceNonce] = useState(() => Math.random().toString(36).slice(2));
   const config = STAGE_CONFIG[stage];
 
   // Pick deterministic text per overlay instance so it stays stable across re-renders.
@@ -532,10 +533,10 @@ export function CelebrationOverlay({ stage, isRipe, onComplete }: CelebrationOve
       ripe: t.celebrateRipe,
       legendary: t.celebrateLegendary,
     };
-    return pickSeeded(pools[stage], `${celebrationId}-${stage}-text`);
-  }, [celebrationId, stage, t]);
+    return pickSeeded(pools[stage], `${instanceNonce}-${stage}-text`);
+  }, [instanceNonce, stage, t]);
 
-  const specialEffectSeed = `${celebrationId}-${stage}-effect`;
+  const specialEffectSeed = `${instanceNonce}-${stage}-effect`;
 
   const specialEffect = useMemo(() => {
     if (!config.hasSpecialEffect) return null;
@@ -543,8 +544,8 @@ export function CelebrationOverlay({ stage, isRipe, onComplete }: CelebrationOve
   }, [config.hasSpecialEffect, specialEffectSeed]);
 
   const particles = useMemo(
-    () => generateParticles(stage, config, `${celebrationId}-particles`),
-    [celebrationId, stage, config],
+    () => generateParticles(stage, config, `${instanceNonce}-particles`),
+    [instanceNonce, stage, config],
   );
 
   // Click to dismiss
