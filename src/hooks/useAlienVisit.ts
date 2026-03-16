@@ -88,6 +88,7 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
     migrateAlienVisit,
   );
   const previousSignalRef = useRef(mutationDoctorSignal);
+  const currentAlienExpiresAt = alienVisit.current?.expiresAt;
 
   // App open / day check: melon alien appears with 10% chance when 3+ melons exist.
   useEffect(() => {
@@ -143,9 +144,8 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
 
   // Auto-hide active alien bubble after 3 seconds.
   useEffect(() => {
-    const currentExpiresAt = alienVisit.current?.expiresAt;
-    if (!currentExpiresAt) return;
-    const remainingMs = currentExpiresAt - Date.now();
+    if (!currentAlienExpiresAt) return;
+    const remainingMs = currentAlienExpiresAt - Date.now();
     if (remainingMs <= 0) {
       setAlienVisit((prev) => clearExpiredAppearance(prev, Date.now()));
       return;
@@ -158,7 +158,7 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [alienVisit.current?.expiresAt, setAlienVisit]);
+  }, [currentAlienExpiresAt, setAlienVisit]);
 
   return {
     alienVisit,

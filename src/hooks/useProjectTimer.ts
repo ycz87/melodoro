@@ -106,7 +106,10 @@ export function useProjectTimer(
   autoStartWork?: boolean,
 ): UseProjectTimerReturn {
   const [state, setState] = useState<ProjectState | null>(null);
-  const [hasSavedProject, setHasSavedProject] = useState(false);
+  const [hasSavedProject, setHasSavedProject] = useState(() => {
+    const saved = loadState();
+    return !!(saved && saved.phase !== 'setup' && saved.phase !== 'summary');
+  });
   const onTaskCompleteRef = useRef(onTaskComplete);
   const onProjectCompleteRef = useRef(onProjectComplete);
   const onOvertimeStartRef = useRef(onOvertimeStart);
@@ -117,14 +120,6 @@ export function useProjectTimer(
   useEffect(() => { onOvertimeStartRef.current = onOvertimeStart; }, [onOvertimeStart]);
   useEffect(() => { autoStartWorkRef.current = autoStartWork ?? false; }, [autoStartWork]);
 
-  // Check for saved project on mount
-  useEffect(() => {
-    const saved = loadState();
-    if (saved && saved.phase !== 'setup' && saved.phase !== 'summary') {
-      setHasSavedProject(true);
-    }
-  }, []);
-
   // Persist state changes
   useEffect(() => {
     if (state) {
@@ -132,14 +127,15 @@ export function useProjectTimer(
     }
   }, [state]);
 
+  const statePhase = state?.phase;
+
   // ─── Timer tick ───
   // 1s interval that drives the countdown for running/break/overtime phases.
   // - running: decrements timeLeft, transitions to overtime when timeLeft hits 0
   // - overtime: increments elapsedSeconds (counting up past the estimate)
   // - break: decrements timeLeft, auto-starts next task or goes to summary when done
   useEffect(() => {
-    if (!state) return;
-    if (state.phase !== 'running' && state.phase !== 'break' && state.phase !== 'overtime') return;
+    if (statePhase !== 'running' && statePhase !== 'break' && statePhase !== 'overtime') return;
 
     const interval = setInterval(() => {
       setState((prev) => {
@@ -199,7 +195,7 @@ export function useProjectTimer(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state?.phase]);
+  }, [statePhase]);
 
   // ─── Compute timer view ───
   // Maps the internal ProjectState into a flat object that the Timer component

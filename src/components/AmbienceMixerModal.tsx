@@ -26,9 +26,15 @@ export function AmbienceMixerModal({ config, onChange, onClose, keepOnClose }: P
   const [local, setLocal] = useState<AmbienceMixerConfig>({ ...config });
   // Track latest config via ref so cleanup can access it
   const localRef = useRef(local);
-  localRef.current = local;
   const keepOnCloseRef = useRef(keepOnClose);
-  keepOnCloseRef.current = keepOnClose;
+
+  useEffect(() => {
+    localRef.current = local;
+  }, [local]);
+
+  useEffect(() => {
+    keepOnCloseRef.current = keepOnClose;
+  }, [keepOnClose]);
 
   // Enter preview mode on mount, exit on unmount
   useEffect(() => {
