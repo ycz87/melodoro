@@ -22,6 +22,12 @@ interface HistoryPanelProps {
 
 type Tab = 'history' | 'stats';
 
+function getPreviousDateKey(dateKey: string): string {
+  const date = new Date(`${dateKey}T12:00:00`);
+  date.setDate(date.getDate() - 1);
+  return formatDateKey(date);
+}
+
 export function HistoryPanel({ records, projectRecords = [], onClose }: HistoryPanelProps) {
   const theme = useTheme();
   const t = useI18n();
@@ -56,8 +62,7 @@ export function HistoryPanel({ records, projectRecords = [], onClose }: HistoryP
   // Format selected date for display
   const selectedDateLabel = useMemo(() => {
     if (selectedDate === today) return t.today;
-    const yesterday = formatDateKey(new Date(Date.now() - 86400000));
-    if (selectedDate === yesterday) return t.yesterday;
+    if (selectedDate === getPreviousDateKey(today)) return t.yesterday;
     const [, m, d] = selectedDate.split('-');
     return t.dateFormat(parseInt(m), parseInt(d));
   }, [selectedDate, today, t]);
