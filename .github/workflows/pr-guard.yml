@@ -1,0 +1,58 @@
+name: PR Guard
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-guard-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch PR base ref
+        if: github.event_name == 'pull_request'
+        run: git fetch origin "${{ github.base_ref }}" --depth=1
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Diff check (working tree)
+        run: npm run guard:pr:diff-check
+
+      - name: Diff check (PR patch)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_GUARD_BASE_REF: origin/${{ github.base_ref }}
+        run: npm run guard:pr:patch-check
