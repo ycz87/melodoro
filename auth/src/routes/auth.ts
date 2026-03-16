@@ -3,7 +3,7 @@
  */
 import { Hono } from 'hono'
 import type { Env } from '../index'
-import { signAccessToken, verifyAccessToken, generateRefreshTokenId } from '../services/jwt'
+import { signAccessToken, generateRefreshTokenId } from '../services/jwt'
 import { sendVerificationEmail, generateCode } from '../services/email'
 import {
   googleAuthUrl, googleExchangeCode, googleUserInfo,

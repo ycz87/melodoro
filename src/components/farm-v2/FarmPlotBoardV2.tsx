@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Plot, Weather } from '../../types/farm';
-import { FarmPlotTileV2, mapPlotStateToTileState } from './FarmPlotTileV2';
+import { FarmPlotTileV2 } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
@@ -16,6 +16,13 @@ interface FarmPlotBoardV2Props {
 const GRID_SIDE = 3;
 const TOTAL_PLOTS = GRID_SIDE * GRID_SIDE;
 const MOTION_CLASS = 'farm-v2-motion';
+
+function mapPlotStateToTileState(plot: Plot | null) {
+  if (!plot) return 'locked' as const;
+  if (plot.state === 'mature') return 'mature' as const;
+  if (plot.state === 'growing') return 'growing' as const;
+  return 'empty' as const;
+}
 
 function FarmHudV2({
   compactMode,

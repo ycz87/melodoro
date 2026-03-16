@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react';
-import type { Plot } from '../../types/farm';
 
 export type FarmPlotTileState = 'empty' | 'growing' | 'mature' | 'locked';
 
@@ -330,11 +329,4 @@ export function FarmPlotTileV2({ state, onClick }: FarmPlotTileV2Props) {
       {isLocked && <LockedOverlay />}
     </div>
   );
-}
-
-export function mapPlotStateToTileState(plot: Plot | null): FarmPlotTileState {
-  if (!plot) return 'locked';
-  if (plot.state === 'mature') return 'mature';
-  if (plot.state === 'growing') return 'growing';
-  return 'empty';
 }
