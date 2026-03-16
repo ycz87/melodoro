@@ -16,16 +16,15 @@ const DISMISSED_KEY = 'pwa-install-dismissed';
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(display-mode: standalone)').matches;
+  });
   const theme = useTheme();
   const t = useI18n();
 
   useEffect(() => {
-    // Check if already installed (standalone mode)
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-      return;
-    }
+    if (isInstalled) return;
 
     // Check if user previously dismissed
     if (localStorage.getItem(DISMISSED_KEY)) return;
@@ -52,7 +51,7 @@ export function InstallPrompt() {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', appInstalledHandler);
     };
-  }, []);
+  }, [isInstalled]);
 
   const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return;

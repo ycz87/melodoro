@@ -128,7 +128,6 @@ export function FarmPage({
   onUseStarTracker,
   onUseGuardianBarrier,
   onUseTrapNet,
-  mutationDoctorSignal: _mutationDoctorSignal,
   onGoWarehouse,
   compactShell = false,
 }: FarmPageProps) {
@@ -162,7 +161,11 @@ export function FarmPage({
         !revealedRef.current.has(plot.id)
       ) {
         revealedRef.current.add(plot.id);
-        setRevealAnim({ varietyId: plot.varietyId, plotId: plot.id });
+        const varietyId = plot.varietyId;
+        const plotId = plot.id;
+        requestAnimationFrame(() => {
+          setRevealAnim({ varietyId, plotId });
+        });
         const rarityStars = RARITY_STARS[VARIETY_DEFS[plot.varietyId].rarity];
         const revealDuration = rarityStars >= REVEAL_RARE_PLUS_MIN_STARS
           ? REVEAL_DURATION_RARE_PLUS_MS
@@ -183,6 +186,8 @@ export function FarmPage({
     const match = farm.plots.find((plot) => plot.id === activeTooltipPlotId);
     return match?.state === 'growing' ? match : null;
   }, [activeTooltipPlotId, farm.plots]);
+
+  const effectiveActiveTooltipPlotId = activeGrowingPlot ? activeTooltipPlotId : null;
 
   const activeGrowingSnapshot = useMemo(() => {
     if (!activeGrowingPlot) return null;
@@ -218,12 +223,6 @@ export function FarmPage({
       needsFocusHint: displayProgress < 0.5,
     };
   }, [activeGrowingPlot, nowTimestamp]);
-
-  useEffect(() => {
-    if (activeTooltipPlotId !== null && !activeGrowingPlot) {
-      setActiveTooltipPlotId(null);
-    }
-  }, [activeTooltipPlotId, activeGrowingPlot]);
 
   const totalBaseSeeds = seeds.normal + seeds.epic + seeds.legendary;
   const totalPlantableSeeds = totalBaseSeeds + injectedSeeds.length + hybridSeeds.length + prismaticSeeds.length + darkMatterSeeds.length;
@@ -425,7 +424,7 @@ export function FarmPage({
               plots={farm.plots}
               weather={weather}
               nowTimestamp={nowTimestamp}
-              activeTooltipPlotId={activeTooltipPlotId}
+              activeTooltipPlotId={effectiveActiveTooltipPlotId}
               stolenRecordByPlotId={latestStolenRecordByPlotId}
               mutationGunCount={mutationGunCount}
               moonDewCount={moonDewCount}
@@ -661,7 +660,7 @@ export interface PlotCardProps {
   onUseTrapNet: () => void;
 }
 
-export function PlotCard({ plot, weather: _weather, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
+export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
   const variety = plot.varietyId ? VARIETY_DEFS[plot.varietyId] : null;
   const varietyLabel = plot.varietyId
     ? `${t.varietyName(plot.varietyId)}${plot.isMutant ? ` · ${t.mutationPositive}` : ''}`
@@ -703,7 +702,9 @@ export function PlotCard({ plot, weather: _weather, stolenRecord, nowTimestamp, 
   useEffect(() => {
     const previousState = previousPlotStateRef.current;
     if (previousState === 'empty' && plot.state === 'growing') {
-      setIsPlantFxActive(true);
+      requestAnimationFrame(() => {
+        setIsPlantFxActive(true);
+      });
       if (plantFxTimerRef.current !== null) {
         window.clearTimeout(plantFxTimerRef.current);
       }
@@ -713,7 +714,9 @@ export function PlotCard({ plot, weather: _weather, stolenRecord, nowTimestamp, 
       }, 680);
     }
     if (plot.state !== 'growing') {
-      setIsPlantFxActive(false);
+      requestAnimationFrame(() => {
+        setIsPlantFxActive(false);
+      });
     }
     previousPlotStateRef.current = plot.state;
   }, [plot.state]);
