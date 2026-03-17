@@ -3,9 +3,28 @@
  */
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import type { FarmStorage, Plot, CollectedVariety, VarietyId, GalaxyId, StolenRecord, Rarity } from '../types/farm';
+import type {
+  FarmStorage,
+  Plot,
+  CollectedVariety,
+  VarietyId,
+  GalaxyId,
+  StolenRecord,
+  Rarity,
+  FarmMilestoneId,
+  FarmMilestoneRecord,
+  FarmMilestoneRewardId,
+  FarmMilestoneRewardRecord,
+  FarmMilestoneSource,
+} from '../types/farm';
 import type { SeedCounts, SeedQuality } from '../types/slicing';
-import { DEFAULT_FARM_STORAGE, DEFAULT_UNLOCKED_PLOT_COUNT, createEmptyPlot, VARIETY_DEFS } from '../types/farm';
+import {
+  DEFAULT_FARM_STORAGE,
+  DEFAULT_UNLOCKED_PLOT_COUNT,
+  DEFAULT_FARM_MILESTONE_STATE,
+  createEmptyPlot,
+  VARIETY_DEFS,
+} from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { getPlotCount } from '../farm/galaxy';
 import { rollVariety } from '../farm/growth';
@@ -167,6 +186,99 @@ function toNonNegativeInt(value: unknown): number {
   return Math.max(0, Math.floor(value));
 }
 
+const FARM_MILESTONE_IDS = new Set<FarmMilestoneId>([
+  'collect-3-varieties',
+  'collect-5-varieties',
+  'unlock-fire-galaxy',
+  'collect-8-varieties',
+  'unlock-water-galaxy',
+  'complete-2-core-galaxies',
+  'complete-3-core-galaxies',
+  'collect-15-varieties',
+  'reach-five-element-resonance',
+  'collect-22-varieties',
+  'complete-prismatic-collection',
+  'complete-main-collection',
+]);
+
+const FARM_MILESTONE_REWARD_IDS = new Set<FarmMilestoneRewardId>([
+  'plot-5',
+  'plot-6',
+  'fire-galaxy',
+  'water-galaxy',
+  'plot-7',
+  'wood-galaxy',
+  'focus-theme',
+  'metal-galaxy',
+  'plot-8',
+  'cosmic-ambience',
+  'rainbow-galaxy',
+  'five-element-fusion',
+  'plot-9',
+  'dark-matter-galaxy',
+  'cosmic-heart',
+  'ultimate-theme',
+]);
+
+function normalizeMilestoneSource(value: unknown): FarmMilestoneSource {
+  return value === 'live' ? 'live' : 'backfill';
+}
+
+function normalizeFarmMilestoneRecord(raw: unknown): FarmMilestoneRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.milestoneId !== 'string' || !FARM_MILESTONE_IDS.has(record.milestoneId as FarmMilestoneId)) return null;
+  if (typeof record.achievedAt !== 'string' || record.achievedAt.length === 0) return null;
+
+  return {
+    milestoneId: record.milestoneId as FarmMilestoneId,
+    achievedAt: record.achievedAt,
+    source: normalizeMilestoneSource(record.source),
+  };
+}
+
+function normalizeFarmMilestoneRewardRecord(raw: unknown): FarmMilestoneRewardRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.rewardId !== 'string' || !FARM_MILESTONE_REWARD_IDS.has(record.rewardId as FarmMilestoneRewardId)) return null;
+  if (typeof record.milestoneId !== 'string' || !FARM_MILESTONE_IDS.has(record.milestoneId as FarmMilestoneId)) return null;
+  if (typeof record.grantedAt !== 'string' || record.grantedAt.length === 0) return null;
+
+  return {
+    rewardId: record.rewardId as FarmMilestoneRewardId,
+    milestoneId: record.milestoneId as FarmMilestoneId,
+    grantedAt: record.grantedAt,
+    source: normalizeMilestoneSource(record.source),
+  };
+}
+
+function normalizeFarmMilestoneState(raw: unknown) {
+  if (!raw || typeof raw !== 'object') return DEFAULT_FARM_MILESTONE_STATE;
+  const state = raw as Record<string, unknown>;
+  const milestones = Array.isArray(state.milestones)
+    ? state.milestones
+      .map((record) => normalizeFarmMilestoneRecord(record))
+      .filter((record): record is FarmMilestoneRecord => record !== null)
+    : [];
+  const rewards = Array.isArray(state.rewards)
+    ? state.rewards
+      .map((record) => normalizeFarmMilestoneRewardRecord(record))
+      .filter((record): record is FarmMilestoneRewardRecord => record !== null)
+    : [];
+
+  const uniqueMilestones = milestones.filter((record, index, list) => (
+    list.findIndex((item) => item.milestoneId === record.milestoneId) === index
+  ));
+  const uniqueRewards = rewards.filter((record, index, list) => (
+    list.findIndex((item) => item.rewardId === record.rewardId) === index
+  ));
+
+  return {
+    milestones: uniqueMilestones,
+    rewards: uniqueRewards,
+  };
+}
+
 function normalizeSeedCounts(rawSeeds: unknown): SeedCounts {
   if (typeof rawSeeds === 'number') {
     return {
@@ -257,6 +369,7 @@ function migrateFarm(raw: unknown): FarmStorage {
     plots: [...DEFAULT_FARM_STORAGE.plots],
     unlockedPlotCount: DEFAULT_UNLOCKED_PLOT_COUNT,
     collection: [],
+    milestoneRewards: DEFAULT_FARM_MILESTONE_STATE,
     lastActiveDate: '',
     consecutiveInactiveDays: 0,
     lastActivityTimestamp: 0,
@@ -273,6 +386,8 @@ function migrateFarm(raw: unknown): FarmStorage {
       isMutant: record.isMutant === true ? true : undefined,
     }));
   }
+
+  result.milestoneRewards = normalizeFarmMilestoneState(s.milestoneRewards);
 
   if (Array.isArray(s.plots)) {
     result.plots = (s.plots as Plot[]).map((p, i) => {

@@ -78,6 +78,11 @@ import {
 } from './farm/growth';
 import { getUnlockedSeedPoolGalaxies, getCollectedHybridVarietyCount } from './farm/galaxy';
 import {
+  FARM_MILESTONE_DEFINITIONS,
+  getAchievedFarmMilestoneIds,
+  getFarmMilestoneProgress,
+} from './farm/milestoneRewards';
+import {
   rollInjectedVariety,
   createInjectedSeedId,
   attemptFusion,
@@ -96,20 +101,26 @@ import type { GrowthStage } from './types';
 import type { AppMode } from './types/project';
 import type { ProjectRecord } from './types/project';
 import {
-  ALL_VARIETY_IDS,
   DEFAULT_FARM_STORAGE,
   DEFAULT_FUSION_HISTORY,
   PRISMATIC_VARIETIES,
   VARIETY_DEFS,
 } from './types/farm';
-import type { CollectedVariety, FusionHistory, Plot, VarietyId, Weather } from './types/farm';
+import type {
+  CollectedVariety,
+  FarmMilestoneId,
+  FarmMilestoneSource,
+  FusionHistory,
+  Plot,
+  VarietyId,
+  Weather,
+} from './types/farm';
 import { SHOP_ITEMS, PLOT_PRICES } from './types/market';
 import type { ShopItemId, WeeklyItem } from './types/market';
 import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from './types/gene';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FUSION_HISTORY_KEY = 'watermelon-fusion-history';
-const COSMIC_HEART_TARGET_COLLECTION_COUNT = 78;
 const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow', 'snowy', 'stormy'];
 
 function migrateFusionHistory(raw: unknown): FusionHistory {
@@ -259,7 +270,6 @@ function App() {
   const growthCarryMinutesRef = useRef(0);
   const sellingRef = useRef(false);
   const mutationGunMutexRef = useRef(false);
-  const cosmicHeartUnlockingRef = useRef(false);
 
   // Slicing scene state
   const [slicingMelon, setSlicingMelon] = useState<'ripe' | 'legendary' | null>(null);
@@ -288,23 +298,11 @@ function App() {
   const activeMutationToast = mutationToastQueue[0] ?? null;
   const activeRecoveryToast = recoveryToastQueue[0] ?? null;
   const harvestedHybridVarietyCount = useMemo(() => getCollectedHybridVarietyCount(farm.collection), [farm.collection]);
-  const collectedNormalVarietySet = useMemo(() => {
-    const ids = new Set<VarietyId>();
-    for (const record of farm.collection) {
-      if (record.isMutant === true) continue;
-      ids.add(record.varietyId);
-    }
-    return ids;
-  }, [farm.collection]);
-  const hasCosmicHeart = collectedNormalVarietySet.has('cosmic-heart');
-  const hasAllVarietiesExceptCosmicHeart = useMemo(() => (
-    ALL_VARIETY_IDS
-      .filter((varietyId) => varietyId !== 'cosmic-heart')
-      .every((varietyId) => collectedNormalVarietySet.has(varietyId))
-  ), [collectedNormalVarietySet]);
-  const reachedCosmicHeartLegacyCondition = (
-    collectedNormalVarietySet.size === COSMIC_HEART_TARGET_COLLECTION_COUNT
-  );
+
+  const milestoneProgress = useMemo(() => getFarmMilestoneProgress(farm.collection), [farm.collection]);
+  const currentAchievedMilestoneIds = useMemo(() => getAchievedFarmMilestoneIds(milestoneProgress), [milestoneProgress]);
+  const previousAchievedMilestoneIdsRef = useRef<Set<FarmMilestoneId>>(new Set());
+  const milestoneEffectRunningRef = useRef(false);
 
   const enqueueMutationToasts = useCallback((toasts: MutationOutcome[]) => {
     if (toasts.length === 0) return;
@@ -325,37 +323,105 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (cosmicHeartUnlockingRef.current) return;
-    if (hasCosmicHeart) return;
-    if (!hasAllVarietiesExceptCosmicHeart && !reachedCosmicHeartLegacyCondition) return;
+    if (milestoneEffectRunningRef.current) return;
+    milestoneEffectRunningRef.current = true;
 
-    cosmicHeartUnlockingRef.current = true;
     const today = getTodayKey();
+    const previousAchievedIds = previousAchievedMilestoneIdsRef.current;
+    const newlyAchievedIds = currentAchievedMilestoneIds.filter((id) => !previousAchievedIds.has(id));
+    const isFirstRun = previousAchievedIds.size === 0;
+
+    previousAchievedMilestoneIdsRef.current = new Set(currentAchievedMilestoneIds);
+
+    if (newlyAchievedIds.length === 0) {
+      milestoneEffectRunningRef.current = false;
+      return;
+    }
+
     setFarm((prev) => {
-      if (prev.collection.some((item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true)) {
-        return prev;
-      }
+      const existingMilestoneIds = new Set(prev.milestoneRewards.milestones.map((m) => m.milestoneId));
+      const existingRewardIds = new Set(prev.milestoneRewards.rewards.map((r) => r.rewardId));
+
+      const newMilestoneRecords = newlyAchievedIds
+        .filter((id) => !existingMilestoneIds.has(id))
+        .map((id): import('./types/farm').FarmMilestoneRecord => ({
+          milestoneId: id,
+          achievedAt: today,
+          source: isFirstRun ? 'backfill' as FarmMilestoneSource : 'live' as FarmMilestoneSource,
+        }));
+
+      const source: FarmMilestoneSource = isFirstRun ? 'backfill' : 'live';
+      const newRewardRecords = newlyAchievedIds.flatMap((milestoneId) => {
+        const definition = FARM_MILESTONE_DEFINITIONS.find((d) => d.id === milestoneId);
+        if (!definition) return [];
+        return definition.rewardIds
+          .filter((rewardId) => !existingRewardIds.has(rewardId))
+          .map((rewardId): import('./types/farm').FarmMilestoneRewardRecord => ({
+            rewardId,
+            milestoneId,
+            grantedAt: today,
+            source,
+          }));
+      });
+
+      if (newMilestoneRecords.length === 0 && newRewardRecords.length === 0) return prev;
+
       return {
         ...prev,
-        collection: [
-          ...prev.collection,
-          {
-            varietyId: 'cosmic-heart',
-            firstObtainedDate: today,
-            count: 1,
-          },
-        ],
+        milestoneRewards: {
+          milestones: [...prev.milestoneRewards.milestones, ...newMilestoneRecords],
+          rewards: [...prev.milestoneRewards.rewards, ...newRewardRecords],
+        },
       };
     });
-    addDarkMatterSeed({
-      id: createInjectedSeedId(),
-      varietyId: 'cosmic-heart',
-    });
-    setShowCosmicHeartCelebration(true);
+
+    // Live cosmic-heart grant: add collection entry + seed if not already present
+    const isLive = !isFirstRun;
+    const hasCosmicHeartMilestone = newlyAchievedIds.includes('complete-main-collection');
+    if (isLive && hasCosmicHeartMilestone) {
+      const alreadyInCollection = farm.collection.some(
+        (item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true,
+      );
+      if (!alreadyInCollection) {
+        setFarm((prev) => {
+          if (prev.collection.some((item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true)) return prev;
+          return {
+            ...prev,
+            collection: [
+              ...prev.collection,
+              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1 },
+            ],
+          };
+        });
+        addDarkMatterSeed({ id: createInjectedSeedId(), varietyId: 'cosmic-heart' });
+        setShowCosmicHeartCelebration(true);
+      }
+    }
+
+    // Backfill cosmic-heart: if milestone achieved on first run and not in collection, add entry + seed
+    if (isFirstRun && hasCosmicHeartMilestone) {
+      const alreadyInCollection = farm.collection.some(
+        (item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true,
+      );
+      if (!alreadyInCollection) {
+        setFarm((prev) => {
+          if (prev.collection.some((item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true)) return prev;
+          return {
+            ...prev,
+            collection: [
+              ...prev.collection,
+              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1 },
+            ],
+          };
+        });
+        addDarkMatterSeed({ id: createInjectedSeedId(), varietyId: 'cosmic-heart' });
+      }
+    }
+
+    milestoneEffectRunningRef.current = false;
   }, [
-    hasCosmicHeart,
-    hasAllVarietiesExceptCosmicHeart,
-    reachedCosmicHeartLegacyCondition,
+    currentAchievedMilestoneIds,
+    farm.collection,
     setFarm,
     addDarkMatterSeed,
   ]);
