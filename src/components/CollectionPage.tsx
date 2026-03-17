@@ -410,11 +410,13 @@ function MilestoneRewardLedger({ statusList, theme, t }: {
   const totalCount = statusList.length;
 
   const kindLabel = (kind: string, reward: typeof statusList[number]['reward']) => {
-    if (kind === 'plot') return `第 ${reward.plotCount} 块地`;
+    if (kind === 'plot') return t.marketPlotName((reward.plotCount ?? 1) - 1);
     if (kind === 'galaxy') return t.galaxyName(reward.galaxyId!);
-    if (kind === 'feature') return '五行融合功能';
-    if (kind === 'theme') return reward.contentKey === 'ultimate-theme' ? '终极农场主题' : '专注主题';
-    if (kind === 'ambience') return '宇宙白噪音';
+    if (kind === 'feature') return t.geneFiveElementTitle;
+    if (kind === 'theme') return reward.contentKey === 'ultimate-theme'
+      ? t.collectionMilestoneRewardUltimateTheme
+      : t.collectionMilestoneRewardFocusTheme;
+    if (kind === 'ambience') return t.collectionMilestoneRewardCosmicAmbience;
     if (kind === 'variety') return t.varietyName(reward.varietyId!);
     return reward.id;
   };
@@ -426,7 +428,7 @@ function MilestoneRewardLedger({ statusList, theme, t }: {
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold" style={{ color: theme.text }}>
-          🏅 里程碑奖励
+          🏅 {t.collectionMilestoneRewardsTitle}
         </h3>
         <span className="text-xs" style={{ color: theme.textMuted }}>
           {grantedCount}/{totalCount}
@@ -454,13 +456,15 @@ function MilestoneRewardLedger({ statusList, theme, t }: {
               </div>
               {granted ? (
                 <div className="text-[10px]" style={{ color: theme.textFaint }}>
-                  {source === 'backfill' ? '✓ 回补' : '✓ 已获得'} · {grantedAt}
+                  {source === 'backfill'
+                    ? t.collectionMilestoneRewardBackfilled(grantedAt ?? '')
+                    : t.collectionMilestoneRewardGranted(grantedAt ?? '')}
                   {isContentOnly && (
-                    <span className="ml-1 opacity-70">（内容待接入）</span>
+                    <span className="ml-1 opacity-70">({t.collectionMilestoneRewardContentPending})</span>
                   )}
                 </div>
               ) : (
-                <div className="text-[10px]" style={{ color: theme.textFaint }}>未获得</div>
+                <div className="text-[10px]" style={{ color: theme.textFaint }}>{t.collectionMilestoneRewardNotEarned}</div>
               )}
             </div>
           );

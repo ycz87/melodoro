@@ -464,6 +464,14 @@ export interface Messages {
   collectionGuideResonanceMissingGalaxies: (names: string) => string;
   collectionGuideResonanceReady: string;
   collectionGuideDone: string;
+  collectionMilestoneRewardsTitle: string;
+  collectionMilestoneRewardFocusTheme: string;
+  collectionMilestoneRewardUltimateTheme: string;
+  collectionMilestoneRewardCosmicAmbience: string;
+  collectionMilestoneRewardGranted: (date: string) => string;
+  collectionMilestoneRewardBackfilled: (date: string) => string;
+  collectionMilestoneRewardNotEarned: string;
+  collectionMilestoneRewardContentPending: string;
   darkMatterGuideVoid: string;
   darkMatterGuideBlackHole: string;
   darkMatterGuideCosmicHeart: string;
