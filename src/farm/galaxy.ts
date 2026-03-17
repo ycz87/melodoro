@@ -2,10 +2,17 @@
  * 星系解锁与地块扩展计算。
  */
 import type { CollectedVariety, GalaxyId, VarietyId } from '../types/farm';
-import { GALAXY_VARIETIES, PLOT_MILESTONES, VARIETY_DEFS } from '../types/farm';
+import {
+  DARK_MATTER_VARIETIES,
+  GALAXY_VARIETIES,
+  PLOT_MILESTONES,
+  VARIETY_DEFS,
+} from '../types/farm';
 
-const GALAXY_UNLOCK_ORDER: GalaxyId[] = ['thick-earth', 'fire', 'water', 'wood', 'metal', 'rainbow', 'dark-matter'];
-const CORE_GALAXIES: GalaxyId[] = ['thick-earth', 'fire', 'water', 'wood', 'metal'];
+export const GALAXY_UNLOCK_ORDER: GalaxyId[] = ['thick-earth', 'fire', 'water', 'wood', 'metal', 'rainbow', 'dark-matter'];
+export const CORE_GALAXIES = ['thick-earth', 'fire', 'water', 'wood', 'metal'] as const;
+export type CoreGalaxyId = typeof CORE_GALAXIES[number];
+
 const FIRE_UNLOCK_REQUIRED_COUNT = 5;
 const WATER_UNLOCK_REQUIRED_COUNT = GALAXY_VARIETIES['thick-earth'].length;
 const WOOD_UNLOCK_REQUIRED_COMPLETED_GALAXIES = 2;
@@ -33,6 +40,40 @@ export interface GalaxyProgressSnapshot {
   coreGalaxiesWithCollectionCount: number;
   unlockStateByGalaxy: Record<GalaxyId, GalaxyUnlockState>;
   unlockedGalaxies: GalaxyId[];
+}
+
+export type CollectionGuideStageId =
+  | 'core-discovery'
+  | 'core-expansion'
+  | 'five-element-resonance'
+  | 'prismatic-journey'
+  | 'dark-matter-journey'
+  | 'collection-complete';
+
+export type CollectionGuideMilestoneId = GalaxyId | 'dark-matter-collection' | 'collection-complete';
+
+export interface CollectionNextMilestone {
+  id: CollectionGuideMilestoneId;
+  progressSegments: UnlockProgressSegment[];
+}
+
+export interface FiveElementResonanceProgress {
+  coreGalaxyStatus: Record<CoreGalaxyId, boolean>;
+  currentCoreGalaxies: number;
+  targetCoreGalaxies: number;
+  currentHybridVarieties: number;
+  targetHybridVarieties: number;
+  missingCoreGalaxies: CoreGalaxyId[];
+  remainingHybridVarieties: number;
+  isReady: boolean;
+}
+
+export interface CollectionGuideSnapshot {
+  currentStageId: CollectionGuideStageId;
+  nextMilestone: CollectionNextMilestone;
+  fiveElementResonance: FiveElementResonanceProgress;
+  darkMatterCollectedCount: number;
+  darkMatterTotalCount: number;
 }
 
 function getCollectedVarietyIdSet(collection: CollectedVariety[]): Set<VarietyId> {
@@ -139,6 +180,72 @@ export function getGalaxyProgressSnapshot(collection: CollectedVariety[]): Galax
     coreGalaxiesWithCollectionCount,
     unlockStateByGalaxy,
     unlockedGalaxies: GALAXY_UNLOCK_ORDER.filter((galaxyId) => unlockStateByGalaxy[galaxyId].isUnlocked),
+  };
+}
+
+export function getCollectionGuideSnapshot(collection: CollectedVariety[]): CollectionGuideSnapshot {
+  const galaxyProgress = getGalaxyProgressSnapshot(collection);
+  const darkMatterCollectedCount = galaxyProgress.collectedByGalaxy.get('dark-matter') ?? 0;
+  const darkMatterTotalCount = DARK_MATTER_VARIETIES.length;
+
+  const coreGalaxyStatus = CORE_GALAXIES.reduce<Record<CoreGalaxyId, boolean>>((status, galaxyId) => {
+    status[galaxyId] = (galaxyProgress.collectedByGalaxy.get(galaxyId) ?? 0) > 0;
+    return status;
+  }, {} as Record<CoreGalaxyId, boolean>);
+
+  const missingCoreGalaxies = CORE_GALAXIES.filter((galaxyId) => !coreGalaxyStatus[galaxyId]);
+  const fiveElementResonance: FiveElementResonanceProgress = {
+    coreGalaxyStatus,
+    currentCoreGalaxies: galaxyProgress.coreGalaxiesWithCollectionCount,
+    targetCoreGalaxies: RAINBOW_UNLOCK_REQUIRED_CORE_GALAXIES,
+    currentHybridVarieties: galaxyProgress.harvestedHybridVarietyCount,
+    targetHybridVarieties: RAINBOW_UNLOCK_REQUIRED_HYBRIDS,
+    missingCoreGalaxies,
+    remainingHybridVarieties: Math.max(0, RAINBOW_UNLOCK_REQUIRED_HYBRIDS - galaxyProgress.harvestedHybridVarietyCount),
+    isReady: galaxyProgress.unlockStateByGalaxy.rainbow.isUnlocked,
+  };
+
+  const nextLockedGalaxyId = GALAXY_UNLOCK_ORDER.slice(1).find((galaxyId) => !galaxyProgress.unlockStateByGalaxy[galaxyId].isUnlocked);
+
+  let currentStageId: CollectionGuideStageId;
+  if (!galaxyProgress.unlockStateByGalaxy.fire.isUnlocked || !galaxyProgress.unlockStateByGalaxy.water.isUnlocked) {
+    currentStageId = 'core-discovery';
+  } else if (!galaxyProgress.unlockStateByGalaxy.wood.isUnlocked || !galaxyProgress.unlockStateByGalaxy.metal.isUnlocked) {
+    currentStageId = 'core-expansion';
+  } else if (!galaxyProgress.unlockStateByGalaxy.rainbow.isUnlocked) {
+    currentStageId = 'five-element-resonance';
+  } else if (!galaxyProgress.unlockStateByGalaxy['dark-matter'].isUnlocked) {
+    currentStageId = 'prismatic-journey';
+  } else if (darkMatterCollectedCount < darkMatterTotalCount) {
+    currentStageId = 'dark-matter-journey';
+  } else {
+    currentStageId = 'collection-complete';
+  }
+
+  let nextMilestone: CollectionNextMilestone;
+  if (nextLockedGalaxyId) {
+    nextMilestone = {
+      id: nextLockedGalaxyId,
+      progressSegments: galaxyProgress.unlockStateByGalaxy[nextLockedGalaxyId].progressSegments,
+    };
+  } else if (darkMatterCollectedCount < darkMatterTotalCount) {
+    nextMilestone = {
+      id: 'dark-matter-collection',
+      progressSegments: [{ current: darkMatterCollectedCount, target: darkMatterTotalCount }],
+    };
+  } else {
+    nextMilestone = {
+      id: 'collection-complete',
+      progressSegments: [],
+    };
+  }
+
+  return {
+    currentStageId,
+    nextMilestone,
+    fiveElementResonance,
+    darkMatterCollectedCount,
+    darkMatterTotalCount,
   };
 }
 
