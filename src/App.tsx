@@ -302,6 +302,7 @@ function App() {
   const milestoneProgress = useMemo(() => getFarmMilestoneProgress(farm.collection), [farm.collection]);
   const currentAchievedMilestoneIds = useMemo(() => getAchievedFarmMilestoneIds(milestoneProgress), [milestoneProgress]);
   const previousAchievedMilestoneIdsRef = useRef<Set<FarmMilestoneId>>(new Set());
+  const milestoneTrackingInitializedRef = useRef(false);
   const milestoneEffectRunningRef = useRef(false);
 
   const enqueueMutationToasts = useCallback((toasts: MutationOutcome[]) => {
@@ -328,10 +329,12 @@ function App() {
 
     const today = getTodayKey();
     const previousAchievedIds = previousAchievedMilestoneIdsRef.current;
+    const hasInitializedTracking = milestoneTrackingInitializedRef.current;
     const newlyAchievedIds = currentAchievedMilestoneIds.filter((id) => !previousAchievedIds.has(id));
-    const isFirstRun = previousAchievedIds.size === 0;
+    const isBackfillPass = !hasInitializedTracking;
 
     previousAchievedMilestoneIdsRef.current = new Set(currentAchievedMilestoneIds);
+    milestoneTrackingInitializedRef.current = true;
 
     if (newlyAchievedIds.length === 0) {
       milestoneEffectRunningRef.current = false;
@@ -347,10 +350,10 @@ function App() {
         .map((id): import('./types/farm').FarmMilestoneRecord => ({
           milestoneId: id,
           achievedAt: today,
-          source: isFirstRun ? 'backfill' as FarmMilestoneSource : 'live' as FarmMilestoneSource,
+          source: isBackfillPass ? 'backfill' as FarmMilestoneSource : 'live' as FarmMilestoneSource,
         }));
 
-      const source: FarmMilestoneSource = isFirstRun ? 'backfill' : 'live';
+      const source: FarmMilestoneSource = isBackfillPass ? 'backfill' : 'live';
       const newRewardRecords = newlyAchievedIds.flatMap((milestoneId) => {
         const definition = FARM_MILESTONE_DEFINITIONS.find((d) => d.id === milestoneId);
         if (!definition) return [];
@@ -376,7 +379,7 @@ function App() {
     });
 
     // Live cosmic-heart grant: add collection entry + seed if not already present
-    const isLive = !isFirstRun;
+    const isLive = !isBackfillPass;
     const hasCosmicHeartMilestone = newlyAchievedIds.includes('complete-main-collection');
     if (isLive && hasCosmicHeartMilestone) {
       const alreadyInCollection = farm.collection.some(
@@ -399,7 +402,7 @@ function App() {
     }
 
     // Backfill cosmic-heart: if milestone achieved on first run and not in collection, add entry + seed
-    if (isFirstRun && hasCosmicHeartMilestone) {
+    if (isBackfillPass && hasCosmicHeartMilestone) {
       const alreadyInCollection = farm.collection.some(
         (item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true,
       );
