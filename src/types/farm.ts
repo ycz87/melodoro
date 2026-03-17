@@ -666,11 +666,70 @@ export const DEFAULT_FUSION_HISTORY: FusionHistory = {
   obtainedPrismaticVarietyIds: [],
 };
 
+export type FarmMilestoneId =
+  | 'collect-3-varieties'
+  | 'collect-5-varieties'
+  | 'unlock-fire-galaxy'
+  | 'collect-8-varieties'
+  | 'unlock-water-galaxy'
+  | 'complete-2-core-galaxies'
+  | 'complete-3-core-galaxies'
+  | 'collect-15-varieties'
+  | 'reach-five-element-resonance'
+  | 'collect-22-varieties'
+  | 'complete-prismatic-collection'
+  | 'complete-main-collection';
+
+export type FarmMilestoneRewardId =
+  | 'plot-5'
+  | 'plot-6'
+  | 'fire-galaxy'
+  | 'water-galaxy'
+  | 'plot-7'
+  | 'wood-galaxy'
+  | 'focus-theme'
+  | 'metal-galaxy'
+  | 'plot-8'
+  | 'cosmic-ambience'
+  | 'rainbow-galaxy'
+  | 'five-element-fusion'
+  | 'plot-9'
+  | 'dark-matter-galaxy'
+  | 'cosmic-heart'
+  | 'ultimate-theme';
+
+export type FarmMilestoneRewardKind = 'plot' | 'galaxy' | 'feature' | 'theme' | 'ambience' | 'variety';
+export type FarmMilestoneSource = 'live' | 'backfill';
+
+export interface FarmMilestoneRecord {
+  milestoneId: FarmMilestoneId;
+  achievedAt: string;
+  source: FarmMilestoneSource;
+}
+
+export interface FarmMilestoneRewardRecord {
+  rewardId: FarmMilestoneRewardId;
+  milestoneId: FarmMilestoneId;
+  grantedAt: string;
+  source: FarmMilestoneSource;
+}
+
+export interface FarmMilestoneState {
+  milestones: FarmMilestoneRecord[];
+  rewards: FarmMilestoneRewardRecord[];
+}
+
+export const DEFAULT_FARM_MILESTONE_STATE: FarmMilestoneState = {
+  milestones: [],
+  rewards: [],
+};
+
 // ─── 农场存储 ───
 export interface FarmStorage {
   plots: Plot[];
   unlockedPlotCount: number;
   collection: CollectedVariety[];
+  milestoneRewards: FarmMilestoneState;
   lastActiveDate: string; // YYYY-MM-DD
   consecutiveInactiveDays: number; // 连续未活跃天数（用于枯萎检测）
   lastActivityTimestamp: number; // 最近活跃时间戳（ms）
@@ -708,6 +767,7 @@ export const DEFAULT_FARM_STORAGE: FarmStorage = {
   plots: DEFAULT_SHOWCASE_PLOTS,
   unlockedPlotCount: DEFAULT_UNLOCKED_PLOT_COUNT,
   collection: [],
+  milestoneRewards: DEFAULT_FARM_MILESTONE_STATE,
   lastActiveDate: '',
   consecutiveInactiveDays: 0,
   lastActivityTimestamp: 0,

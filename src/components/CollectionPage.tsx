@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
-import type { CollectedVariety, VarietyId } from '../types/farm';
+import type { CollectedVariety, FarmMilestoneState, VarietyId } from '../types/farm';
 import {
   ALL_VARIETY_IDS,
   DARK_MATTER_VARIETIES,
@@ -23,14 +23,18 @@ import {
   getCollectionGuideSnapshot,
   getGalaxyProgressSnapshot,
 } from '../farm/galaxy';
+import {
+  getFarmMilestoneRewardStatusList,
+} from '../farm/milestoneRewards';
 
 interface CollectionPageProps {
   collection: CollectedVariety[];
+  milestoneRewards?: FarmMilestoneState;
 }
 
 type CollectionTab = 'pure' | 'hybrid' | 'prismatic' | 'dark-matter';
 
-export function CollectionPage({ collection }: CollectionPageProps) {
+export function CollectionPage({ collection, milestoneRewards }: CollectionPageProps) {
   const theme = useTheme();
   const t = useI18n();
   const [collectionTab, setCollectionTab] = useState<CollectionTab>('pure');
@@ -45,6 +49,11 @@ export function CollectionPage({ collection }: CollectionPageProps) {
   const galaxyProgress = useMemo(() => getGalaxyProgressSnapshot(collection), [collection]);
   const collectionGuide = useMemo(() => getCollectionGuideSnapshot(collection), [collection]);
   const selectedVariety = selectedVarietyId ? collectionMap.get(selectedVarietyId) : undefined;
+
+  const milestoneRewardStatusList = useMemo(() => {
+    if (!milestoneRewards) return [];
+    return getFarmMilestoneRewardStatusList(milestoneRewards);
+  }, [milestoneRewards]);
 
   const pureGalaxyDefs = useMemo(
     () => GALAXIES.filter((galaxy) => CORE_GALAXIES.some((galaxyId) => galaxyId === galaxy.id)),
@@ -369,6 +378,14 @@ export function CollectionPage({ collection }: CollectionPageProps) {
         </div>
       )}
 
+      {milestoneRewardStatusList.length > 0 && (
+        <MilestoneRewardLedger
+          statusList={milestoneRewardStatusList}
+          theme={theme}
+          t={t}
+        />
+      )}
+
       {selectedVarietyId && (
         <VarietyDetailModal
           varietyId={selectedVarietyId}
@@ -380,6 +397,79 @@ export function CollectionPage({ collection }: CollectionPageProps) {
           onClose={() => setSelectedVarietyId(null)}
         />
       )}
+    </div>
+  );
+}
+
+function MilestoneRewardLedger({ statusList, theme, t }: {
+  statusList: ReturnType<typeof import('../farm/milestoneRewards').getFarmMilestoneRewardStatusList>;
+  theme: ReturnType<typeof useTheme>;
+  t: ReturnType<typeof useI18n>;
+}) {
+  const grantedCount = statusList.filter((s) => s.grantedAt).length;
+  const totalCount = statusList.length;
+
+  const kindLabel = (kind: string, reward: typeof statusList[number]['reward']) => {
+    if (kind === 'plot') return t.marketPlotName((reward.plotCount ?? 1) - 1);
+    if (kind === 'galaxy') return t.galaxyName(reward.galaxyId!);
+    if (kind === 'feature') return t.geneFiveElementTitle;
+    if (kind === 'theme') return reward.contentKey === 'ultimate-theme'
+      ? t.collectionMilestoneRewardUltimateTheme
+      : t.collectionMilestoneRewardFocusTheme;
+    if (kind === 'ambience') return t.collectionMilestoneRewardCosmicAmbience;
+    if (kind === 'variety') return t.varietyName(reward.varietyId!);
+    return reward.id;
+  };
+
+  return (
+    <div
+      className="mt-4 mb-4 rounded-2xl border px-4 py-4"
+      style={{ backgroundColor: `${theme.surface}70`, borderColor: theme.border }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold" style={{ color: theme.text }}>
+          🏅 {t.collectionMilestoneRewardsTitle}
+        </h3>
+        <span className="text-xs" style={{ color: theme.textMuted }}>
+          {grantedCount}/{totalCount}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {statusList.map(({ reward, grantedAt, source }) => {
+          const granted = Boolean(grantedAt);
+          const isContentOnly = reward.kind === 'theme' || reward.kind === 'ambience';
+          return (
+            <div
+              key={reward.id}
+              className="rounded-xl border px-2.5 py-2"
+              style={{
+                borderColor: granted ? `${theme.accent}55` : theme.border,
+                backgroundColor: granted ? `${theme.accent}10` : `${theme.surface}55`,
+                opacity: granted ? 1 : 0.6,
+              }}
+            >
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-base">{reward.icon}</span>
+                <span className="text-xs font-medium truncate" style={{ color: granted ? theme.text : theme.textMuted }}>
+                  {kindLabel(reward.kind, reward)}
+                </span>
+              </div>
+              {granted ? (
+                <div className="text-[10px]" style={{ color: theme.textFaint }}>
+                  {source === 'backfill'
+                    ? t.collectionMilestoneRewardBackfilled(grantedAt ?? '')
+                    : t.collectionMilestoneRewardGranted(grantedAt ?? '')}
+                  {isContentOnly && (
+                    <span className="ml-1 opacity-70">({t.collectionMilestoneRewardContentPending})</span>
+                  )}
+                </div>
+              ) : (
+                <div className="text-[10px]" style={{ color: theme.textFaint }}>{t.collectionMilestoneRewardNotEarned}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
