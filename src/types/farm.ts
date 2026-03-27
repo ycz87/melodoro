@@ -652,7 +652,18 @@ export interface CollectedVariety {
   varietyId: VarietyId;
   isMutant?: boolean;
   firstObtainedDate: string;
-  count: number;
+  count: number; // current owned quantity
+  harvestCount?: number; // cumulative harvest count for dex detail/history
+}
+
+export function getCollectedVarietyHarvestCount(record: CollectedVariety): number {
+  const ownedCount = Number.isFinite(record.count) ? Math.max(0, Math.floor(record.count)) : 0;
+  const storedHarvestCount = Number.isFinite(record.harvestCount)
+    ? Math.max(0, Math.floor(record.harvestCount as number))
+    : 0;
+
+  // Legacy saves only had `count`; any collection entry implies at least one historical harvest.
+  return Math.max(ownedCount, storedHarvestCount, 1);
 }
 
 export interface FusionHistory {

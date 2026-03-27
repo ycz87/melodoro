@@ -8,6 +8,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
 import type { CollectedVariety, VarietyId } from '../types/farm';
 import {
+  getCollectedVarietyHarvestCount,
   HYBRID_GALAXY_PAIRS, HYBRID_VARIETIES, VARIETY_DEFS,
   RARITY_COLOR, RARITY_STARS,
 } from '../types/farm';
@@ -206,7 +207,7 @@ function VarietyDetailModal({ varietyId, collected, theme, t, onClose }: {
             {collected.firstObtainedDate}
           </p>
           <p className="text-xs" style={{ color: theme.textMuted }}>
-            {t.varietyDetailHarvestCount(collected.count)}
+            {t.varietyDetailHarvestCount(getCollectedVarietyHarvestCount(collected))}
           </p>
         </div>
         <button

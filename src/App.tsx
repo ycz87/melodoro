@@ -350,6 +350,7 @@ function App() {
             varietyId: 'cosmic-heart',
             firstObtainedDate: today,
             count: 1,
+            harvestCount: 1,
           },
         ],
       };

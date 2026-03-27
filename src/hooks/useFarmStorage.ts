@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import type { FarmStorage, Plot, CollectedVariety, VarietyId, GalaxyId, StolenRecord, Rarity } from '../types/farm';
 import type { SeedCounts, SeedQuality } from '../types/slicing';
-import { DEFAULT_FARM_STORAGE, createEmptyPlot, VARIETY_DEFS } from '../types/farm';
+import { DEFAULT_FARM_STORAGE, createEmptyPlot, getCollectedVarietyHarvestCount, VARIETY_DEFS } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { rollVariety } from '../farm/growth';
 import { getPlotCount } from '../farm/galaxy';
@@ -133,6 +133,26 @@ function normalizeSeedQuality(rawQuality: unknown): SeedQuality {
   return 'normal';
 }
 
+function createCollectedVariety(record: Omit<CollectedVariety, 'harvestCount'> & { harvestCount?: number }): CollectedVariety {
+  return {
+    ...record,
+    count: toNonNegativeInt(record.count),
+    harvestCount: Math.max(
+      toNonNegativeInt(record.harvestCount),
+      toNonNegativeInt(record.count),
+      1,
+    ),
+  };
+}
+
+function incrementCollectedVariety(record: CollectedVariety): CollectedVariety {
+  return {
+    ...record,
+    count: toNonNegativeInt(record.count) + 1,
+    harvestCount: getCollectedVarietyHarvestCount(record) + 1,
+  };
+}
+
 function mergeCollectionWithHarvestedPlot(
   collection: CollectedVariety[],
   harvestedPlot: Plot,
@@ -149,19 +169,20 @@ function mergeCollectionWithHarvestedPlot(
   if (existing) {
     return collection.map((record) => (
       isSameCollectionEntry(record)
-        ? { ...record, count: record.count + 1 }
+        ? incrementCollectedVariety(record)
         : record
     ));
   }
 
   return [
     ...collection,
-    {
+    createCollectedVariety({
       varietyId: harvestedPlot.varietyId,
       isMutant: harvestedIsMutant ? true : undefined,
       firstObtainedDate: obtainedDate,
       count: 1,
-    },
+      harvestCount: 1,
+    }),
   ];
 }
 
@@ -205,7 +226,7 @@ function migrateFarm(raw: unknown): FarmStorage {
   };
 
   if (Array.isArray(s.collection)) {
-    result.collection = (s.collection as CollectedVariety[]).map((record) => ({
+    result.collection = (s.collection as CollectedVariety[]).map((record) => createCollectedVariety({
       ...record,
       isMutant: record.isMutant === true ? true : undefined,
     }));
@@ -391,16 +412,17 @@ export function useFarmStorage() {
 
       const newCollection = existing
         ? prev.collection.map(c =>
-            isSameCollectionEntry(c) ? { ...c, count: c.count + 1 } : c
+            isSameCollectionEntry(c) ? incrementCollectedVariety(c) : c
           )
         : [
             ...prev.collection,
-            {
+            createCollectedVariety({
               varietyId: plot.varietyId,
               isMutant: harvestedIsMutant ? true : undefined,
               firstObtainedDate: todayKey,
               count: 1,
-            },
+              harvestCount: 1,
+            }),
           ];
       const targetPlotCount = getPlotCount(newCollection);
       const nextPlots = prev.plots.map(p => (p.id === plotId ? createEmptyPlot(plotId) : p));
@@ -421,7 +443,7 @@ export function useFarmStorage() {
     };
   }, [setFarm]);
 
-  /** 卖出品种（仅减少图鉴 count，条目保留） */
+  /** 卖出品种（仅减少当前持有 count，累计收获保留） */
   const sellVariety = useCallback((varietyId: VarietyId, isMutant: boolean = false): boolean => {
     let success = false;
 

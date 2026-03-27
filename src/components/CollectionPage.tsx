@@ -12,6 +12,7 @@ import {
   DARK_MATTER_VARIETIES,
   GALAXIES,
   GALAXY_VARIETIES,
+  getCollectedVarietyHarvestCount,
   HYBRID_GALAXY_PAIRS,
   HYBRID_VARIETIES,
   PRISMATIC_VARIETIES,
@@ -607,7 +608,7 @@ function VarietyDetailModal({ varietyId, collected, collectionCount, totalCount,
                 {collected?.firstObtainedDate ?? '-'}
               </p>
               <p className="text-xs" style={{ color: theme.textMuted }}>
-                {t.varietyDetailHarvestCount(collected?.count ?? 0)}
+                {t.varietyDetailHarvestCount(collected ? getCollectedVarietyHarvestCount(collected) : 0)}
               </p>
             </div>
           </>
