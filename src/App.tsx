@@ -392,7 +392,7 @@ function App() {
             ...prev,
             collection: [
               ...prev.collection,
-              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1 },
+              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1, harvestCount: 1 },
             ],
           };
         });
@@ -413,7 +413,7 @@ function App() {
             ...prev,
             collection: [
               ...prev.collection,
-              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1 },
+              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1, harvestCount: 1 },
             ],
           };
         });

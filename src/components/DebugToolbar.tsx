@@ -152,6 +152,7 @@ export function DebugToolbar({
       varietyId,
       firstObtainedDate: todayKey,
       count: 1,
+      harvestCount: 1,
     }));
 
     setFarmCollection([...farm.collection, ...additions]);
