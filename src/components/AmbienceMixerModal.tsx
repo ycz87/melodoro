@@ -3,7 +3,7 @@
  * 列出所有可用背景音，每个有开关 + 独立音量滑块
  * 支持多音效同时叠加
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
 import type { AmbienceMixerConfig, AmbienceSoundId } from '../audio';
@@ -26,9 +26,15 @@ export function AmbienceMixerModal({ config, onChange, onClose, keepOnClose }: P
   const [local, setLocal] = useState<AmbienceMixerConfig>({ ...config });
   // Track latest config via ref so cleanup can access it
   const localRef = useRef(local);
-  localRef.current = local;
   const keepOnCloseRef = useRef(keepOnClose);
-  keepOnCloseRef.current = keepOnClose;
+
+  useLayoutEffect(() => {
+    localRef.current = local;
+  }, [local]);
+
+  useLayoutEffect(() => {
+    keepOnCloseRef.current = keepOnClose;
+  }, [keepOnClose]);
 
   // Enter preview mode on mount, exit on unmount
   useEffect(() => {

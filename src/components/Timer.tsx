@@ -159,6 +159,16 @@ export function Timer({ timeLeft, totalDuration, phase, status, celebrating, cel
     actionLockTimer.current = setTimeout(() => { actionLockRef.current = false; }, ACTION_DEBOUNCE_MS);
   }, []);
 
+  const handleStart = useCallback(() => {
+    setShowQuickPicker(false);
+    onStart();
+  }, [onStart]);
+
+  const handleResume = useCallback(() => {
+    setShowQuickPicker(false);
+    onResume();
+  }, [onResume]);
+
   useEffect(() => {
     return () => { if (actionLockTimer.current) clearTimeout(actionLockTimer.current); };
   }, []);
@@ -169,7 +179,6 @@ export function Timer({ timeLeft, totalDuration, phase, status, celebrating, cel
       void containerRef.current.offsetWidth;
       containerRef.current.classList.add('animate-scale-in');
     }
-    if (status !== 'idle') setShowQuickPicker(false);
     prevStatusRef.current = status;
   }, [status]);
 
@@ -389,7 +398,7 @@ export function Timer({ timeLeft, totalDuration, phase, status, celebrating, cel
 
         {/* ▶ Start — idle only */}
         {status === 'idle' && (
-          <button onClick={onStart}
+          <button onClick={handleStart}
             className="w-[52px] h-[52px] min-w-[52px] min-h-[52px] rounded-full flex items-center justify-center transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 active:scale-95 cursor-pointer"
             style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`, boxShadow: `0 2px 12px ${colors.from}30` }}>
             <svg width="18" height="22" viewBox="0 0 20 24" fill="none" className="ml-1">
@@ -412,7 +421,7 @@ export function Timer({ timeLeft, totalDuration, phase, status, celebrating, cel
 
         {/* ▶ Resume (center) */}
         {status === 'paused' && (
-          <button onClick={onResume}
+          <button onClick={handleResume}
             className="w-[52px] h-[52px] min-w-[52px] min-h-[52px] rounded-full flex items-center justify-center transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:scale-110 active:scale-95 cursor-pointer"
             style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`, boxShadow: `0 2px 12px ${colors.from}30` }}>
             <svg width="18" height="22" viewBox="0 0 20 24" fill="none" className="ml-1">

@@ -15,6 +15,7 @@ interface Props {
 
 const LANGUAGES: { locale: Locale; flag: string; name: string }[] = [
   { locale: 'zh', flag: '🇨🇳', name: '中文' },
+  { locale: 'zh-TW', flag: '🇹🇼', name: '繁體中文' },
   { locale: 'en', flag: '🇺🇸', name: 'English' },
   { locale: 'ja', flag: '🇯🇵', name: '日本語' },
   { locale: 'ko', flag: '🇰🇷', name: '한국어' },

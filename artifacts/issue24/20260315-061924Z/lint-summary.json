@@ -1,0 +1,129 @@
+{
+  "issue": 24,
+  "generatedAt": "2026-03-15T06:24:08.074Z",
+  "branch": "feature/issue24-lint-baseline",
+  "commit": "2092246c217084abd644b3b324355c260c4302b8",
+  "version": "0.61.13",
+  "lintCommand": "npm run lint > artifacts/issue24/20260315-061924Z/lint-raw.txt 2>&1",
+  "jsonCommand": "npx eslint . -f json -o artifacts/issue24/20260315-061924Z/lint-report.json",
+  "rawOutput": "artifacts/issue24/20260315-061924Z/lint-raw.txt",
+  "jsonOutput": "artifacts/issue24/20260315-061924Z/lint-report.json",
+  "totals": {
+    "filesWithDebt": 32,
+    "messages": 67,
+    "errors": 59,
+    "warnings": 8,
+    "fixableWithEslintFix": 0
+  },
+  "topRules": [
+    {
+      "ruleId": "react-hooks/purity",
+      "count": 18
+    },
+    {
+      "ruleId": "react-hooks/set-state-in-effect",
+      "count": 16
+    },
+    {
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "count": 9
+    },
+    {
+      "ruleId": "react-hooks/exhaustive-deps",
+      "count": 8
+    },
+    {
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "count": 7
+    },
+    {
+      "ruleId": "react-hooks/refs",
+      "count": 5
+    },
+    {
+      "ruleId": "react-hooks/rules-of-hooks",
+      "count": 1
+    },
+    {
+      "ruleId": "react-hooks/static-components",
+      "count": 1
+    },
+    {
+      "ruleId": "react-refresh/only-export-components",
+      "count": 1
+    },
+    {
+      "ruleId": "react-hooks/immutability",
+      "count": 1
+    }
+  ],
+  "topModules": [
+    {
+      "module": "src/components",
+      "count": 39
+    },
+    {
+      "module": "e2e",
+      "count": 13
+    },
+    {
+      "module": "src/hooks",
+      "count": 9
+    },
+    {
+      "module": "src/App.tsx",
+      "count": 5
+    },
+    {
+      "module": "auth",
+      "count": 1
+    }
+  ],
+  "topDebtFiles": [
+    {
+      "file": "src/components/CelebrationOverlay.tsx",
+      "count": 8
+    },
+    {
+      "file": "e2e/debug-toolbar.spec.ts",
+      "count": 7
+    },
+    {
+      "file": "src/components/AchievementCelebration.tsx",
+      "count": 7
+    },
+    {
+      "file": "src/App.tsx",
+      "count": 5
+    },
+    {
+      "file": "src/components/FarmPage.tsx",
+      "count": 5
+    },
+    {
+      "file": "src/components/GeneLabPage.tsx",
+      "count": 5
+    },
+    {
+      "file": "src/components/AmbienceMixerModal.tsx",
+      "count": 2
+    },
+    {
+      "file": "src/components/farm/SkyLayer.tsx",
+      "count": 2
+    },
+    {
+      "file": "src/hooks/useProjectTimer.ts",
+      "count": 2
+    },
+    {
+      "file": "src/hooks/useTimer.ts",
+      "count": 2
+    }
+  ],
+  "autoFixCounts": {
+    "yes": 0,
+    "partial": 0,
+    "no": 67
+  }
+}

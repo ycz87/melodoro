@@ -1,14 +1,34 @@
 /**
  * useFarmStorage — 农场数据持久化 hook
  */
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import type { FarmStorage, Plot, CollectedVariety, VarietyId, GalaxyId, StolenRecord, Rarity } from '../types/farm';
+import type {
+  FarmStorage,
+  Plot,
+  CollectedVariety,
+  VarietyId,
+  GalaxyId,
+  StolenRecord,
+  Rarity,
+  FarmMilestoneId,
+  FarmMilestoneRecord,
+  FarmMilestoneRewardId,
+  FarmMilestoneRewardRecord,
+  FarmMilestoneSource,
+} from '../types/farm';
 import type { SeedCounts, SeedQuality } from '../types/slicing';
-import { DEFAULT_FARM_STORAGE, createEmptyPlot, getCollectedVarietyHarvestCount, VARIETY_DEFS } from '../types/farm';
+import {
+  DEFAULT_FARM_STORAGE,
+  DEFAULT_UNLOCKED_PLOT_COUNT,
+  DEFAULT_FARM_MILESTONE_STATE,
+  createEmptyPlot,
+  getCollectedVarietyHarvestCount,
+  VARIETY_DEFS,
+} from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
-import { rollVariety } from '../farm/growth';
 import { getPlotCount } from '../farm/galaxy';
+import { rollVariety } from '../farm/growth';
 
 const FARM_KEY = 'watermelon-farm';
 const MAX_PLOT_COUNT = 9;
@@ -84,6 +104,53 @@ function ensurePlotCapacity(plots: Plot[], requiredCount: number): Plot[] {
   return nextPlots;
 }
 
+// Plot availability is monotonic: keep the highest purchased or milestone-expanded count.
+function resolveUnlockedPlotCount(
+  collection: CollectedVariety[],
+  storedUnlockedPlotCount: number,
+  currentPlotCount: number,
+): number {
+  return Math.max(
+    DEFAULT_UNLOCKED_PLOT_COUNT,
+    storedUnlockedPlotCount,
+    getPlotCount(collection),
+    Math.min(currentPlotCount, MAX_PLOT_COUNT),
+  );
+}
+
+function cloneDefaultPlots(): Plot[] {
+  return DEFAULT_FARM_STORAGE.plots.map((plot) => ({ ...plot }));
+}
+
+function isLegacyDefaultShowcaseLayout(plots: Plot[]): boolean {
+  if (plots.length !== MAX_PLOT_COUNT) return false;
+
+  return plots.every((plot, index) => {
+    if (plot.id !== index) return false;
+
+    if (index === 2 || index === 3 || index === 8) {
+      return plot.state === 'mature' && plot.varietyId === 'jade-stripe' && plot.progress >= 1;
+    }
+
+    if (index === 1 || index === 4 || index === 7) {
+      return plot.state === 'growing' && plot.varietyId === 'jade-stripe';
+    }
+
+    return plot.state === 'empty';
+  });
+}
+
+function shouldResetLegacyPlotBaseline(collection: CollectedVariety[], plots: Plot[]): boolean {
+  if (collection.length > 0) return false;
+  if (plots.length !== MAX_PLOT_COUNT) return false;
+
+  const legacyExtraPlotsAreEmpty = plots
+    .slice(DEFAULT_UNLOCKED_PLOT_COUNT)
+    .every((plot) => plot.state === 'empty');
+
+  return legacyExtraPlotsAreEmpty || isLegacyDefaultShowcaseLayout(plots);
+}
+
 function isPagesPreviewHost(): boolean {
   try {
     return window.location.hostname.endsWith('.watermelon-clock.pages.dev');
@@ -92,9 +159,21 @@ function isPagesPreviewHost(): boolean {
   }
 }
 
-function shouldSeedPreviewShowcase(collection: CollectedVariety[], plots: Plot[]): boolean {
+function shouldSeedPreviewShowcase(
+  collection: CollectedVariety[],
+  plots: Plot[],
+  storedUnlockedPlotCount: number | null,
+): boolean {
   if (!isPagesPreviewHost()) return false;
   if (collection.length > 0) return false;
+
+  const hasPersistedUnlockState = storedUnlockedPlotCount !== null;
+  const hasPurchasedOrExpandedPlots = (storedUnlockedPlotCount ?? DEFAULT_UNLOCKED_PLOT_COUNT) > DEFAULT_UNLOCKED_PLOT_COUNT
+    || plots.length > DEFAULT_UNLOCKED_PLOT_COUNT;
+
+  // Only coerce very old preview saves with no explicit unlock metadata.
+  // Never overwrite current-schema saves or any farm that already expanded beyond the 4-plot baseline.
+  if (hasPersistedUnlockState || hasPurchasedOrExpandedPlots) return false;
 
   const matureCount = plots.filter((plot) => plot.state === 'mature').length;
   const growingCount = plots.filter((plot) => plot.state === 'growing').length;
@@ -106,6 +185,99 @@ function shouldSeedPreviewShowcase(collection: CollectedVariety[], plots: Plot[]
 function toNonNegativeInt(value: unknown): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
   return Math.max(0, Math.floor(value));
+}
+
+const FARM_MILESTONE_IDS = new Set<FarmMilestoneId>([
+  'collect-3-varieties',
+  'collect-5-varieties',
+  'unlock-fire-galaxy',
+  'collect-8-varieties',
+  'unlock-water-galaxy',
+  'complete-2-core-galaxies',
+  'complete-3-core-galaxies',
+  'collect-15-varieties',
+  'reach-five-element-resonance',
+  'collect-22-varieties',
+  'complete-prismatic-collection',
+  'complete-main-collection',
+]);
+
+const FARM_MILESTONE_REWARD_IDS = new Set<FarmMilestoneRewardId>([
+  'plot-5',
+  'plot-6',
+  'fire-galaxy',
+  'water-galaxy',
+  'plot-7',
+  'wood-galaxy',
+  'focus-theme',
+  'metal-galaxy',
+  'plot-8',
+  'cosmic-ambience',
+  'rainbow-galaxy',
+  'five-element-fusion',
+  'plot-9',
+  'dark-matter-galaxy',
+  'cosmic-heart',
+  'ultimate-theme',
+]);
+
+function normalizeMilestoneSource(value: unknown): FarmMilestoneSource {
+  return value === 'live' ? 'live' : 'backfill';
+}
+
+function normalizeFarmMilestoneRecord(raw: unknown): FarmMilestoneRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.milestoneId !== 'string' || !FARM_MILESTONE_IDS.has(record.milestoneId as FarmMilestoneId)) return null;
+  if (typeof record.achievedAt !== 'string' || record.achievedAt.length === 0) return null;
+
+  return {
+    milestoneId: record.milestoneId as FarmMilestoneId,
+    achievedAt: record.achievedAt,
+    source: normalizeMilestoneSource(record.source),
+  };
+}
+
+function normalizeFarmMilestoneRewardRecord(raw: unknown): FarmMilestoneRewardRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.rewardId !== 'string' || !FARM_MILESTONE_REWARD_IDS.has(record.rewardId as FarmMilestoneRewardId)) return null;
+  if (typeof record.milestoneId !== 'string' || !FARM_MILESTONE_IDS.has(record.milestoneId as FarmMilestoneId)) return null;
+  if (typeof record.grantedAt !== 'string' || record.grantedAt.length === 0) return null;
+
+  return {
+    rewardId: record.rewardId as FarmMilestoneRewardId,
+    milestoneId: record.milestoneId as FarmMilestoneId,
+    grantedAt: record.grantedAt,
+    source: normalizeMilestoneSource(record.source),
+  };
+}
+
+function normalizeFarmMilestoneState(raw: unknown) {
+  if (!raw || typeof raw !== 'object') return DEFAULT_FARM_MILESTONE_STATE;
+  const state = raw as Record<string, unknown>;
+  const milestones = Array.isArray(state.milestones)
+    ? state.milestones
+      .map((record) => normalizeFarmMilestoneRecord(record))
+      .filter((record): record is FarmMilestoneRecord => record !== null)
+    : [];
+  const rewards = Array.isArray(state.rewards)
+    ? state.rewards
+      .map((record) => normalizeFarmMilestoneRewardRecord(record))
+      .filter((record): record is FarmMilestoneRewardRecord => record !== null)
+    : [];
+
+  const uniqueMilestones = milestones.filter((record, index, list) => (
+    list.findIndex((item) => item.milestoneId === record.milestoneId) === index
+  ));
+  const uniqueRewards = rewards.filter((record, index, list) => (
+    list.findIndex((item) => item.rewardId === record.rewardId) === index
+  ));
+
+  return {
+    milestones: uniqueMilestones,
+    rewards: uniqueRewards,
+  };
 }
 
 function normalizeSeedCounts(rawSeeds: unknown): SeedCounts {
@@ -217,13 +389,18 @@ function migrateFarm(raw: unknown): FarmStorage {
   const s = raw as Record<string, unknown>;
   const result: FarmStorage = {
     plots: [...DEFAULT_FARM_STORAGE.plots],
+    unlockedPlotCount: DEFAULT_UNLOCKED_PLOT_COUNT,
     collection: [],
+    milestoneRewards: DEFAULT_FARM_MILESTONE_STATE,
     lastActiveDate: '',
     consecutiveInactiveDays: 0,
     lastActivityTimestamp: 0,
     guardianBarrierDate: '',
     stolenRecords: [],
   };
+  const storedUnlockedPlotCount = typeof s.unlockedPlotCount === 'number' && Number.isFinite(s.unlockedPlotCount)
+    ? Math.max(DEFAULT_UNLOCKED_PLOT_COUNT, Math.min(MAX_PLOT_COUNT, Math.floor(s.unlockedPlotCount)))
+    : null;
 
   if (Array.isArray(s.collection)) {
     result.collection = (s.collection as CollectedVariety[]).map((record) => createCollectedVariety({
@@ -231,6 +408,8 @@ function migrateFarm(raw: unknown): FarmStorage {
       isMutant: record.isMutant === true ? true : undefined,
     }));
   }
+
+  result.milestoneRewards = normalizeFarmMilestoneState(s.milestoneRewards);
 
   if (Array.isArray(s.plots)) {
     result.plots = (s.plots as Plot[]).map((p, i) => {
@@ -284,14 +463,25 @@ function migrateFarm(raw: unknown): FarmStorage {
     result.plots = result.plots.slice(0, MAX_PLOT_COUNT);
   }
 
-  const usePreviewShowcase = shouldSeedPreviewShowcase(result.collection, result.plots);
-  const targetPlotCount = usePreviewShowcase
-    ? DEFAULT_FARM_STORAGE.plots.length
-    : Math.min(getPlotCount(result.collection), MAX_PLOT_COUNT);
-  result.plots = ensurePlotCapacity(result.plots, targetPlotCount);
+  if (storedUnlockedPlotCount === null && shouldResetLegacyPlotBaseline(result.collection, result.plots)) {
+    result.plots = cloneDefaultPlots();
+  }
+
+  const usePreviewShowcase = shouldSeedPreviewShowcase(
+    result.collection,
+    result.plots,
+    storedUnlockedPlotCount,
+  );
+  result.unlockedPlotCount = resolveUnlockedPlotCount(
+    result.collection,
+    storedUnlockedPlotCount ?? 0,
+    result.plots.length,
+  );
+  result.plots = ensurePlotCapacity(result.plots, result.unlockedPlotCount);
 
   if (usePreviewShowcase) {
     result.plots = DEFAULT_FARM_STORAGE.plots.map((plot) => ({ ...plot }));
+    result.unlockedPlotCount = DEFAULT_UNLOCKED_PLOT_COUNT;
   }
 
   if (typeof s.lastActiveDate === 'string') result.lastActiveDate = s.lastActiveDate;
@@ -309,6 +499,35 @@ function migrateFarm(raw: unknown): FarmStorage {
 
 export function useFarmStorage() {
   const [farm, setFarm] = useLocalStorage<FarmStorage>(FARM_KEY, DEFAULT_FARM_STORAGE, migrateFarm);
+  const farmRef = useRef(farm);
+
+  useEffect(() => {
+    farmRef.current = farm;
+  }, [farm]);
+
+  useEffect(() => {
+    const targetUnlockedPlotCount = resolveUnlockedPlotCount(
+      farm.collection,
+      farm.unlockedPlotCount,
+      farm.plots.length,
+    );
+    if (farm.unlockedPlotCount === targetUnlockedPlotCount && farm.plots.length === targetUnlockedPlotCount) return;
+
+    setFarm((prev) => {
+      const nextUnlockedPlotCount = resolveUnlockedPlotCount(
+        prev.collection,
+        prev.unlockedPlotCount,
+        prev.plots.length,
+      );
+      const nextPlots = ensurePlotCapacity(prev.plots, nextUnlockedPlotCount);
+      if (prev.unlockedPlotCount === nextUnlockedPlotCount && prev.plots.length === nextPlots.length) return prev;
+      return {
+        ...prev,
+        plots: nextPlots,
+        unlockedPlotCount: nextUnlockedPlotCount,
+      };
+    });
+  }, [farm.collection, farm.plots.length, farm.unlockedPlotCount, setFarm]);
 
   /** 种植种子到指定地块 */
   const plantSeed = useCallback((plotId: number, unlockedGalaxies: GalaxyId[], seedQuality: SeedQuality, todayKey: string) => {
@@ -424,12 +643,11 @@ export function useFarmStorage() {
               harvestCount: 1,
             }),
           ];
-      const targetPlotCount = getPlotCount(newCollection);
       const nextPlots = prev.plots.map(p => (p.id === plotId ? createEmptyPlot(plotId) : p));
 
       return {
         ...prev,
-        plots: ensurePlotCapacity(nextPlots, targetPlotCount),
+        plots: nextPlots,
         collection: newCollection,
       };
     });
@@ -514,18 +732,20 @@ export function useFarmStorage() {
 
   /** 购买地块并扩容（返回是否成功） */
   const buyPlot = useCallback((plotIndex: number): boolean => {
-    if (plotIndex < 0) return false;
-    let success = false;
-    setFarm(prev => {
-      if (prev.plots.length > plotIndex) return prev;
-      const nextPlots = [...prev.plots];
-      while (nextPlots.length <= plotIndex) {
-        nextPlots.push(createEmptyPlot(nextPlots.length));
-      }
-      success = true;
-      return { ...prev, plots: nextPlots };
-    });
-    return success;
+    if (plotIndex < DEFAULT_UNLOCKED_PLOT_COUNT || plotIndex >= MAX_PLOT_COUNT) return false;
+    const currentFarm = farmRef.current;
+    if (plotIndex !== currentFarm.unlockedPlotCount) return false;
+
+    const nextUnlockedPlotCount = plotIndex + 1;
+    const nextFarm: FarmStorage = {
+      ...currentFarm,
+      plots: ensurePlotCapacity(currentFarm.plots, nextUnlockedPlotCount),
+      unlockedPlotCount: nextUnlockedPlotCount,
+    };
+
+    farmRef.current = nextFarm;
+    setFarm(nextFarm);
+    return true;
   }, [setFarm]);
 
   /** 更新活跃日信息 */

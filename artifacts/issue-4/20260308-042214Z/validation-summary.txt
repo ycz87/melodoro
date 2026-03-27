@@ -1,0 +1,5 @@
+Build: npm run build -> PASS
+Type check: npx tsc --noEmit -> PASS
+Lint: npm run lint -> FAIL (pre-existing repo-wide lint issues outside Issue #4 scope)
+Proof mode (initial): code-level state snapshots (Playwright browser launch blocked by sandbox kernel restrictions)
+Supplemental proof: real browser screenshots captured later under artifacts/issue-4/20260308-browser-proof/

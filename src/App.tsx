@@ -76,7 +76,12 @@ import {
   type MutationOutcome,
   witherPlots,
 } from './farm/growth';
-import { getUnlockedGalaxies } from './farm/galaxy';
+import { getUnlockedSeedPoolGalaxies, getCollectedHybridVarietyCount } from './farm/galaxy';
+import {
+  FARM_MILESTONE_DEFINITIONS,
+  getAchievedFarmMilestoneIds,
+  getFarmMilestoneProgress,
+} from './farm/milestoneRewards';
 import {
   rollInjectedVariety,
   createInjectedSeedId,
@@ -96,20 +101,26 @@ import type { GrowthStage } from './types';
 import type { AppMode } from './types/project';
 import type { ProjectRecord } from './types/project';
 import {
-  ALL_VARIETY_IDS,
   DEFAULT_FARM_STORAGE,
   DEFAULT_FUSION_HISTORY,
   PRISMATIC_VARIETIES,
   VARIETY_DEFS,
 } from './types/farm';
-import type { CollectedVariety, FusionHistory, Plot, VarietyId, Weather } from './types/farm';
+import type {
+  CollectedVariety,
+  FarmMilestoneId,
+  FarmMilestoneSource,
+  FusionHistory,
+  Plot,
+  VarietyId,
+  Weather,
+} from './types/farm';
 import { SHOP_ITEMS, PLOT_PRICES } from './types/market';
 import type { ShopItemId, WeeklyItem } from './types/market';
 import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from './types/gene';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FUSION_HISTORY_KEY = 'watermelon-fusion-history';
-const COSMIC_HEART_TARGET_COLLECTION_COUNT = 78;
 const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow', 'snowy', 'stormy'];
 
 function migrateFusionHistory(raw: unknown): FusionHistory {
@@ -256,9 +267,9 @@ function App() {
   const farmPlotsRef = useRef(farm.plots);
   const previousFarmPlotsRef = useRef<Plot[] | null>(null);
   const updatePlotsRef = useRef(updatePlots);
+  const growthCarryMinutesRef = useRef(0);
   const sellingRef = useRef(false);
   const mutationGunMutexRef = useRef(false);
-  const cosmicHeartUnlockingRef = useRef(false);
 
   // Slicing scene state
   const [slicingMelon, setSlicingMelon] = useState<'ripe' | 'legendary' | null>(null);
@@ -282,36 +293,17 @@ function App() {
   // ─── Farm daily update ───
   const todayKey = getTodayKey();
   const todayFocusMinutes = useMemo(() => getDayMinutes(records, todayKey), [records, todayKey]);
+  const appliedFocusMinutesRef = useRef(todayFocusMinutes);
   const farmUpdatedRef = useRef(false);
   const activeMutationToast = mutationToastQueue[0] ?? null;
   const activeRecoveryToast = recoveryToastQueue[0] ?? null;
-  const harvestedHybridVarietyCount = useMemo(() => {
-    const hybridVarietySet = new Set<VarietyId>();
-    for (const record of farm.collection) {
-      if (record.count <= 0) continue;
-      const varietyDef = VARIETY_DEFS[record.varietyId];
-      if (!varietyDef || varietyDef.breedType !== 'hybrid') continue;
-      hybridVarietySet.add(record.varietyId);
-    }
-    return hybridVarietySet.size;
-  }, [farm.collection]);
-  const collectedNormalVarietySet = useMemo(() => {
-    const ids = new Set<VarietyId>();
-    for (const record of farm.collection) {
-      if (record.isMutant === true) continue;
-      ids.add(record.varietyId);
-    }
-    return ids;
-  }, [farm.collection]);
-  const hasCosmicHeart = collectedNormalVarietySet.has('cosmic-heart');
-  const hasAllVarietiesExceptCosmicHeart = useMemo(() => (
-    ALL_VARIETY_IDS
-      .filter((varietyId) => varietyId !== 'cosmic-heart')
-      .every((varietyId) => collectedNormalVarietySet.has(varietyId))
-  ), [collectedNormalVarietySet]);
-  const reachedCosmicHeartLegacyCondition = (
-    collectedNormalVarietySet.size === COSMIC_HEART_TARGET_COLLECTION_COUNT
-  );
+  const harvestedHybridVarietyCount = useMemo(() => getCollectedHybridVarietyCount(farm.collection), [farm.collection]);
+
+  const milestoneProgress = useMemo(() => getFarmMilestoneProgress(farm.collection), [farm.collection]);
+  const currentAchievedMilestoneIds = useMemo(() => getAchievedFarmMilestoneIds(milestoneProgress), [milestoneProgress]);
+  const previousAchievedMilestoneIdsRef = useRef<Set<FarmMilestoneId>>(new Set());
+  const milestoneTrackingInitializedRef = useRef(false);
+  const milestoneEffectRunningRef = useRef(false);
 
   const enqueueMutationToasts = useCallback((toasts: MutationOutcome[]) => {
     if (toasts.length === 0) return;
@@ -332,38 +324,107 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (cosmicHeartUnlockingRef.current) return;
-    if (hasCosmicHeart) return;
-    if (!hasAllVarietiesExceptCosmicHeart && !reachedCosmicHeartLegacyCondition) return;
+    if (milestoneEffectRunningRef.current) return;
+    milestoneEffectRunningRef.current = true;
 
-    cosmicHeartUnlockingRef.current = true;
     const today = getTodayKey();
+    const previousAchievedIds = previousAchievedMilestoneIdsRef.current;
+    const hasInitializedTracking = milestoneTrackingInitializedRef.current;
+    const newlyAchievedIds = currentAchievedMilestoneIds.filter((id) => !previousAchievedIds.has(id));
+    const isBackfillPass = !hasInitializedTracking;
+
+    previousAchievedMilestoneIdsRef.current = new Set(currentAchievedMilestoneIds);
+    milestoneTrackingInitializedRef.current = true;
+
+    if (newlyAchievedIds.length === 0) {
+      milestoneEffectRunningRef.current = false;
+      return;
+    }
+
     setFarm((prev) => {
-      if (prev.collection.some((item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true)) {
-        return prev;
-      }
+      const existingMilestoneIds = new Set(prev.milestoneRewards.milestones.map((m) => m.milestoneId));
+      const existingRewardIds = new Set(prev.milestoneRewards.rewards.map((r) => r.rewardId));
+
+      const newMilestoneRecords = newlyAchievedIds
+        .filter((id) => !existingMilestoneIds.has(id))
+        .map((id): import('./types/farm').FarmMilestoneRecord => ({
+          milestoneId: id,
+          achievedAt: today,
+          source: isBackfillPass ? 'backfill' as FarmMilestoneSource : 'live' as FarmMilestoneSource,
+        }));
+
+      const source: FarmMilestoneSource = isBackfillPass ? 'backfill' : 'live';
+      const newRewardRecords = newlyAchievedIds.flatMap((milestoneId) => {
+        const definition = FARM_MILESTONE_DEFINITIONS.find((d) => d.id === milestoneId);
+        if (!definition) return [];
+        return definition.rewardIds
+          .filter((rewardId) => !existingRewardIds.has(rewardId))
+          .map((rewardId): import('./types/farm').FarmMilestoneRewardRecord => ({
+            rewardId,
+            milestoneId,
+            grantedAt: today,
+            source,
+          }));
+      });
+
+      if (newMilestoneRecords.length === 0 && newRewardRecords.length === 0) return prev;
+
       return {
         ...prev,
-        collection: [
-          ...prev.collection,
-          {
-            varietyId: 'cosmic-heart',
-            firstObtainedDate: today,
-            count: 1,
-            harvestCount: 1,
-          },
-        ],
+        milestoneRewards: {
+          milestones: [...prev.milestoneRewards.milestones, ...newMilestoneRecords],
+          rewards: [...prev.milestoneRewards.rewards, ...newRewardRecords],
+        },
       };
     });
-    addDarkMatterSeed({
-      id: createInjectedSeedId(),
-      varietyId: 'cosmic-heart',
-    });
-    setShowCosmicHeartCelebration(true);
+
+    // Live cosmic-heart grant: add collection entry + seed if not already present
+    const isLive = !isBackfillPass;
+    const hasCosmicHeartMilestone = newlyAchievedIds.includes('complete-main-collection');
+    if (isLive && hasCosmicHeartMilestone) {
+      const alreadyInCollection = farm.collection.some(
+        (item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true,
+      );
+      if (!alreadyInCollection) {
+        setFarm((prev) => {
+          if (prev.collection.some((item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true)) return prev;
+          return {
+            ...prev,
+            collection: [
+              ...prev.collection,
+              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1, harvestCount: 1 },
+            ],
+          };
+        });
+        addDarkMatterSeed({ id: createInjectedSeedId(), varietyId: 'cosmic-heart' });
+        setShowCosmicHeartCelebration(true);
+      }
+    }
+
+    // Backfill cosmic-heart: if milestone achieved on first run and not in collection, add entry + seed
+    if (isBackfillPass && hasCosmicHeartMilestone) {
+      const alreadyInCollection = farm.collection.some(
+        (item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true,
+      );
+      if (!alreadyInCollection) {
+        setFarm((prev) => {
+          if (prev.collection.some((item) => item.varietyId === 'cosmic-heart' && item.isMutant !== true)) return prev;
+          return {
+            ...prev,
+            collection: [
+              ...prev.collection,
+              { varietyId: 'cosmic-heart', firstObtainedDate: today, count: 1, harvestCount: 1 },
+            ],
+          };
+        });
+        addDarkMatterSeed({ id: createInjectedSeedId(), varietyId: 'cosmic-heart' });
+      }
+    }
+
+    milestoneEffectRunningRef.current = false;
   }, [
-    hasCosmicHeart,
-    hasAllVarietiesExceptCosmicHeart,
-    reachedCosmicHeartLegacyCondition,
+    currentAchievedMilestoneIds,
+    farm.collection,
     setFarm,
     addDarkMatterSeed,
   ]);
@@ -420,6 +481,35 @@ function App() {
   }), [todayKey, todayFocusMinutes, farm.guardianBarrierDate]);
 
   useEffect(() => {
+    const previousFocusMinutes = appliedFocusMinutesRef.current;
+    if (todayFocusMinutes <= previousFocusMinutes) {
+      appliedFocusMinutesRef.current = todayFocusMinutes;
+      return;
+    }
+
+    if (!farmUpdatedRef.current) {
+      appliedFocusMinutesRef.current = todayFocusMinutes;
+      return;
+    }
+
+    const deltaFocusMinutes = todayFocusMinutes - previousFocusMinutes;
+    appliedFocusMinutesRef.current = todayFocusMinutes;
+
+    const focusBoostMinutes = calculateFocusBoost(deltaFocusMinutes);
+    if (focusBoostMinutes <= 0) return;
+
+    const nowTimestamp = Date.now();
+    const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
+      farmPlotsRef.current,
+      focusBoostMinutes * timeMultiplierRef.current,
+      nowTimestamp,
+    );
+    updatePlotsRef.current(newPlots);
+    enqueueMutationToasts(mutationToasts);
+    stolenRecords.forEach(addStolenRecord);
+  }, [todayFocusMinutes, runFarmGrowth, enqueueMutationToasts, addStolenRecord]);
+
+  useEffect(() => {
     const nowTimestamp = Date.now();
     if (farmUpdatedRef.current) return;
     if (!farm.lastActiveDate || farm.lastActiveDate === todayKey) {
@@ -470,16 +560,19 @@ function App() {
   }, [todayKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (timeMultiplier <= 1) return;
-
     const TICK_INTERVAL_MS = 5000; // 每 5 秒 tick 一次
     const intervalId = window.setInterval(() => {
-      const minutesPerTick = (TICK_INTERVAL_MS / 60000) * timeMultiplier;
+      const rawMinutesPerTick = (TICK_INTERVAL_MS / 60000) * timeMultiplier + growthCarryMinutesRef.current;
+      const minutesPerTick = Math.floor(rawMinutesPerTick);
+      growthCarryMinutesRef.current = rawMinutesPerTick - minutesPerTick;
+      if (minutesPerTick <= 0) return;
+
       const nowTimestamp = Date.now();
       const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
         farmPlotsRef.current,
         minutesPerTick,
         nowTimestamp,
+        false,
       );
       updatePlotsRef.current(newPlots);
       enqueueMutationToasts(mutationToasts);
@@ -575,7 +668,7 @@ function App() {
     plotId: number,
     quality: import('./types/slicing').SeedQuality,
   ) => {
-    const unlockedGalaxies = getUnlockedGalaxies(farm.collection);
+    const unlockedGalaxies = getUnlockedSeedPoolGalaxies(farm.collection);
     const varietyId = plantSeed(plotId, unlockedGalaxies, quality, todayKey);
     if (varietyId) {
       consumeSeed(quality);
@@ -589,7 +682,9 @@ function App() {
       const variety = VARIETY_DEFS[result.varietyId];
       addFragment(variety.galaxy, result.varietyId, variety.rarity);
       if (result.isNew) {
-        addCoins(variety.sellPrice);
+        const basePrice = variety.sellPrice ?? 0;
+        const firstHarvestBonus = basePrice * (result.isMutant ? 3 : 1);
+        addCoins(firstHarvestBonus);
       }
     }
     return result;
@@ -623,14 +718,14 @@ function App() {
   const handleBuyPlot = useCallback((plotIndex: number) => {
     const price = PLOT_PRICES[plotIndex];
     if (!price) return;
-    if (farm.plots.length > plotIndex) return;
+    if (plotIndex !== farm.unlockedPlotCount) return;
     const spent = spendCoins(price);
     if (!spent) return;
     const bought = buyPlot(plotIndex);
     if (!bought) {
       addCoins(price);
     }
-  }, [farm.plots.length, spendCoins, buyPlot, addCoins]);
+  }, [farm.unlockedPlotCount, spendCoins, buyPlot, addCoins]);
 
   const handleUseMutationGun = useCallback((plotId: number) => {
     if (mutationGunMutexRef.current) return;
@@ -929,7 +1024,7 @@ function App() {
   const handleFarmPlantInjected = useCallback((plotId: number, seedId: string) => {
     const seed = shed.injectedSeeds.find(s => s.id === seedId);
     if (!seed) return;
-    const unlockedGalaxies = getUnlockedGalaxies(farm.collection);
+    const unlockedGalaxies = getUnlockedSeedPoolGalaxies(farm.collection);
     const varietyId = rollInjectedVariety(seed.targetGalaxyId, unlockedGalaxies, seed.quality);
     const success = plantSeedWithVariety(plotId, varietyId, seed.quality, todayKey);
     if (success) {
@@ -1212,6 +1307,7 @@ function App() {
     setRecords,
     settings.alertSound,
     settings.alertRepeatCount,
+    settings.ambienceMixer,
     settings.workMinutes,
     t,
     resolveStageAndStore,
@@ -1263,9 +1359,15 @@ function App() {
     } catch (err) {
       console.error('[Timer] onSkipWork error:', err);
     }
-  }, [currentTask, records, setRecords, settings.alertSound, settings.workMinutes, t, resolveStageAndStore, syncRecord, achievements]);
+  }, [currentTask, records, setRecords, settings.alertSound, settings.ambienceMixer, settings.workMinutes, t, resolveStageAndStore, syncRecord, achievements]);
 
   const timer = useTimer({ settings, onComplete: handleTimerComplete, onSkipWork: handleSkipWork });
+  const timerPhase = timer.phase;
+  const timerStatus = timer.status;
+  const timerTimeLeft = timer.timeLeft;
+  const timerOvertimeSeconds = timer.overtimeSeconds;
+  const timerCelebrating = timer.celebrating;
+  const dismissTimerCelebration = timer.dismissCelebration;
 
   // ─── Pomodoro abandon with confirm ───
   // Shows a ConfirmModal before abandoning; records partial work (≥1min) as 'abandoned'
@@ -1364,7 +1466,7 @@ function App() {
         setTimeout(() => setAchievementCelebrationIds(newAchievements), 3000);
       }
     }
-  }, [setRecords, settings.alertSound, t, resolveStageAndStore, syncRecord, achievements]);
+  }, [setRecords, settings.alertSound, settings.ambienceMixer, t, resolveStageAndStore, syncRecord, achievements]);
 
   const handleProjectComplete = useCallback((record: ProjectRecord) => {
     setProjectRecords((prev) => [record, ...prev]);
@@ -1378,6 +1480,7 @@ function App() {
   }, [settings.alertSound, settings.alertRepeatCount, t]);
 
   const project = useProjectTimer(handleProjectTaskComplete, handleProjectComplete, handleProjectOvertimeStart, settings.autoStartWork);
+  const projectState = project.state;
 
   // ─── Project exit flow ───
   const handleProjectExitClick = useCallback(() => {
@@ -1418,8 +1521,8 @@ function App() {
   // "12:34 ☕ 西瓜时钟" during break, "+01:23 ⏰" during overtime.
   // Project mode uses 📋 emoji to distinguish from pomodoro mode.
   useEffect(() => {
-    if (project.state && (project.state.phase === 'running' || project.state.phase === 'overtime' || project.state.phase === 'break' || project.state.phase === 'paused')) {
-      const ps = project.state;
+    if (projectState && (projectState.phase === 'running' || projectState.phase === 'overtime' || projectState.phase === 'break' || projectState.phase === 'paused')) {
+      const ps = projectState;
       if (ps.phase === 'break') {
         const m = Math.floor(ps.timeLeft / 60);
         const s = ps.timeLeft % 60;
@@ -1435,24 +1538,24 @@ function App() {
       }
       return;
     }
-    if (timer.status === 'running' || timer.status === 'paused') {
-      if (timer.phase === 'overtime') {
-        const m = Math.floor(timer.overtimeSeconds / 60);
-        const s = timer.overtimeSeconds % 60;
+    if (timerStatus === 'running' || timerStatus === 'paused') {
+      if (timerPhase === 'overtime') {
+        const m = Math.floor(timerOvertimeSeconds / 60);
+        const s = timerOvertimeSeconds % 60;
         document.title = `+${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ⏰ ${t.appName}`;
       } else {
-        const minutes = Math.floor(timer.timeLeft / 60);
-        const seconds = timer.timeLeft % 60;
+        const minutes = Math.floor(timerTimeLeft / 60);
+        const seconds = timerTimeLeft % 60;
         const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        const phaseEmoji = timer.phase === 'work' ? '🍉' : '☕';
+        const phaseEmoji = timerPhase === 'work' ? '🍉' : '☕';
         document.title = `${timeStr} ${phaseEmoji} ${t.appName}`;
       }
-    } else if (timer.phase !== 'work') {
+    } else if (timerPhase !== 'work') {
       document.title = `${t.phaseShortBreak} · ${t.appName}`;
     } else {
       document.title = t.appName;
     }
-  }, [timer.timeLeft, timer.phase, timer.status, t, project.state]);
+  }, [timerTimeLeft, timerPhase, timerStatus, timerOvertimeSeconds, t, projectState]);
 
   const handleUpdateRecord = useCallback((id: string, task: string) => {
     setRecords((prev) => prev.map((r) => r.id === id ? { ...r, task } : r));
@@ -1493,12 +1596,12 @@ function App() {
   // Celebration — use lastRolledStage if available (includes legendary), fallback to getGrowthStage
   // null lastRolledStage = overtime 2x, suppress celebration
   useEffect(() => {
-    if (timer.celebrating && suppressCelebrationRef.current) {
+    if (timerCelebrating && suppressCelebrationRef.current) {
       suppressCelebrationRef.current = false;
-      timer.dismissCelebration();
+      dismissTimerCelebration();
     }
-  }, [timer.celebrating, timer.dismissCelebration]);
-  const celebrationGrowthStage: GrowthStage | null = timer.celebrating && lastRolledStage
+  }, [timerCelebrating, dismissTimerCelebration]);
+  const celebrationGrowthStage: GrowthStage | null = timerCelebrating && lastRolledStage
     ? lastRolledStage
     : null;
   const celebrationIsRipe = celebrationGrowthStage === 'ripe' || celebrationGrowthStage === 'legendary';
@@ -1801,7 +1904,7 @@ function App() {
             onBuyItem={handleBuyItem}
             onBuyWeeklyItem={buyWeeklyItem}
             onBuyPlot={handleBuyPlot}
-            unlockedPlotCount={farm.plots.length}
+            unlockedPlotCount={farm.unlockedPlotCount}
             weeklyShop={weeklyShop}
             messages={t}
           />

@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import type { Plot } from '../../types/farm';
-import { FarmPlotTileV2, mapPlotStateToTileState } from './FarmPlotTileV2';
+import type { Plot, Weather } from '../../types/farm';
+import { FarmPlotTileV2 } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
+  weather: Weather | null;
   compactMode?: boolean;
   todayFocusMinutes: number;
   coinBalance: number;
@@ -15,6 +16,13 @@ interface FarmPlotBoardV2Props {
 const GRID_SIDE = 3;
 const TOTAL_PLOTS = GRID_SIDE * GRID_SIDE;
 const MOTION_CLASS = 'farm-v2-motion';
+
+function mapPlotStateToTileState(plot: Plot | null) {
+  if (!plot) return 'locked' as const;
+  if (plot.state === 'mature') return 'mature' as const;
+  if (plot.state === 'growing') return 'growing' as const;
+  return 'empty' as const;
+}
 
 function FarmHudV2({
   compactMode,
@@ -212,9 +220,30 @@ function Cottage({ left, top }: { left: string; top: string }) {
   );
 }
 
-function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
+function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weather: Weather | null }) {
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
+  const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;
+  const isNight = weather === 'night';
+  // Keep the mobile horizon stable while the extra viewport height becomes usable foreground.
+  const tightBackdropMetrics = useTightBackdrop
+    ? {
+      skyHeight: 'clamp(184px, 23vh, 198px)',
+      hillTop: 'clamp(184px, 23vh, 198px)',
+      hillHeight: 'clamp(84px, 10.4vh, 90px)',
+      backHillTop: 'clamp(198px, 24.4vh, 208px)',
+      frontHillTop: 'clamp(212px, 26vh, 222px)',
+      grassTop: 'clamp(282px, 34.8vh, 296px)',
+      sunHaloTop: '4.5%',
+      sunTop: '6.8%',
+      pathTop: 'clamp(214px, 26.5vh, 224px)',
+      leftTreeTop: 'clamp(214px, 26.4vh, 224px)',
+      cottageTop: 'clamp(218px, 27vh, 228px)',
+      rightTreeTop: 'clamp(214px, 26.5vh, 224px)',
+      fenceTop: 'clamp(258px, 31.8vh, 272px)',
+      foregroundTop: 'clamp(338px, 41.5vh, 352px)',
+    }
+    : null;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -222,7 +251,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="absolute inset-x-0 top-0 z-[1]"
         style={{
-          height: compactMode ? '28%' : useTightBackdrop ? '35%' : '27%',
+          height: compactMode
+            ? useCompactMobilePolish
+              ? '23.8%'
+              : '28%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.skyHeight ?? '27%')
+              : '27%',
           background: useTightBackdrop
             ? 'linear-gradient(180deg, #8ed3f5 0%, #b8e8fa 58%, #d1ebc7 100%)'
             : 'linear-gradient(180deg, #8ed3f5 0%, #b8e8fa 66%, #d9f4fb 100%)',
@@ -233,8 +268,18 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="absolute inset-x-0 z-[2]"
         style={{
-          top: compactMode ? '28%' : useTightBackdrop ? '35%' : '27%',
-          height: compactMode ? '16%' : '16%',
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '23.8%'
+              : '28%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.hillTop ?? '27%')
+              : '27%',
+          height: compactMode
+            ? '16%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.hillHeight ?? '16%')
+              : '16%',
           background: 'linear-gradient(180deg, #d1ebc7 0%, #bbdea9 44%, #9fcc88 100%)',
         }}
       />
@@ -244,8 +289,18 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
         style={{
           left: compactMode ? '-8%' : '-6%',
           right: compactMode ? '-8%' : '-6%',
-          top: compactMode ? '28.8%' : useTightBackdrop ? '35.6%' : '28%',
-          height: compactMode ? '17.6%' : '17.2%',
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '24.6%'
+              : '28.8%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.backHillTop ?? '28%')
+              : '28%',
+          height: compactMode
+            ? '17.6%'
+            : useTightBackdrop
+              ? 'clamp(92px, 11.6vh, 102px)'
+              : '17.2%',
           borderRadius: '50% 50% 0 0 / 78% 78% 0 0',
           background: 'linear-gradient(180deg, rgba(151,198,115,0.9) 0%, rgba(116,171,86,0.94) 100%)',
         }}
@@ -255,8 +310,18 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
         style={{
           left: compactMode ? '10%' : '13%',
           width: compactMode ? '76%' : '70%',
-          top: compactMode ? '30.2%' : useTightBackdrop ? '37%' : '29.5%',
-          height: compactMode ? '13.6%' : '13.2%',
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '26.2%'
+              : '30.2%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.frontHillTop ?? '29.5%')
+              : '29.5%',
+          height: compactMode
+            ? '13.6%'
+            : useTightBackdrop
+              ? 'clamp(72px, 9.2vh, 82px)'
+              : '13.2%',
           borderRadius: '54% 46% 0 0 / 100% 100% 0 0',
           background: 'linear-gradient(180deg, rgba(171,212,132,0.86) 0%, rgba(126,182,94,0.88) 100%)',
         }}
@@ -266,7 +331,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="absolute inset-x-0 bottom-0 z-[1]"
         style={{
-          top: compactMode ? '44%' : useTightBackdrop ? '51%' : '43%',
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '39.2%'
+              : '44%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.grassTop ?? '43%')
+              : '43%',
           background: 'linear-gradient(180deg, #a8de90 0%, #95d06f 45%, #89c761 100%)',
         }}
       />
@@ -275,25 +346,58 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
         className={`absolute z-[6] rounded-full ${MOTION_CLASS}`}
         style={{
           top: compactMode ? '5%' : '4.5%',
-          right: compactMode ? '12%' : '14%',
-          width: compactMode ? '84px' : '98px',
-          height: compactMode ? '84px' : '98px',
-          background: 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
+          right: compactMode ? (isNight ? '14%' : '12%') : (isNight ? '18.5%' : '14%'),
+          width: compactMode ? (isNight ? '82px' : '84px') : (isNight ? '98px' : '98px'),
+          height: compactMode ? (isNight ? '82px' : '84px') : (isNight ? '98px' : '98px'),
+          background: isNight
+            ? 'radial-gradient(circle at 50% 50%, rgba(238,245,255,0.2) 0%, rgba(215,229,255,0.38) 44%, rgba(186,204,236,0) 100%)'
+            : 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
           animation: 'farmV2SunHalo 5.6s ease-in-out -0.8s infinite',
         }}
       />
       <div
-        className={`absolute z-[7] rounded-full ${MOTION_CLASS}`}
+        className={`absolute ${isNight ? 'z-[9]' : 'z-[7]'} rounded-full ${MOTION_CLASS}`}
+        data-testid="farm-v2-celestial-body"
+        aria-label={isNight ? 'moon' : 'sun'}
         style={{
-          top: compactMode ? '7.2%' : '6.8%',
-          right: compactMode ? '14.4%' : '16%',
-          width: compactMode ? '46px' : '56px',
-          height: compactMode ? '46px' : '56px',
-          background: 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
-          boxShadow: '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
+          top: compactMode ? (isNight ? '7.4%' : '7.2%') : (isNight ? '7%' : '6.8%'),
+          right: compactMode ? (isNight ? '16.6%' : '14.4%') : (isNight ? '21%' : '16%'),
+          width: compactMode ? (isNight ? '42px' : '46px') : (isNight ? '54px' : '56px'),
+          height: compactMode ? (isNight ? '42px' : '46px') : (isNight ? '54px' : '56px'),
+          background: isNight
+            ? 'radial-gradient(circle at 35% 30%, #fcfdff 0%, #e6efff 58%, #b8cae3 100%)'
+            : 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
+          boxShadow: isNight
+            ? '0 0 0 2px rgba(233,242,255,0.34), 0 0 24px rgba(211,224,249,0.42)'
+            : '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
           animation: 'farmV2SunFloat 7.8s ease-in-out -1.2s infinite',
         }}
-      />
+      >
+        {isNight && (
+          <>
+            <div
+              className="absolute rounded-full"
+              style={{
+                left: '24%',
+                top: '24%',
+                width: '18%',
+                height: '18%',
+                background: 'rgba(178,194,219,0.32)',
+              }}
+            />
+            <div
+              className="absolute rounded-full"
+              style={{
+                right: '26%',
+                bottom: '22%',
+                width: '14%',
+                height: '14%',
+                background: 'rgba(178,194,219,0.26)',
+              }}
+            />
+          </>
+        )}
+      </div>
 
       <CloudCluster top="3%" left="6%" width="22%" height="10%" opacity={0.9} duration="13s" delay="-0.8s" />
       <CloudCluster top="8%" left="34%" width="20%" height="10%" opacity={0.84} duration="16s" delay="-2.4s" />
@@ -302,7 +406,13 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="absolute z-[6]"
         style={{
-          top: compactMode ? '30.8%' : useTightBackdrop ? '38.2%' : '29.8%',
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '26.4%'
+              : '30.8%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.pathTop ?? '29.8%')
+              : '29.8%',
           left: '50%',
           width: compactMode ? '38%' : '28%',
           height: compactMode ? '11.5%' : '10.8%',
@@ -314,17 +424,35 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
 
       <FruitTree
         left={compactMode ? '8.2%' : useTightBackdrop ? '8%' : '9.2%'}
-        top={compactMode ? '30.5%' : useTightBackdrop ? '38.2%' : '29.8%'}
+        top={compactMode
+          ? useCompactMobilePolish
+            ? '26%'
+            : '30.5%'
+          : useTightBackdrop
+            ? (tightBackdropMetrics?.leftTreeTop ?? '29.8%')
+            : '29.8%'}
         scale={compactMode ? 0.84 : useTightBackdrop ? 0.9 : 0.94}
         testId="farm-v2-tree-left"
       />
       <Cottage
         left={compactMode ? '18%' : useTightBackdrop ? '20%' : '23.5%'}
-        top={compactMode ? '31%' : useTightBackdrop ? '38.6%' : '30.2%'}
+        top={compactMode
+          ? useCompactMobilePolish
+            ? '26.7%'
+            : '31%'
+          : useTightBackdrop
+            ? (tightBackdropMetrics?.cottageTop ?? '30.2%')
+            : '30.2%'}
       />
       <FruitTree
         right={compactMode ? '7.8%' : useTightBackdrop ? '7.2%' : '8.8%'}
-        top={compactMode ? '30.6%' : useTightBackdrop ? '38.3%' : '29.9%'}
+        top={compactMode
+          ? useCompactMobilePolish
+            ? '26.1%'
+            : '30.6%'
+          : useTightBackdrop
+            ? (tightBackdropMetrics?.rightTreeTop ?? '29.9%')
+            : '29.9%'}
         scale={compactMode ? 0.86 : useTightBackdrop ? 0.92 : 0.98}
         testId="farm-v2-tree-right"
       />
@@ -332,7 +460,16 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       {/* Clear fence: posts + 2 rails */}
       <div
         className="absolute left-[7%] right-[7%] z-[8]"
-        style={{ top: compactMode ? '39.3%' : useTightBackdrop ? '47.8%' : '38.2%', height: compactMode ? '14px' : '15px' }}
+        style={{
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '35.6%'
+              : '39.3%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.fenceTop ?? '38.2%')
+              : '38.2%',
+          height: compactMode ? '14px' : '15px',
+        }}
       >
         <div
           className="absolute left-0 right-0 top-[1px] h-[3px] rounded-full"
@@ -355,8 +492,18 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
       <div
         className="absolute inset-x-0 z-[2]"
         style={{
-          top: compactMode ? '56%' : useTightBackdrop ? '62%' : '54%',
-          height: compactMode ? '44%' : '46%',
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '51.8%'
+              : '56%'
+            : useTightBackdrop
+              ? (tightBackdropMetrics?.foregroundTop ?? '54%')
+              : '54%',
+          height: compactMode
+            ? '44%'
+            : useTightBackdrop
+              ? 'calc(100% - clamp(338px, 41.5vh, 352px))'
+              : '46%',
           background:
             'linear-gradient(180deg, rgba(161,215,124,0.34) 0%, rgba(130,194,86,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
         }}
@@ -365,12 +512,23 @@ function FarmBackdropV2({ compactMode }: { compactMode: boolean }) {
   );
 }
 
-function FarmBoardSceneDecorV2({ compactMode }: { compactMode: boolean }) {
+function FarmBoardSceneDecorV2({
+  compactMode,
+  useTightMobileSpacing,
+}: {
+  compactMode: boolean;
+  useTightMobileSpacing: boolean;
+}) {
+  if (useTightMobileSpacing) {
+    return null;
+  }
+
   return (
     <div
-      className="pointer-events-none absolute left-1/2 z-10 h-10 -translate-x-1/2 rounded-[999px]"
+      className="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-[999px]"
       style={{
         bottom: compactMode ? '-18px' : '-20px',
+        height: '40px',
         width: compactMode ? 'calc(100% + 56px)' : 'calc(100% + 140px)',
         background: 'radial-gradient(circle at center, rgba(83,128,55,0.58) 0%, rgba(88,128,54,0.22) 56%, rgba(88,128,54,0) 100%)',
       }}
@@ -380,6 +538,7 @@ function FarmBoardSceneDecorV2({ compactMode }: { compactMode: boolean }) {
 
 export function FarmPlotBoardV2({
   plots,
+  weather,
   compactMode = false,
   todayFocusMinutes,
   coinBalance,
@@ -388,36 +547,57 @@ export function FarmPlotBoardV2({
   onPlotClick,
 }: FarmPlotBoardV2Props) {
   const displaySlots = useMemo(
-    () => Array.from({ length: TOTAL_PLOTS }, (_, index) => plots[index] ?? null),
+    () => Array.from({ length: TOTAL_PLOTS }, (_, index) => ({
+      plot: plots[index] ?? null,
+      isLocked: index >= plots.length,
+    })),
     [plots],
   );
 
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
+  const useCompactMobilePolish = compactMode && isNarrowScreen;
   const useTightMobileSpacing = isNarrowScreen && !compactMode;
 
   const boardWidth = compactMode
     ? 'min(96vw, 500px)'
     : useTightMobileSpacing
-      ? 'min(calc(100% - 4px), 500px)'
+      ? 'min(calc(100% - 26px), 470px)'
       : 'min(82vw, calc(100dvh - 290px), 620px)';
   const boardGap = compactMode || useTightMobileSpacing
     ? 'clamp(6px, 1vw, 9px)'
     : 'clamp(8px, 0.8vw, 11px)';
+  const sceneMinHeight = compactMode
+    ? useCompactMobilePolish
+      ? '100dvh'
+      : 'min(100dvh, 630px)'
+    : useTightMobileSpacing
+      ? 'clamp(620px, calc(100dvh - 112px - env(safe-area-inset-bottom, 0px)), 732px)'
+      : 'min(76dvh, 660px)';
+  const boardPaddingTop = compactMode
+    ? useCompactMobilePolish
+      ? 'clamp(162px, 29vh, 204px)'
+      : 'clamp(168px, 31vh, 214px)'
+    : useTightMobileSpacing
+      ? 'clamp(282px, 35.5vh, 304px)'
+      : 'clamp(96px, 14.5vh, 132px)';
+  const boardPaddingBottom = compactMode
+    ? useCompactMobilePolish
+      ? 'clamp(4px, 0.8vh, 8px)'
+      : 'clamp(6px, 1.1vh, 10px)'
+    : useTightMobileSpacing
+      ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.5vh, 16px))'
+      : 'clamp(18px, 2.5vh, 28px)';
 
   return (
     <div
-      className={`relative w-full ${useTightMobileSpacing ? 'overflow-visible' : 'overflow-hidden'}`}
+      className="relative w-full overflow-hidden"
       style={{
-        minHeight: compactMode
-          ? 'min(100dvh, 630px)'
-          : useTightMobileSpacing
-            ? 'min(100dvh, 556px)'
-            : 'min(76dvh, 660px)',
+        minHeight: sceneMinHeight,
         isolation: 'isolate',
         background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
       }}
     >
-      <FarmBackdropV2 compactMode={compactMode} />
+      <FarmBackdropV2 compactMode={compactMode} weather={weather} />
       <FarmHudV2
         compactMode={compactMode}
         todayFocusMinutes={todayFocusMinutes}
@@ -427,23 +607,14 @@ export function FarmPlotBoardV2({
       />
 
       <div
-        className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-1 sm:px-2' : 'px-0 sm:px-2'}`}
+        className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-2 sm:px-2' : 'px-0 sm:px-2'}`}
         style={{
-          paddingTop: compactMode
-            ? 'clamp(168px, 31vh, 214px)'
-            : useTightMobileSpacing
-              ? 'clamp(132px, 19vh, 164px)'
-              : 'clamp(96px, 14.5vh, 132px)',
-          paddingBottom: compactMode
-            ? 'clamp(6px, 1.1vh, 10px)'
-            : useTightMobileSpacing
-              ? 'clamp(8px, 1.3vh, 12px)'
-              : 'clamp(18px, 2.5vh, 28px)',
-          transform: useTightMobileSpacing ? 'translateY(clamp(156px, calc(26.7vw + 63px), 170px))' : undefined,
+          paddingTop: boardPaddingTop,
+          paddingBottom: boardPaddingBottom,
         }}
       >
         <div className="relative" style={{ width: boardWidth }}>
-          <FarmBoardSceneDecorV2 compactMode={compactMode} />
+          <FarmBoardSceneDecorV2 compactMode={compactMode} useTightMobileSpacing={useTightMobileSpacing} />
           <div
             className="relative z-20 grid grid-cols-3"
             data-testid="farm-plot-board-v2"
@@ -457,11 +628,13 @@ export function FarmPlotBoardV2({
               filter: 'drop-shadow(0 11px 14px rgba(46,72,27,0.24))',
             }}
           >
-            {displaySlots.map((plot, index) => {
-              const tileState = mapPlotStateToTileState(plot);
+            {displaySlots.map(({ plot, isLocked }, index) => {
+              const tileState = isLocked ? 'locked' : mapPlotStateToTileState(plot);
+              const interactiveState = tileState === 'locked' ? null : tileState;
               return (
                 <div
                   key={`farm-v2-slot-${plot?.id ?? index}`}
+                  data-slot-state={tileState}
                   style={{
                     transform: `translateY(${Math.floor(index / GRID_SIDE) * (compactMode ? 2.4 : 3.2)}px)`,
                   }}
@@ -469,8 +642,8 @@ export function FarmPlotBoardV2({
                   <FarmPlotTileV2
                     state={tileState}
                     onClick={
-                      onPlotClick && plot
-                        ? () => onPlotClick(plot.id, tileState)
+                      onPlotClick && plot && interactiveState
+                        ? () => onPlotClick(plot.id, interactiveState)
                         : undefined
                     }
                   />

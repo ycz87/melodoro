@@ -33,6 +33,8 @@ export const PLOT_PRICES: Record<number, number> = {
   4: 200,
   5: 500,
   6: 1000,
+  7: 2000,
+  8: 5000,
 };
 
 export interface MelonCoinState {

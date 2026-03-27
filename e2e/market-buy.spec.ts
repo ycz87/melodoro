@@ -125,15 +125,6 @@ async function readShedItemCount(page: Page, itemId: ShopItemId): Promise<number
   }, itemId);
 }
 
-async function readFarmPlotCount(page: Page): Promise<number> {
-  return page.evaluate(() => {
-    const raw = localStorage.getItem('watermelon-farm');
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw) as { plots?: unknown };
-    return Array.isArray(parsed.plots) ? parsed.plots.length : 0;
-  });
-}
-
 test.describe('Market Buy', () => {
   test('AC1: 14 种常驻商品在买 Tab 正确展示', async ({ page }) => {
     expect(SHOP_ITEMS).toHaveLength(14);

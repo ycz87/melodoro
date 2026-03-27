@@ -228,6 +228,27 @@ npm run build
 npm run preview
 ```
 
+## PR 守门与 lint 护栏
+
+默认 PR 守门链路：
+
+```bash
+npm run lint
+npm run build
+git diff --check
+PR_GUARD_BASE_REF=origin/main npm run guard:pr:patch-check
+```
+
+本地一键执行：
+
+```bash
+npm run guard:pr
+```
+
+规则说明见 `docs/lint-guardrails.md`。
+Reviewer checklist 见 `.github/review-checklist.md`。
+PR 描述模板见 `.github/pull_request_template.md`。
+
 ## 项目结构
 
 ```

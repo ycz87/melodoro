@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
-import type { CollectedVariety, GalaxyId, VarietyId } from '../types/farm';
+import type { CollectedVariety, FarmMilestoneState, VarietyId } from '../types/farm';
 import {
   ALL_VARIETY_IDS,
   DARK_MATTER_VARIETIES,
@@ -19,17 +19,23 @@ import {
   VARIETY_DEFS,
   RARITY_COLOR, RARITY_STARS,
 } from '../types/farm';
-import { getUnlockedGalaxies } from '../farm/galaxy';
+import {
+  CORE_GALAXIES,
+  getCollectionGuideSnapshot,
+  getGalaxyProgressSnapshot,
+} from '../farm/galaxy';
+import {
+  getFarmMilestoneRewardStatusList,
+} from '../farm/milestoneRewards';
 
 interface CollectionPageProps {
   collection: CollectedVariety[];
+  milestoneRewards?: FarmMilestoneState;
 }
 
 type CollectionTab = 'pure' | 'hybrid' | 'prismatic' | 'dark-matter';
 
-const PURE_GALAXY_IDS: ReadonlyArray<GalaxyId> = ['thick-earth', 'fire', 'water', 'wood', 'metal'];
-
-export function CollectionPage({ collection }: CollectionPageProps) {
+export function CollectionPage({ collection, milestoneRewards }: CollectionPageProps) {
   const theme = useTheme();
   const t = useI18n();
   const [collectionTab, setCollectionTab] = useState<CollectionTab>('pure');
@@ -41,16 +47,22 @@ export function CollectionPage({ collection }: CollectionPageProps) {
   );
 
   const collectedIds = new Set(collectionMap.keys());
-  const unlockedGalaxies = getUnlockedGalaxies(collection);
+  const galaxyProgress = useMemo(() => getGalaxyProgressSnapshot(collection), [collection]);
+  const collectionGuide = useMemo(() => getCollectionGuideSnapshot(collection), [collection]);
   const selectedVariety = selectedVarietyId ? collectionMap.get(selectedVarietyId) : undefined;
 
+  const milestoneRewardStatusList = useMemo(() => {
+    if (!milestoneRewards) return [];
+    return getFarmMilestoneRewardStatusList(milestoneRewards);
+  }, [milestoneRewards]);
+
   const pureGalaxyDefs = useMemo(
-    () => GALAXIES.filter((galaxy) => PURE_GALAXY_IDS.includes(galaxy.id)),
+    () => GALAXIES.filter((galaxy) => CORE_GALAXIES.some((galaxyId) => galaxyId === galaxy.id)),
     [],
   );
 
   const pureVarietiesAll = useMemo(
-    () => PURE_GALAXY_IDS.flatMap((galaxyId) => GALAXY_VARIETIES[galaxyId] ?? []),
+    () => CORE_GALAXIES.flatMap((galaxyId) => GALAXY_VARIETIES[galaxyId] ?? []),
     [],
   );
   const pureCollectedCount = pureVarietiesAll.filter((id) => collectedIds.has(id)).length;
@@ -64,13 +76,15 @@ export function CollectionPage({ collection }: CollectionPageProps) {
     ), 0);
     const totalInGalaxy = varieties.length;
     const percent = totalInGalaxy > 0 ? Math.round((collectedInGalaxy / totalInGalaxy) * 100) : 0;
+    const unlockState = galaxyProgress.unlockStateByGalaxy[galaxy.id];
 
     return {
       galaxy,
       collectedInGalaxy,
       totalInGalaxy,
       percent,
-      isUnlocked: unlockedGalaxies.includes(galaxy.id) || collectedInGalaxy > 0 || galaxy.id === 'thick-earth',
+      isUnlocked: unlockState.isUnlocked,
+      progressSegments: unlockState.progressSegments,
     };
   });
 
@@ -85,7 +99,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
   const prismaticCollectedCount = PRISMATIC_VARIETIES.filter((id) => collectedIds.has(id)).length;
   const prismaticTotalCount = PRISMATIC_VARIETIES.length;
   const prismaticPercent = prismaticTotalCount > 0 ? Math.round((prismaticCollectedCount / prismaticTotalCount) * 100) : 0;
-  const isPrismaticUnlocked = unlockedGalaxies.includes('rainbow') || prismaticCollectedCount > 0;
+  const isPrismaticUnlocked = galaxyProgress.unlockStateByGalaxy.rainbow.isUnlocked;
 
   const darkMatterCollectedCount = DARK_MATTER_VARIETIES.filter((id) => collectedIds.has(id)).length;
   const darkMatterTotalCount = DARK_MATTER_VARIETIES.length;
@@ -101,6 +115,12 @@ export function CollectionPage({ collection }: CollectionPageProps) {
 
   return (
     <div className="flex-1 w-full px-4 pb-4 overflow-y-auto">
+      <CollectionGuideOverview
+        guide={collectionGuide}
+        theme={theme}
+        t={t}
+      />
+
       <CollectionSubTabHeader
         collectionTab={collectionTab}
         setCollectionTab={setCollectionTab}
@@ -135,7 +155,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {pureStarJourneyProgress.map(({ galaxy, collectedInGalaxy, totalInGalaxy, percent, isUnlocked }) => (
+              {pureStarJourneyProgress.map(({ galaxy, collectedInGalaxy, totalInGalaxy, percent, isUnlocked, progressSegments }) => (
                 <div
                   key={galaxy.id}
                   className="rounded-xl border px-3 py-2"
@@ -158,7 +178,7 @@ export function CollectionPage({ collection }: CollectionPageProps) {
                       </span>
                     ) : (
                       <span className="text-[11px] shrink-0" style={{ color: theme.textFaint }}>
-                        🔒 {t.collectionLocked}
+                        🔒 {progressSegments.map(seg => `${seg.current}/${seg.target}`).join(' · ')}
                       </span>
                     )}
                   </div>
@@ -177,8 +197,8 @@ export function CollectionPage({ collection }: CollectionPageProps) {
 
           {pureGalaxyDefs.map(galaxy => {
             const varieties = GALAXY_VARIETIES[galaxy.id] ?? [];
-            const collectedInGalaxy = varieties.filter((id) => collectedIds.has(id)).length;
-            const isUnlocked = unlockedGalaxies.includes(galaxy.id) || collectedInGalaxy > 0 || galaxy.id === 'thick-earth';
+            const unlockState = galaxyProgress.unlockStateByGalaxy[galaxy.id];
+            const isUnlocked = unlockState.isUnlocked;
             return (
               <div key={galaxy.id} className="mb-5">
                 <div className="flex items-center gap-2 mb-3">
@@ -359,6 +379,14 @@ export function CollectionPage({ collection }: CollectionPageProps) {
         </div>
       )}
 
+      {milestoneRewardStatusList.length > 0 && (
+        <MilestoneRewardLedger
+          statusList={milestoneRewardStatusList}
+          theme={theme}
+          t={t}
+        />
+      )}
+
       {selectedVarietyId && (
         <VarietyDetailModal
           varietyId={selectedVarietyId}
@@ -370,6 +398,279 @@ export function CollectionPage({ collection }: CollectionPageProps) {
           onClose={() => setSelectedVarietyId(null)}
         />
       )}
+    </div>
+  );
+}
+
+function MilestoneRewardLedger({ statusList, theme, t }: {
+  statusList: ReturnType<typeof import('../farm/milestoneRewards').getFarmMilestoneRewardStatusList>;
+  theme: ReturnType<typeof useTheme>;
+  t: ReturnType<typeof useI18n>;
+}) {
+  const grantedCount = statusList.filter((s) => s.grantedAt).length;
+  const totalCount = statusList.length;
+
+  const kindLabel = (kind: string, reward: typeof statusList[number]['reward']) => {
+    if (kind === 'plot') return t.marketPlotName((reward.plotCount ?? 1) - 1);
+    if (kind === 'galaxy') return t.galaxyName(reward.galaxyId!);
+    if (kind === 'feature') return t.geneFiveElementTitle;
+    if (kind === 'theme') return reward.contentKey === 'ultimate-theme'
+      ? t.collectionMilestoneRewardUltimateTheme
+      : t.collectionMilestoneRewardFocusTheme;
+    if (kind === 'ambience') return t.collectionMilestoneRewardCosmicAmbience;
+    if (kind === 'variety') return t.varietyName(reward.varietyId!);
+    return reward.id;
+  };
+
+  return (
+    <div
+      className="mt-4 mb-4 rounded-2xl border px-4 py-4"
+      style={{ backgroundColor: `${theme.surface}70`, borderColor: theme.border }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold" style={{ color: theme.text }}>
+          🏅 {t.collectionMilestoneRewardsTitle}
+        </h3>
+        <span className="text-xs" style={{ color: theme.textMuted }}>
+          {grantedCount}/{totalCount}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {statusList.map(({ reward, grantedAt, source }) => {
+          const granted = Boolean(grantedAt);
+          const isContentOnly = reward.kind === 'theme' || reward.kind === 'ambience';
+          return (
+            <div
+              key={reward.id}
+              className="rounded-xl border px-2.5 py-2"
+              style={{
+                borderColor: granted ? `${theme.accent}55` : theme.border,
+                backgroundColor: granted ? `${theme.accent}10` : `${theme.surface}55`,
+                opacity: granted ? 1 : 0.6,
+              }}
+            >
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-base">{reward.icon}</span>
+                <span className="text-xs font-medium truncate" style={{ color: granted ? theme.text : theme.textMuted }}>
+                  {kindLabel(reward.kind, reward)}
+                </span>
+              </div>
+              {granted ? (
+                <div className="text-[10px]" style={{ color: theme.textFaint }}>
+                  {source === 'backfill'
+                    ? t.collectionMilestoneRewardBackfilled(grantedAt ?? '')
+                    : t.collectionMilestoneRewardGranted(grantedAt ?? '')}
+                  {isContentOnly && (
+                    <span className="ml-1 opacity-70">({t.collectionMilestoneRewardContentPending})</span>
+                  )}
+                </div>
+              ) : (
+                <div className="text-[10px]" style={{ color: theme.textFaint }}>{t.collectionMilestoneRewardNotEarned}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CollectionGuideOverview({ guide, theme, t }: {
+  guide: ReturnType<typeof getCollectionGuideSnapshot>;
+  theme: ReturnType<typeof useTheme>;
+  t: ReturnType<typeof useI18n>;
+}) {
+  const currentStageLabel = {
+    'core-discovery': t.collectionGuideStageCoreDiscovery,
+    'core-expansion': t.collectionGuideStageCoreExpansion,
+    'five-element-resonance': t.collectionGuideStageResonance,
+    'prismatic-journey': t.collectionGuideStagePrismatic,
+    'dark-matter-journey': t.collectionGuideStageDarkMatter,
+    'collection-complete': t.collectionGuideStageComplete,
+  }[guide.currentStageId];
+
+  const currentStageIcon = {
+    'core-discovery': '🌱',
+    'core-expansion': '🪐',
+    'five-element-resonance': '✨',
+    'prismatic-journey': '🌈',
+    'dark-matter-journey': '🌑',
+    'collection-complete': '🏆',
+  }[guide.currentStageId];
+
+  const milestoneTitle = (() => {
+    if (guide.nextMilestone.id === 'collection-complete') return t.collectionGuideAllMilestonesComplete;
+    if (guide.nextMilestone.id === 'dark-matter-collection') return t.collectionGuideCompleteDarkMatter;
+    return t.collectionGuideUnlockGalaxy(t.galaxyName(guide.nextMilestone.id));
+  })();
+
+  const milestoneHint = (() => {
+    if (guide.nextMilestone.id === 'collection-complete') return t.collectionGuideDone;
+    if (guide.nextMilestone.id === 'dark-matter-collection') return t.collectionGuideGalaxyProgress(
+      t.galaxyName('dark-matter'),
+      guide.nextMilestone.progressSegments[0]?.current ?? 0,
+      guide.nextMilestone.progressSegments[0]?.target ?? 0,
+      Math.max(0, (guide.nextMilestone.progressSegments[0]?.target ?? 0) - (guide.nextMilestone.progressSegments[0]?.current ?? 0)),
+    );
+    if (guide.nextMilestone.id === 'wood' || guide.nextMilestone.id === 'metal') {
+      const segment = guide.nextMilestone.progressSegments[0];
+      return t.collectionGuideCompletedCoreGalaxiesProgress(
+        segment?.current ?? 0,
+        segment?.target ?? 0,
+        Math.max(0, (segment?.target ?? 0) - (segment?.current ?? 0)),
+      );
+    }
+    if (guide.nextMilestone.id === 'rainbow') {
+      return null;
+    }
+
+    const segment = guide.nextMilestone.progressSegments[0];
+    return t.collectionGuideGalaxyProgress(
+      t.galaxyName('thick-earth'),
+      segment?.current ?? 0,
+      segment?.target ?? 0,
+      Math.max(0, (segment?.target ?? 0) - (segment?.current ?? 0)),
+    );
+  })();
+
+  const milestoneSecondaryHint = (() => {
+    if (guide.nextMilestone.id === 'rainbow') {
+      const missingNames = guide.fiveElementResonance.missingCoreGalaxies
+        .map((galaxyId) => t.galaxyName(galaxyId))
+        .join(' / ');
+
+      return {
+        core: t.collectionGuideResonanceCoreProgress(
+          guide.fiveElementResonance.currentCoreGalaxies,
+          guide.fiveElementResonance.targetCoreGalaxies,
+        ),
+        hybrid: t.collectionGuideResonanceHybridProgress(
+          guide.fiveElementResonance.currentHybridVarieties,
+          guide.fiveElementResonance.targetHybridVarieties,
+        ),
+        missing: missingNames ? t.collectionGuideResonanceMissingGalaxies(missingNames) : null,
+      };
+    }
+
+    if (guide.nextMilestone.id === 'dark-matter') {
+      const segment = guide.nextMilestone.progressSegments[0];
+      return {
+        core: t.collectionGuideGalaxyProgress(
+          t.galaxyName('rainbow'),
+          segment?.current ?? 0,
+          segment?.target ?? 0,
+          Math.max(0, (segment?.target ?? 0) - (segment?.current ?? 0)),
+        ),
+        hybrid: null,
+        missing: null,
+      };
+    }
+
+    return null;
+  })();
+
+  const resonanceMissingNames = guide.fiveElementResonance.missingCoreGalaxies
+    .map((galaxyId) => t.galaxyName(galaxyId))
+    .join(' / ');
+
+  return (
+    <div className="grid gap-3 mb-4 pt-1 md:grid-cols-3">
+      <div
+        className="rounded-2xl border p-4"
+        style={{ backgroundColor: `${theme.surface}72`, borderColor: theme.border }}
+      >
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: theme.textFaint }}>
+          {t.collectionGuideCurrentStage}
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <span className="text-2xl">{currentStageIcon}</span>
+          <div className="text-sm font-semibold" style={{ color: theme.text }}>
+            {currentStageLabel}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="rounded-2xl border p-4"
+        style={{ backgroundColor: `${theme.surface}72`, borderColor: theme.border }}
+      >
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: theme.textFaint }}>
+          {t.collectionGuideNextMilestone}
+        </div>
+        <div className="mt-3 text-sm font-semibold" style={{ color: theme.text }}>
+          {milestoneTitle}
+        </div>
+        {guide.nextMilestone.id !== 'collection-complete' && guide.nextMilestone.id !== 'dark-matter-collection' && (
+          <p className="mt-2 text-xs leading-5" style={{ color: theme.textMuted }}>
+            {t.collectionUnlockHint(guide.nextMilestone.id)}
+          </p>
+        )}
+        {milestoneHint && (
+          <p className="mt-2 text-xs leading-5" style={{ color: theme.textMuted }}>
+            {milestoneHint}
+          </p>
+        )}
+        {milestoneSecondaryHint && (
+          <div className="mt-2 flex flex-col gap-1.5 text-xs" style={{ color: theme.textMuted }}>
+            <span>{milestoneSecondaryHint.core}</span>
+            {milestoneSecondaryHint.hybrid && <span>{milestoneSecondaryHint.hybrid}</span>}
+            {milestoneSecondaryHint.missing && <span>{milestoneSecondaryHint.missing}</span>}
+          </div>
+        )}
+      </div>
+
+      <div
+        className="rounded-2xl border p-4"
+        style={{ backgroundColor: `${theme.surface}72`, borderColor: guide.fiveElementResonance.isReady ? `${theme.accent}45` : theme.border }}
+      >
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: theme.textFaint }}>
+          {t.collectionGuideFiveElementTitle}
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {CORE_GALAXIES.map((galaxyId) => {
+            const isReady = guide.fiveElementResonance.coreGalaxyStatus[galaxyId];
+            return (
+              <div
+                key={galaxyId}
+                className="rounded-xl border px-3 py-2 text-xs"
+                style={{
+                  backgroundColor: isReady ? `${theme.accent}12` : `${theme.surface}60`,
+                  borderColor: isReady ? `${theme.accent}35` : theme.border,
+                  color: isReady ? theme.text : theme.textMuted,
+                }}
+              >
+                <div className="font-medium">{t.galaxyName(galaxyId)}</div>
+                <div className="mt-1 text-[11px]" style={{ color: isReady ? theme.textMuted : theme.textFaint }}>
+                  {isReady ? '✓ ≥1' : '· 0/1'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-3 flex items-center justify-between text-xs" style={{ color: theme.textMuted }}>
+          <span>{t.collectionGuideResonanceHybridProgress(guide.fiveElementResonance.currentHybridVarieties, guide.fiveElementResonance.targetHybridVarieties)}</span>
+          <span>{guide.fiveElementResonance.currentHybridVarieties}/{guide.fiveElementResonance.targetHybridVarieties}</span>
+        </div>
+        <div className="mt-2 h-2 rounded-full overflow-hidden" style={{ backgroundColor: `${theme.inputBg}90` }}>
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${Math.min(100, (guide.fiveElementResonance.currentHybridVarieties / guide.fiveElementResonance.targetHybridVarieties) * 100)}%`,
+              backgroundColor: theme.accent,
+            }}
+          />
+        </div>
+        <p className="mt-3 text-xs leading-5" style={{ color: guide.fiveElementResonance.isReady ? theme.text : theme.textMuted }}>
+          {guide.fiveElementResonance.isReady
+            ? t.collectionGuideResonanceReady
+            : resonanceMissingNames
+              ? t.collectionGuideResonanceMissingGalaxies(resonanceMissingNames)
+              : t.collectionGuideResonanceHybridProgress(
+                guide.fiveElementResonance.currentHybridVarieties,
+                guide.fiveElementResonance.targetHybridVarieties,
+              )}
+        </p>
+      </div>
     </div>
   );
 }

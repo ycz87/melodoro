@@ -43,9 +43,7 @@ export function ProjectExitModal({
   // Use breakAccent during break phase for visual consistency
   const phaseAccent = isBreak ? theme.breakAccent : theme.accent;
 
-  // Always reset to step 1 when the modal mounts (re-opens)
   useEffect(() => {
-    setStep('confirm');
     return () => { if (lockTimer.current) clearTimeout(lockTimer.current); };
   }, []);
 

@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-03-08T04:23:30Z",
+  "source": "Issue #4 logic patch verification (state-machine simulation mirroring App/useFarmStorage flow)",
+  "assumptions": {
+    "plotId": 0,
+    "varietyId": "jade-stripe",
+    "matureMinutes": 10000,
+    "growthFeedbackMinutes": 3500,
+    "growthToMatureMinutes": 6500,
+    "todayKey": "2026-03-08"
+  },
+  "snapshots": {
+    "stage1Empty": {
+      "plot": {
+        "id": 0,
+        "state": "empty",
+        "progress": 0,
+        "mutationStatus": "none",
+        "mutationChance": 0.02,
+        "isMutant": false,
+        "accumulatedMinutes": 0,
+        "lastActivityTimestamp": 0,
+        "hasTracker": false
+      }
+    },
+    "stage2Planted": {
+      "plot": {
+        "id": 0,
+        "state": "growing",
+        "seedQuality": "normal",
+        "varietyId": "jade-stripe",
+        "progress": 0,
+        "mutationStatus": "none",
+        "mutationChance": 0.02,
+        "isMutant": false,
+        "accumulatedMinutes": 0,
+        "plantedDate": "2026-03-08",
+        "lastUpdateDate": "2026-03-08",
+        "lastActivityTimestamp": 1772943810000,
+        "hasTracker": false
+      }
+    },
+    "stage3GrowingFeedback": {
+      "plot": {
+        "id": 0,
+        "state": "growing",
+        "seedQuality": "normal",
+        "varietyId": "jade-stripe",
+        "progress": 0.35,
+        "mutationStatus": "none",
+        "mutationChance": 0.02,
+        "isMutant": false,
+        "accumulatedMinutes": 3500,
+        "plantedDate": "2026-03-08",
+        "lastUpdateDate": "2026-03-08",
+        "lastActivityTimestamp": 1773153810000,
+        "hasTracker": false
+      },
+      "feedback": {
+        "stage": "flower",
+        "progressPercent": 35
+      }
+    },
+    "stage4Mature": {
+      "plot": {
+        "id": 0,
+        "state": "mature",
+        "seedQuality": "normal",
+        "varietyId": "jade-stripe",
+        "progress": 1,
+        "mutationStatus": "none",
+        "mutationChance": 0.02,
+        "isMutant": false,
+        "accumulatedMinutes": 10000,
+        "plantedDate": "2026-03-08",
+        "lastUpdateDate": "2026-03-08",
+        "lastActivityTimestamp": 1773543810000,
+        "hasTracker": false
+      },
+      "feedback": {
+        "stage": "fruit",
+        "progressPercent": 100
+      }
+    },
+    "stage5Harvested": {
+      "plot": {
+        "id": 0,
+        "state": "empty",
+        "progress": 0,
+        "mutationStatus": "none",
+        "mutationChance": 0.02,
+        "isMutant": false,
+        "accumulatedMinutes": 0,
+        "lastActivityTimestamp": 0,
+        "hasTracker": false
+      },
+      "collection": [
+        {
+          "varietyId": "jade-stripe",
+          "firstObtainedDate": "2026-03-08",
+          "count": 1
+        }
+      ]
+    }
+  },
+  "checks": {
+    "emptyToPlanted": true,
+    "plantedToGrowingFeedback": true,
+    "growingToMature": true,
+    "matureToHarvestedEmpty": true,
+    "collectionIncremented": true
+  }
+}

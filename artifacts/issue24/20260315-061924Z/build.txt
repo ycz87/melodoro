@@ -1,0 +1,37 @@
+
+> pomodoro@0.61.13 build
+> tsc -b && vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+Found 1 warning while optimizing generated CSS:
+
+[2m│   }[22m
+[2m│   .rounded-\[var\(--radius-\*\)\] {[22m
+[2m│[22m     border-radius: var(--radius-*);
+[2m┆[22m                                 [33m[2m^--[22m Unexpected token Delim('*')[39m
+[2m┆[22m
+[2m│   }[22m
+[2m│   .rounded-\[var\(--radius-card\)\] {[22m
+
+✓ 131 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                  0.13 kB
+dist/manifest.webmanifest           0.47 kB
+dist/index.html                     1.63 kB │ gzip:   0.76 kB
+dist/assets/index-DvsmabNg.css     71.40 kB │ gzip:  13.77 kB
+dist/assets/index-BZd7xbIs.js   1,003.13 kB │ gzip: 294.77 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 4.43s
+
+PWA v1.2.0
+mode      generateSW
+precache  68 entries (23944.34 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-db9f0182.js

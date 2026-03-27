@@ -279,6 +279,7 @@ export function FarmPixiPhase0Prototype() {
   useEffect(() => {
     let disposed = false;
     let resizeObserver: ResizeObserver | null = null;
+    const mountElement = mountRef.current;
 
     const boot = async () => {
       try {
@@ -289,7 +290,7 @@ export function FarmPixiPhase0Prototype() {
 
         if (disposed) return;
 
-        const host = mountRef.current;
+        const host = mountElement;
         if (!host) return;
 
         const width = Math.max(320, host.clientWidth || 320);
@@ -413,8 +414,8 @@ export function FarmPixiPhase0Prototype() {
       appRef.current = null;
       nodesRef.current = [];
       requestRenderRef.current = null;
-      if (mountRef.current) {
-        mountRef.current.innerHTML = '';
+      if (mountElement) {
+        mountElement.innerHTML = '';
       }
     };
   }, []);

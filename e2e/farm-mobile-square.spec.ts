@@ -150,10 +150,7 @@ test.describe('AC5: Theme switching', () => {
       const slots = grid.locator('> div');
       await expect(slots).toHaveCount(7);
 
-      // No error overlays or blank screens
-      const errorOverlay = page.locator('[class*="error"]');
-      const errorCount = await errorOverlay.count();
-      // Some elements may have "error" in class for styling, just ensure grid is visible
+      // Some elements may have "error" in class for styling, so only assert the grid stays visible.
       expect(await grid.isVisible()).toBe(true);
     });
   }

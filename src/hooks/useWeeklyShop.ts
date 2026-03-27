@@ -23,6 +23,7 @@ import {
 
 const WEEKLY_SHOP_KEY = 'watermelon-weekly-shop';
 const AUTO_REFRESH_CHECK_INTERVAL_MS = 60 * 1000;
+const INITIAL_WEEKLY_SHOP = createWeeklyShop(Date.now());
 
 interface UseWeeklyShopOptions {
   spendCoins: (amount: number) => boolean;
@@ -149,7 +150,7 @@ export function useWeeklyShop(options: UseWeeklyShopOptions) {
   const { spendCoins, onGrantItem } = options;
   const [weeklyShop, setWeeklyShop] = useLocalStorage<WeeklyShop>(
     WEEKLY_SHOP_KEY,
-    createWeeklyShop(Date.now()),
+    INITIAL_WEEKLY_SHOP,
     migrateWeeklyShop,
   );
 

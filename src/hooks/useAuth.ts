@@ -35,34 +35,37 @@ export function useAuth() {
   }, [])
 
   const scheduleRefresh = useCallback((token: string) => {
-    // Parse JWT to get exp
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-      const expiresIn = payload.exp * 1000 - Date.now()
-      // Refresh 1 minute before expiry
-      const refreshIn = Math.max(expiresIn - 60_000, 10_000)
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
-      refreshTimerRef.current = setTimeout(async () => {
-        try {
-          const res = await fetch(`${AUTH_BASE}/auth/refresh`, {
-            method: 'POST',
-            credentials: 'include',
-          })
-          if (res.ok) {
-            const data = await res.json() as { accessToken: string }
-            localStorage.setItem(TOKEN_KEY, data.accessToken)
-            scheduleRefresh(data.accessToken)
-          } else {
+    function scheduleTokenRefresh(nextToken: string) {
+      try {
+        const payload = JSON.parse(atob(nextToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+        const expiresIn = payload.exp * 1000 - Date.now()
+        // Refresh 1 minute before expiry
+        const refreshIn = Math.max(expiresIn - 60_000, 10_000)
+        if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
+        refreshTimerRef.current = setTimeout(async () => {
+          try {
+            const res = await fetch(`${AUTH_BASE}/auth/refresh`, {
+              method: 'POST',
+              credentials: 'include',
+            })
+            if (res.ok) {
+              const data = await res.json() as { accessToken: string }
+              localStorage.setItem(TOKEN_KEY, data.accessToken)
+              scheduleTokenRefresh(data.accessToken)
+            } else {
+              clearAuth()
+            }
+          } catch {
             clearAuth()
           }
-        } catch {
-          clearAuth()
-        }
-      }, refreshIn)
-    } catch {
-      // Invalid token format
-      clearAuth()
+        }, refreshIn)
+      } catch {
+        // Invalid token format
+        clearAuth()
+      }
     }
+
+    scheduleTokenRefresh(token)
   }, [clearAuth])
 
   const fetchMe = useCallback(async (token: string): Promise<User | null> => {

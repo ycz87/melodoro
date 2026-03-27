@@ -1,12 +1,17 @@
 {
   "name": "pomodoro",
   "private": true,
-  "version": "0.61.5",
+  "version": "0.61.13",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "guard:pr": "npm run guard:pr:lint && npm run guard:pr:build && npm run guard:pr:diff-check && npm run guard:pr:patch-check",
+    "guard:pr:lint": "npm run lint",
+    "guard:pr:build": "npm run build",
+    "guard:pr:diff-check": "git diff --check",
+    "guard:pr:patch-check": "node scripts/pr-diff-check.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "compare:e001-t02": "node scripts/e001-t02-generate-triptych-compare.mjs --task-id=E-001-T02",

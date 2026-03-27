@@ -1,5 +1,5 @@
 import type { Locale } from './i18n';
-import { detectLocale } from './i18n';
+import { detectLocale, normalizeLocale } from './i18n';
 import type { AlertSoundId } from './audio';
 import type { AmbienceMixerConfig } from './audio';
 import { defaultMixerConfig } from './audio';
@@ -153,19 +153,10 @@ export function migrateSettings(raw: unknown): PomodoroSettings {
   if (typeof s.autoStartWork === 'boolean') result.autoStartWork = s.autoStartWork;
   if (typeof s.theme === 'string' && s.theme in THEMES) result.theme = s.theme as ThemeId;
   if (typeof s.language === 'string') {
-    const normalizedLanguage = s.language.toLowerCase();
-    if (
-      normalizedLanguage === 'zh'
-      || normalizedLanguage === 'en'
-      || normalizedLanguage === 'ja'
-      || normalizedLanguage === 'ko'
-      || normalizedLanguage === 'es'
-      || normalizedLanguage === 'fr'
-      || normalizedLanguage === 'de'
-      || normalizedLanguage === 'ru'
-    ) {
-      result.language = normalizedLanguage as Locale;
-    } else if (normalizedLanguage === 'pt') {
+    const normalizedLanguage = normalizeLocale(s.language);
+    if (normalizedLanguage) {
+      result.language = normalizedLanguage;
+    } else if (s.language.toLowerCase() === 'pt') {
       result.language = 'en';
     }
   }

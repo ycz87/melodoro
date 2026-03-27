@@ -166,17 +166,31 @@ export function GeneLabPage({
     return counts;
   }, [galaxyGroups]);
 
-  useEffect(() => {
-    if (selectedGalaxyId === null) return;
-    if ((fragmentCounts.get(selectedGalaxyId) ?? 0) > 0) return;
-    setSelectedGalaxyId(null);
-  }, [fragmentCounts, selectedGalaxyId]);
+  const effectiveSelectedGalaxyId = useMemo(() => {
+    if (selectedGalaxyId === null) return null;
+    return (fragmentCounts.get(selectedGalaxyId) ?? 0) > 0 ? selectedGalaxyId : null;
+  }, [selectedGalaxyId, fragmentCounts]);
 
-  useEffect(() => {
-    if (selectedQuality === null) return;
-    if (seeds[selectedQuality] > 0) return;
-    setSelectedQuality(null);
-  }, [seeds, selectedQuality]);
+  const effectiveSelectedQuality = useMemo(() => {
+    if (selectedQuality === null) return null;
+    return seeds[selectedQuality] > 0 ? selectedQuality : null;
+  }, [selectedQuality, seeds]);
+
+  const effectiveSelectedFusionGalaxy1 = useMemo(() => {
+    if (selectedFusionGalaxy1 === null) return null;
+    return bestFragmentByGalaxy.has(selectedFusionGalaxy1) ? selectedFusionGalaxy1 : null;
+  }, [selectedFusionGalaxy1, bestFragmentByGalaxy]);
+
+  const effectiveSelectedFusionGalaxy2 = useMemo(() => {
+    if (selectedFusionGalaxy2 === null) return null;
+    if (!bestFragmentByGalaxy.has(selectedFusionGalaxy2)) return null;
+    if (selectedFusionGalaxy2 === effectiveSelectedFusionGalaxy1) return null;
+    return selectedFusionGalaxy2;
+  }, [selectedFusionGalaxy2, effectiveSelectedFusionGalaxy1, bestFragmentByGalaxy]);
+
+  const modifierCount = items['gene-modifier'] ?? 0;
+  const hasModifier = modifierCount > 0;
+  const effectiveUseModifier = useModifier && hasModifier;
 
   useEffect(() => {
     return () => {
@@ -188,34 +202,19 @@ export function GeneLabPage({
     };
   }, []);
 
-  useEffect(() => {
-    if (selectedFusionGalaxy1 === null) return;
-    if (bestFragmentByGalaxy.has(selectedFusionGalaxy1)) return;
-    setSelectedFusionGalaxy1(null);
-  }, [bestFragmentByGalaxy, selectedFusionGalaxy1]);
-
-  useEffect(() => {
-    if (selectedFusionGalaxy2 === null) return;
-    if (!bestFragmentByGalaxy.has(selectedFusionGalaxy2) || selectedFusionGalaxy2 === selectedFusionGalaxy1) {
-      setSelectedFusionGalaxy2(null);
-    }
-  }, [bestFragmentByGalaxy, selectedFusionGalaxy1, selectedFusionGalaxy2]);
-
-  const selectedGalaxyFragments = selectedGalaxyId ? (fragmentCounts.get(selectedGalaxyId) ?? 0) : 0;
-  const selectedQualityCount = selectedQuality ? seeds[selectedQuality] : 0;
+  const selectedGalaxyFragments = effectiveSelectedGalaxyId ? (fragmentCounts.get(effectiveSelectedGalaxyId) ?? 0) : 0;
+  const selectedQualityCount = effectiveSelectedQuality ? seeds[effectiveSelectedQuality] : 0;
   const hasFragments = totalFragments > 0;
   const hasSeeds = totalSeeds > 0;
-  const modifierCount = items['gene-modifier'] ?? 0;
-  const hasModifier = modifierCount > 0;
-  const selectedFusionFragment1 = selectedFusionGalaxy1 ? (bestFragmentByGalaxy.get(selectedFusionGalaxy1) ?? null) : null;
-  const selectedFusionFragment2 = selectedFusionGalaxy2 ? (bestFragmentByGalaxy.get(selectedFusionGalaxy2) ?? null) : null;
+  const selectedFusionFragment1 = effectiveSelectedFusionGalaxy1 ? (bestFragmentByGalaxy.get(effectiveSelectedFusionGalaxy1) ?? null) : null;
+  const selectedFusionFragment2 = effectiveSelectedFusionGalaxy2 ? (bestFragmentByGalaxy.get(effectiveSelectedFusionGalaxy2) ?? null) : null;
   const baseFusionRate = selectedFusionFragment1 && selectedFusionFragment2
     ? fusionSuccessRate(selectedFusionFragment1.rarity, selectedFusionFragment2.rarity)
     : null;
-  const fusionRate = baseFusionRate === null ? null : Math.min(1, baseFusionRate + (useModifier ? 0.2 : 0));
+  const fusionRate = baseFusionRate === null ? null : Math.min(1, baseFusionRate + (effectiveUseModifier ? 0.2 : 0));
   const canFusion = selectedFusionFragment1 !== null && selectedFusionFragment2 !== null;
-  const canInject = selectedGalaxyId !== null
-    && selectedQuality !== null
+  const canInject = effectiveSelectedGalaxyId !== null
+    && effectiveSelectedQuality !== null
     && selectedGalaxyFragments > 0
     && selectedQualityCount > 0;
   const fiveElementGeneCounts = useMemo(() => {
@@ -259,14 +258,9 @@ export function GeneLabPage({
   const blackHoleReadyCount = hybridPairSet.size;
   const blackHoleFusionReady = HYBRID_GALAXY_PAIRS.every((pair) => hybridPairSet.has(pair));
 
-  useEffect(() => {
-    if (hasModifier) return;
-    setUseModifier(false);
-  }, [hasModifier]);
-
   const handleInject = () => {
-    if (!canInject || selectedGalaxyId === null || selectedQuality === null) return;
-    onInject(selectedGalaxyId, selectedQuality);
+    if (!canInject || effectiveSelectedGalaxyId === null || effectiveSelectedQuality === null) return;
+    onInject(effectiveSelectedGalaxyId, effectiveSelectedQuality);
     setShowInjectToast(true);
     if (injectToastTimerRef.current !== null) {
       window.clearTimeout(injectToastTimerRef.current);
@@ -298,7 +292,7 @@ export function GeneLabPage({
 
   const handleFusion = () => {
     if (!canFusion || !selectedFusionFragment1 || !selectedFusionFragment2) return;
-    const result = onFusion(selectedFusionFragment1.id, selectedFusionFragment2.id, useModifier);
+    const result = onFusion(selectedFusionFragment1.id, selectedFusionFragment2.id, effectiveUseModifier);
     if (!result) return;
     setSelectedFusionGalaxy1(null);
     setSelectedFusionGalaxy2(null);
@@ -487,7 +481,7 @@ export function GeneLabPage({
           ) : (
             <div className="flex flex-wrap gap-2">
               {galaxyGroups.map((group) => {
-                const isSelected = selectedGalaxyId === group.galaxyId;
+                const isSelected = effectiveSelectedGalaxyId === group.galaxyId;
                 return (
                   <button
                     key={`inject-${group.galaxyId}`}
@@ -646,8 +640,8 @@ export function GeneLabPage({
           ) : (
             <div className="flex flex-wrap gap-2">
               {fusionGalaxyGroups.map((group) => {
-                const disabled = selectedFusionGalaxy1 === group.galaxyId;
-                const isSelected = selectedFusionGalaxy2 === group.galaxyId;
+                const disabled = effectiveSelectedFusionGalaxy1 === group.galaxyId;
+                const isSelected = effectiveSelectedFusionGalaxy2 === group.galaxyId;
                 return (
                   <button
                     key={`fusion-second-${group.galaxyId}`}
@@ -692,7 +686,7 @@ export function GeneLabPage({
         <label className="mb-3 flex items-center gap-2">
           <input
             type="checkbox"
-            checked={useModifier}
+            checked={effectiveUseModifier}
             disabled={!hasModifier}
             onChange={(event) => setUseModifier(event.target.checked)}
             className="h-4 w-4"

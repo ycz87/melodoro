@@ -1,0 +1,30 @@
+{
+  "runId": "20260308-081251Z",
+  "checks": [
+    {
+      "name": "first-harvest-bonus",
+      "status": "pass",
+      "detail": "Manual browser verification: coin balance 20 -> 28, plot0 mature -> empty, collectionCount 0 -> 1."
+    },
+    {
+      "name": "repeat-harvest-no-auto-sell",
+      "status": "pass",
+      "detail": "Manual browser verification: repeated harvest keeps coin balance at 20, plot0 mature -> empty, jade-stripe count 1 -> 2."
+    },
+    {
+      "name": "refresh-persistence",
+      "status": "pass",
+      "detail": "Growing plot preserves state, varietyId and progress after refresh."
+    },
+    {
+      "name": "no-seed-boundary",
+      "status": "pass",
+      "detail": "After rework, clicking an empty plot with zero seeds opens PlantModal instead of redirecting to Warehouse; all three seed options display ×0 and remain disabled. Proof: no-seed-modal-fix.png"
+    },
+    {
+      "name": "mobile-regression-smoke",
+      "status": "pass",
+      "detail": "390x844 first-screen farm composition remains aligned with Issue #3 baseline."
+    }
+  ]
+}

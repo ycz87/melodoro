@@ -73,6 +73,28 @@ const STAGE_CONFIG: Record<GrowthStage, StageConfig> = {
   },
 };
 
+function hashSeed(seed: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function createSeededRandom(seed: string) {
+  let state = hashSeed(seed) || 1;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function pickSeeded<T>(items: readonly T[], seed: string): T {
+  const random = createSeededRandom(seed);
+  return items[Math.floor(random() * items.length)]!;
+}
+
 // ─── Particle types ───
 type ParticleKind = 'dot' | 'confetti' | 'firework' | 'leaf' | 'petal';
 
@@ -85,13 +107,18 @@ interface Particle {
   angle: number;
   speed: number;
   rotation: number;
+  spin: number;
   kind: ParticleKind;
   delay: number;
 }
 
-function generateParticles(stage: GrowthStage, config: StageConfig): Particle[] {
+function generateParticles(stage: GrowthStage, config: StageConfig, seed: string): Particle[] {
   const particles: Particle[] = [];
+  const random = createSeededRandom(`${seed}-${stage}`);
   let id = 0;
+
+  const pickColor = (colors: readonly string[]) => colors[Math.floor(random() * colors.length)]!;
+  const nextSpin = () => 360 + random() * 360;
 
   // Base particles (dots / rising for seed, falling for others)
   const baseCount = stage === 'seed' ? config.particleCount
@@ -101,35 +128,38 @@ function generateParticles(stage: GrowthStage, config: StageConfig): Particle[] 
     const isSeed = stage === 'seed';
     particles.push({
       id: id++,
-      x: 30 + Math.random() * 40,
-      y: isSeed ? 70 + Math.random() * 20 : 10 + Math.random() * 30,
-      color: config.colors[Math.floor(Math.random() * config.colors.length)],
-      size: 3 + Math.random() * 5,
+      x: 30 + random() * 40,
+      y: isSeed ? 70 + random() * 20 : 10 + random() * 30,
+      color: pickColor(config.colors),
+      size: 3 + random() * 5,
       angle: isSeed
-        ? -Math.PI / 2 + (Math.random() - 0.5) * 0.8
-        : Math.PI / 2 + (Math.random() - 0.5) * 1.2,
-      speed: isSeed ? 40 + Math.random() * 60 : 50 + Math.random() * 80,
-      rotation: Math.random() * 360,
+        ? -Math.PI / 2 + (random() - 0.5) * 0.8
+        : Math.PI / 2 + (random() - 0.5) * 1.2,
+      speed: isSeed ? 40 + random() * 60 : 50 + random() * 80,
+      rotation: random() * 360,
+      spin: nextSpin(),
       kind: 'dot',
-      delay: Math.random() * 0.6,
+      delay: random() * 0.6,
     });
   }
 
   // Leaves (sprout+)
   if (stage === 'sprout' || stage === 'bloom') {
     const leafCount = stage === 'sprout' ? 8 : 5;
+    const leafColors = ['#4ade80', '#86efac', '#22c55e'] as const;
     for (let i = 0; i < leafCount; i++) {
       particles.push({
         id: id++,
-        x: 10 + Math.random() * 80,
-        y: -5 - Math.random() * 15,
-        color: ['#4ade80', '#86efac', '#22c55e'][Math.floor(Math.random() * 3)],
-        size: 8 + Math.random() * 6,
-        angle: Math.PI / 2 + (Math.random() - 0.5) * 0.6,
-        speed: 80 + Math.random() * 60,
-        rotation: Math.random() * 360,
+        x: 10 + random() * 80,
+        y: -5 - random() * 15,
+        color: pickColor(leafColors),
+        size: 8 + random() * 6,
+        angle: Math.PI / 2 + (random() - 0.5) * 0.6,
+        speed: 80 + random() * 60,
+        rotation: random() * 360,
+        spin: nextSpin(),
         kind: 'leaf',
-        delay: Math.random() * 1.0,
+        delay: random() * 1.0,
       });
     }
   }
@@ -137,18 +167,20 @@ function generateParticles(stage: GrowthStage, config: StageConfig): Particle[] 
   // Petals (bloom+)
   if (stage === 'bloom' || stage === 'green') {
     const petalCount = stage === 'bloom' ? 10 : 6;
+    const petalColors = ['#f472b6', '#fbbf24', '#fb923c', '#fda4af'] as const;
     for (let i = 0; i < petalCount; i++) {
       particles.push({
         id: id++,
-        x: 10 + Math.random() * 80,
-        y: -5 - Math.random() * 15,
-        color: ['#f472b6', '#fbbf24', '#fb923c', '#fda4af'][Math.floor(Math.random() * 4)],
-        size: 6 + Math.random() * 5,
-        angle: Math.PI / 2 + (Math.random() - 0.5) * 0.8,
-        speed: 60 + Math.random() * 70,
-        rotation: Math.random() * 360,
+        x: 10 + random() * 80,
+        y: -5 - random() * 15,
+        color: pickColor(petalColors),
+        size: 6 + random() * 5,
+        angle: Math.PI / 2 + (random() - 0.5) * 0.8,
+        speed: 60 + random() * 70,
+        rotation: random() * 360,
+        spin: nextSpin(),
         kind: 'petal',
-        delay: Math.random() * 1.2,
+        delay: random() * 1.2,
       });
     }
   }
@@ -159,15 +191,16 @@ function generateParticles(stage: GrowthStage, config: StageConfig): Particle[] 
     for (let i = 0; i < confettiCount; i++) {
       particles.push({
         id: id++,
-        x: 10 + Math.random() * 80,
-        y: -5 - Math.random() * 20,
-        color: config.colors[Math.floor(Math.random() * config.colors.length)],
-        size: 5 + Math.random() * 4,
-        angle: Math.PI / 2 + (Math.random() - 0.5) * 1.0,
-        speed: 70 + Math.random() * 90,
-        rotation: Math.random() * 360,
+        x: 10 + random() * 80,
+        y: -5 - random() * 20,
+        color: pickColor(config.colors),
+        size: 5 + random() * 4,
+        angle: Math.PI / 2 + (random() - 0.5) * 1.0,
+        speed: 70 + random() * 90,
+        rotation: random() * 360,
+        spin: nextSpin(),
         kind: 'confetti',
-        delay: Math.random() * 1.5,
+        delay: random() * 1.5,
       });
     }
   }
@@ -178,15 +211,16 @@ function generateParticles(stage: GrowthStage, config: StageConfig): Particle[] 
     for (let i = 0; i < fwCount; i++) {
       particles.push({
         id: id++,
-        x: 20 + Math.random() * 60,
-        y: 20 + Math.random() * 40,
-        color: config.colors[Math.floor(Math.random() * config.colors.length)],
-        size: 3 + Math.random() * 3,
-        angle: (Math.PI * 2 * i) / fwCount + (Math.random() - 0.5) * 0.5,
-        speed: 50 + Math.random() * 70,
-        rotation: Math.random() * 360,
+        x: 20 + random() * 60,
+        y: 20 + random() * 40,
+        color: pickColor(config.colors),
+        size: 3 + random() * 3,
+        angle: (Math.PI * 2 * i) / fwCount + (random() - 0.5) * 0.5,
+        speed: 50 + random() * 70,
+        rotation: random() * 360,
+        spin: nextSpin(),
         kind: 'firework',
-        delay: 0.3 + Math.random() * 1.0,
+        delay: 0.3 + random() * 1.0,
       });
     }
   }
@@ -198,22 +232,83 @@ function generateParticles(stage: GrowthStage, config: StageConfig): Particle[] 
 type SpecialEffect = 'firework-burst' | 'confetti-storm' | 'melon-drop' | 'melon-roll';
 const SPECIAL_EFFECTS: SpecialEffect[] = ['firework-burst', 'confetti-storm', 'melon-drop', 'melon-roll'];
 
-function SpecialEffectLayer({ effect }: { effect: SpecialEffect }) {
+interface FireworkBurst {
+  id: number;
+  left: number;
+  top: number;
+  delay: number;
+  sparks: Array<{
+    id: number;
+    color: string;
+    angle: number;
+    dist: number;
+    delay: number;
+  }>;
+}
+
+interface StormConfettiPiece {
+  id: number;
+  left: number;
+  width: number;
+  height: number;
+  color: string;
+  delay: number;
+  duration: number;
+}
+
+function createFireworkBursts(seed: string): FireworkBurst[] {
+  const random = createSeededRandom(`${seed}-firework-burst`);
+  const colors = ['#fbbf24', '#f472b6', '#a78bfa', '#34d399', '#ef4444', '#3b82f6', '#f59e0b', '#ec4899'] as const;
+
+  return Array.from({ length: 5 }, (_, i) => ({
+    id: i,
+    left: 15 + i * 17,
+    top: 20 + (i % 3) * 15,
+    delay: 0.3 + i * 0.4,
+    sparks: Array.from({ length: 8 }, (_, j) => ({
+      id: j,
+      color: colors[j]!,
+      angle: j * 45,
+      dist: 30 + random() * 30,
+      delay: 0.3 + i * 0.4,
+    })),
+  }));
+}
+
+function createStormConfetti(seed: string): StormConfettiPiece[] {
+  const random = createSeededRandom(`${seed}-confetti-storm`);
+  const colors = ['#fbbf24', '#f472b6', '#a78bfa', '#34d399', '#ef4444', '#3b82f6'] as const;
+
+  return Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: random() * 100,
+    width: 4 + random() * 5,
+    height: 3 + random() * 3,
+    color: colors[i % colors.length]!,
+    delay: random() * 2,
+    duration: 1.5 + random() * 1.5,
+  }));
+}
+
+function SpecialEffectLayer({ effect, seed }: { effect: SpecialEffect; seed: string }) {
+  const bursts = createFireworkBursts(seed);
+  const confetti = createStormConfetti(seed);
+
   switch (effect) {
     case 'firework-burst':
       return (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className="absolute celeb-firework-burst" style={{
-              left: `${15 + i * 17}%`, top: `${20 + (i % 3) * 15}%`,
-              animationDelay: `${0.3 + i * 0.4}s`,
+          {bursts.map((burst) => (
+            <div key={burst.id} className="absolute celeb-firework-burst" style={{
+              left: `${burst.left}%`, top: `${burst.top}%`,
+              animationDelay: `${burst.delay}s`,
             }}>
-              {Array.from({ length: 8 }, (_, j) => (
-                <div key={j} className="absolute w-1.5 h-1.5 rounded-full celeb-fw-spark" style={{
-                  backgroundColor: ['#fbbf24', '#f472b6', '#a78bfa', '#34d399', '#ef4444', '#3b82f6', '#f59e0b', '#ec4899'][j],
-                  '--fw-angle': `${j * 45}deg`,
-                  '--fw-dist': `${30 + Math.random() * 30}px`,
-                  animationDelay: `${0.3 + i * 0.4}s`,
+              {burst.sparks.map((spark) => (
+                <div key={spark.id} className="absolute w-1.5 h-1.5 rounded-full celeb-fw-spark" style={{
+                  backgroundColor: spark.color,
+                  '--fw-angle': `${spark.angle}deg`,
+                  '--fw-dist': `${spark.dist}px`,
+                  animationDelay: `${spark.delay}s`,
                 } as React.CSSProperties} />
               ))}
             </div>
@@ -223,16 +318,16 @@ function SpecialEffectLayer({ effect }: { effect: SpecialEffect }) {
     case 'confetti-storm':
       return (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 30 }, (_, i) => (
-            <div key={i} className="absolute celeb-confetti-fall" style={{
-              left: `${Math.random() * 100}%`,
+          {confetti.map((piece) => (
+            <div key={piece.id} className="absolute celeb-confetti-fall" style={{
+              left: `${piece.left}%`,
               top: '-5%',
-              width: 4 + Math.random() * 5,
-              height: 3 + Math.random() * 3,
-              backgroundColor: ['#fbbf24', '#f472b6', '#a78bfa', '#34d399', '#ef4444', '#3b82f6'][i % 6],
+              width: piece.width,
+              height: piece.height,
+              backgroundColor: piece.color,
               borderRadius: '1px',
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${1.5 + Math.random() * 1.5}s`,
+              animationDelay: `${piece.delay}s`,
+              animationDuration: `${piece.duration}s`,
             }} />
           ))}
         </div>
@@ -407,7 +502,7 @@ function ParticleLayer({ particles, stage }: { particles: Particle[]; stage: Gro
               backgroundColor: p.color,
               '--tx': `${tx}px`,
               '--ty': `${ty}px`,
-              '--rot': `${p.rotation + 360 + Math.random() * 360}deg`,
+              '--rot': `${p.rotation + p.spin}deg`,
               animationDelay: `${p.delay}s`,
               ...shape,
             } as React.CSSProperties}
@@ -424,9 +519,11 @@ export function CelebrationOverlay({ stage, isRipe, onComplete }: CelebrationOve
   const [phase, setPhase] = useState<'enter' | 'show' | 'exit'>('enter');
   const theme = useTheme();
   const t = useI18n();
+  // Keep one random seed per overlay mount so a single celebration is stable, but the next trigger re-rolls.
+  const [instanceNonce] = useState(() => Math.random().toString(36).slice(2));
   const config = STAGE_CONFIG[stage];
 
-  // Pick random text from per-stage pool
+  // Pick deterministic text per overlay instance so it stays stable across re-renders.
   const text = useMemo(() => {
     const pools: Record<GrowthStage, readonly string[]> = {
       seed: t.celebrateSeed,
@@ -436,17 +533,20 @@ export function CelebrationOverlay({ stage, isRipe, onComplete }: CelebrationOve
       ripe: t.celebrateRipe,
       legendary: t.celebrateLegendary,
     };
-    const pool = pools[stage];
-    return pool[Math.floor(Math.random() * pool.length)];
-  }, [stage, t]);
+    return pickSeeded(pools[stage], `${instanceNonce}-${stage}-text`);
+  }, [instanceNonce, stage, t]);
 
-  // Random special effect for ripe
+  const specialEffectSeed = `${instanceNonce}-${stage}-effect`;
+
   const specialEffect = useMemo(() => {
     if (!config.hasSpecialEffect) return null;
-    return SPECIAL_EFFECTS[Math.floor(Math.random() * SPECIAL_EFFECTS.length)];
-  }, [config.hasSpecialEffect]);
+    return pickSeeded(SPECIAL_EFFECTS, specialEffectSeed);
+  }, [config.hasSpecialEffect, specialEffectSeed]);
 
-  const particles = useMemo(() => generateParticles(stage, config), [stage, config]);
+  const particles = useMemo(
+    () => generateParticles(stage, config, `${instanceNonce}-particles`),
+    [instanceNonce, stage, config],
+  );
 
   // Click to dismiss
   const dismiss = useCallback(() => {
@@ -490,7 +590,7 @@ export function CelebrationOverlay({ stage, isRipe, onComplete }: CelebrationOve
       <ParticleLayer particles={particles} stage={stage} />
 
       {/* Layer 3b: Special effect (ripe only) */}
-      {specialEffect && <SpecialEffectLayer effect={specialEffect} />}
+      {specialEffect && <SpecialEffectLayer effect={specialEffect} seed={specialEffectSeed} />}
 
       {/* Layer 4: Text */}
       <div

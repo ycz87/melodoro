@@ -11,6 +11,12 @@ type FarmStorage = {
   collection: Array<{ varietyId: string }>;
 };
 
+type DebugToolbarWindow = Window & typeof globalThis & {
+  __e2eNavigationType?: string;
+  __e2eStorageLengthAtInit?: number;
+  __e2eStorageKeysAtInit?: string[];
+};
+
 async function dismissGuideIfPresent(page: import('@playwright/test').Page) {
   const getStarted = page.locator('button', { hasText: 'Get Started' });
   if (await getStarted.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -121,9 +127,10 @@ test.describe('Debug toolbar E2E', () => {
 
   test('reset all data clears localStorage and triggers a real page reload', async ({ page }) => {
     await page.addInitScript(() => {
-      (window as any).__e2eNavigationType = performance.getEntriesByType('navigation')[0]?.type ?? 'unknown';
-      (window as any).__e2eStorageLengthAtInit = localStorage.length;
-      (window as any).__e2eStorageKeysAtInit = Object.keys(localStorage);
+      const debugWindow = window as DebugToolbarWindow;
+      debugWindow.__e2eNavigationType = performance.getEntriesByType('navigation')[0]?.type ?? 'unknown';
+      debugWindow.__e2eStorageLengthAtInit = localStorage.length;
+      debugWindow.__e2eStorageKeysAtInit = Object.keys(localStorage);
     });
 
     await activateDebugMode(page);
@@ -137,14 +144,26 @@ test.describe('Debug toolbar E2E', () => {
     await expect.poll(async () => page.evaluate(() => localStorage.length)).toBeGreaterThan(0);
 
     await Promise.all([
-      page.waitForFunction(() => (window as any).__e2eNavigationType === 'reload'),
+      page.waitForFunction(() => {
+        const debugWindow = window as DebugToolbarWindow;
+        return debugWindow.__e2eNavigationType === 'reload';
+      }),
       page.getByRole('button', { name: '🔄 重置所有数据' }).click(),
     ]);
 
     await page.waitForLoadState('domcontentloaded');
 
-    await expect.poll(async () => page.evaluate(() => (window as any).__e2eNavigationType)).toBe('reload');
-    await expect.poll(async () => page.evaluate(() => (window as any).__e2eStorageLengthAtInit)).toBe(0);
-    await expect.poll(async () => page.evaluate(() => (window as any).__e2eStorageKeysAtInit.length)).toBe(0);
+    await expect.poll(async () => page.evaluate(() => {
+      const debugWindow = window as DebugToolbarWindow;
+      return debugWindow.__e2eNavigationType;
+    })).toBe('reload');
+    await expect.poll(async () => page.evaluate(() => {
+      const debugWindow = window as DebugToolbarWindow;
+      return debugWindow.__e2eStorageLengthAtInit;
+    })).toBe(0);
+    await expect.poll(async () => page.evaluate(() => {
+      const debugWindow = window as DebugToolbarWindow;
+      return debugWindow.__e2eStorageKeysAtInit?.length ?? -1;
+    })).toBe(0);
   });
 });

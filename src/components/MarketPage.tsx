@@ -7,7 +7,8 @@
 import { useMemo, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import type { Messages } from '../i18n/types';
-import { VARIETY_DEFS } from '../types/farm';
+import { getCollectedUniqueVarietyCount } from '../farm/galaxy';
+import { PLOT_MILESTONES, VARIETY_DEFS } from '../types/farm';
 import type { CollectedVariety, VarietyId } from '../types/farm';
 import type { ShopItemDef, ShopItemId, WeeklyShop } from '../types/market';
 import { SHOP_ITEMS, PLOT_PRICES } from '../types/market';
@@ -86,6 +87,8 @@ export function MarketPage(props: MarketPageProps) {
     return sellableVarieties.find((item) => item.key === pendingSellKey) ?? null;
   }, [pendingSellKey, sellableVarieties]);
 
+  const collectedUniqueCount = useMemo(() => getCollectedUniqueVarietyCount(collection), [collection]);
+
   const handleConfirmSell = () => {
     if (!pendingVariety) {
       setPendingSellKey(null);
@@ -96,11 +99,19 @@ export function MarketPage(props: MarketPageProps) {
   };
 
   const buyablePlots = useMemo(() => {
+    const milestoneByTotalPlots = new Map(
+      PLOT_MILESTONES.map((milestone) => [milestone.totalPlots, milestone.requiredVarieties]),
+    );
+
     return Object.entries(PLOT_PRICES)
-      .map(([index, price]) => ({
-        plotIndex: Number(index),
-        price,
-      }))
+      .map(([index, price]) => {
+        const plotIndex = Number(index);
+        return {
+          plotIndex,
+          price,
+          freeUnlockRequiredVarieties: milestoneByTotalPlots.get(plotIndex + 1) ?? null,
+        };
+      })
       .sort((a, b) => a.plotIndex - b.plotIndex);
   }, []);
 
@@ -122,7 +133,7 @@ export function MarketPage(props: MarketPageProps) {
     }
 
     const { plotIndex, price } = pendingPurchase;
-    if (balance < price || unlockedPlotCount > plotIndex) {
+    if (balance < price || plotIndex !== unlockedPlotCount) {
       setPendingPurchase(null);
       return;
     }
@@ -205,15 +216,27 @@ export function MarketPage(props: MarketPageProps) {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {buyablePlots.map((plot) => {
-                const unlocked = unlockedPlotCount > plot.plotIndex;
+                const freeUnlockRequiredVarieties = plot.freeUnlockRequiredVarieties;
+                const milestoneUnlocked = freeUnlockRequiredVarieties !== null
+                  && collectedUniqueCount >= freeUnlockRequiredVarieties;
+                const unlocked = unlockedPlotCount > plot.plotIndex || milestoneUnlocked;
+                const isNextUnlock = !unlocked && unlockedPlotCount === plot.plotIndex;
                 const affordable = balance >= plot.price;
-                const disabled = unlocked || !affordable;
+                const disabled = unlocked || !isNextUnlock || !affordable;
+                const description = unlocked
+                  ? messages.marketPlotUnlocked
+                  : freeUnlockRequiredVarieties === null
+                    ? messages.marketPlotSection
+                    : messages.marketPlotFreeUnlockHint(
+                      freeUnlockRequiredVarieties,
+                      Math.min(collectedUniqueCount, freeUnlockRequiredVarieties),
+                    );
                 return (
                   <MarketItemCard
                     key={plot.plotIndex}
                     icon="🧱"
                     name={messages.marketPlotName(plot.plotIndex)}
-                    description={unlocked ? messages.marketPlotUnlocked : messages.marketPlotSection}
+                    description={description}
                     priceText={unlocked ? messages.marketPlotUnlocked : `${plot.price} 💰`}
                     actionText={unlocked ? messages.marketPlotUnlocked : messages.marketBuyConfirmButton}
                     disabled={disabled}

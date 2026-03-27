@@ -1,7 +1,7 @@
 /**
  * CodeInput — 6-digit verification code input with individual boxes
  */
-import { useRef, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import type { KeyboardEvent, ClipboardEvent } from 'react'
 import { useTheme } from '../hooks/useTheme'
 
@@ -14,6 +14,7 @@ interface CodeInputProps {
 export function CodeInput({ value, onChange, disabled }: CodeInputProps) {
   const theme = useTheme()
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
   const digits = value.padEnd(6, '').slice(0, 6).split('')
 
   const focusInput = useCallback((index: number) => {
@@ -74,11 +75,15 @@ export function CodeInput({ value, onChange, disabled }: CodeInputProps) {
             backgroundColor: theme.inputBg,
             color: theme.text,
             borderColor: digits[i]?.trim() ? theme.accent : theme.border,
-            boxShadow: document.activeElement === inputRefs.current[i]
+            boxShadow: focusedIndex === i
               ? `0 0 0 2px ${theme.accent}40`
               : 'none',
           }}
-          onFocus={(e) => e.target.select()}
+          onFocus={(e) => {
+            setFocusedIndex(i)
+            e.target.select()
+          }}
+          onBlur={() => setFocusedIndex((current) => (current === i ? null : current))}
           onInput={(e) => {
             const val = (e.target as HTMLInputElement).value
             if (val) handleInput(i, val.slice(-1))

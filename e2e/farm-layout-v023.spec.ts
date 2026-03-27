@@ -148,7 +148,7 @@ test('AC7: farm grid uses transform-style: flat', async ({ page }) => {
 });
 
 // ─── AC8: 手机端一屏显示 ───
-test('AC8: mobile viewport (375px) shows all 7 plots without overflow', async ({ page, browserName }, testInfo) => {
+test('AC8: mobile viewport (375px) shows all 7 plots without overflow', async ({ page }, testInfo) => {
   if (testInfo.project.name !== 'mobile') {
     test.skip();
     return;

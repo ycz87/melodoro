@@ -3,7 +3,7 @@
  *
  * 使用 localStorage 持久化余额，提供加币、扣币和直接设置余额能力。
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MelonCoinState } from '../types/market';
 import { DEFAULT_MELON_COIN } from '../types/market';
 
@@ -27,6 +27,11 @@ function readInitialMelonCoinState(): MelonCoinState {
 
 export function useMelonCoin() {
   const [state, setState] = useState<MelonCoinState>(() => readInitialMelonCoinState());
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     try {
@@ -38,22 +43,26 @@ export function useMelonCoin() {
 
   const addCoins = useCallback((amount: number) => {
     if (amount <= 0) return;
-    setState((prev) => ({ ...prev, balance: prev.balance + amount }));
+    const nextState = { ...stateRef.current, balance: stateRef.current.balance + amount };
+    stateRef.current = nextState;
+    setState(nextState);
   }, []);
 
   const spendCoins = useCallback((amount: number): boolean => {
     if (amount <= 0) return false;
-    let success = false;
-    setState((prev) => {
-      if (prev.balance < amount) return prev;
-      success = true;
-      return { ...prev, balance: prev.balance - amount };
-    });
-    return success;
+    const currentState = stateRef.current;
+    if (currentState.balance < amount) return false;
+
+    const nextState = { ...currentState, balance: currentState.balance - amount };
+    stateRef.current = nextState;
+    setState(nextState);
+    return true;
   }, []);
 
   const setBalance = useCallback((balance: number) => {
-    setState({ balance });
+    const nextState = { balance };
+    stateRef.current = nextState;
+    setState(nextState);
   }, []);
 
   return {

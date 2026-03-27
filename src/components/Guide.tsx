@@ -86,10 +86,7 @@ export function GuideButton({ externalShow, onExternalClose }: {
     }
   }, []);
 
-  // External trigger
-  useEffect(() => {
-    if (externalShow) setShowGuide(true);
-  }, [externalShow]);
+  const isVisible = showGuide || Boolean(externalShow);
 
   const handleClose = () => {
     setShowGuide(false);
@@ -97,5 +94,5 @@ export function GuideButton({ externalShow, onExternalClose }: {
     onExternalClose?.();
   };
 
-  return showGuide ? <Guide onClose={handleClose} /> : null;
+  return isVisible ? <Guide onClose={handleClose} /> : null;
 }
