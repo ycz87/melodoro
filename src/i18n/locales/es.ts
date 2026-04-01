@@ -785,6 +785,7 @@ export const es: Messages = {
   }[id] ?? ''),
   varietyDetailTitle: 'Detalles de la variedad',
   varietyDetailFirstObtained: 'Primera obtención',
+  varietyDetailOwnedCountLabel: 'Cantidad actual en posesión (entidades)',
   varietyDetailHarvestCount: (count) => `Cosechada ${count} veces`,
   collectionAcquireHintTitle: 'Cómo obtenerla',
   collectionGuideCurrentStage: 'Etapa actual',

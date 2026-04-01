@@ -790,6 +790,7 @@ export const zh: Messages = {
   }[id] ?? ''),
   varietyDetailTitle: '品种详情',
   varietyDetailFirstObtained: '首次获得日期',
+  varietyDetailOwnedCountLabel: '当前持有数量（实体）',
   varietyDetailHarvestCount: (count) => `累计收获 ${count} 次`,
   collectionAcquireHintTitle: '获取条件',
   collectionGuideCurrentStage: '当前阶段',

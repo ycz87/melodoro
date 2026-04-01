@@ -790,6 +790,7 @@ export const zhTW: Messages = {
   }[id] ?? ''),
   varietyDetailTitle: '品種詳情',
   varietyDetailFirstObtained: '首次獲得日期',
+  varietyDetailOwnedCountLabel: '目前持有數量（實體）',
   varietyDetailHarvestCount: (count) => `累計收穫 ${count} 次`,
   collectionAcquireHintTitle: '取得條件',
   collectionGuideCurrentStage: '當前階段',

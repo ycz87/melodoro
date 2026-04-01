@@ -443,6 +443,7 @@ export interface Messages {
   varietyStory: (id: string) => string;
   varietyDetailTitle: string;
   varietyDetailFirstObtained: string;
+  varietyDetailOwnedCountLabel: string;
   varietyDetailHarvestCount: (count: number) => string;
   collectionAcquireHintTitle: string;
   collectionGuideCurrentStage: string;

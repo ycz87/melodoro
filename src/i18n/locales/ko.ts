@@ -785,6 +785,7 @@ export const ko: Messages = {
   }[id] ?? ''),
   varietyDetailTitle: '품종 상세',
   varietyDetailFirstObtained: '첫 획득일',
+  varietyDetailOwnedCountLabel: '현재 보유 수량(실체)',
   varietyDetailHarvestCount: (count) => `누적 수확 ${count}회`,
   collectionAcquireHintTitle: '획득 조건',
   collectionGuideCurrentStage: '현재 단계',
