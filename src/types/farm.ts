@@ -656,8 +656,12 @@ export interface CollectedVariety {
   harvestCount?: number; // cumulative harvest count for dex detail/history
 }
 
+export function getCollectedVarietyOwnedCount(record: CollectedVariety): number {
+  return Number.isFinite(record.count) ? Math.max(0, Math.floor(record.count)) : 0;
+}
+
 export function getCollectedVarietyHarvestCount(record: CollectedVariety): number {
-  const ownedCount = Number.isFinite(record.count) ? Math.max(0, Math.floor(record.count)) : 0;
+  const ownedCount = getCollectedVarietyOwnedCount(record);
   const storedHarvestCount = Number.isFinite(record.harvestCount)
     ? Math.max(0, Math.floor(record.harvestCount as number))
     : 0;

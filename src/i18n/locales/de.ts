@@ -785,6 +785,7 @@ export const de: Messages = {
   }[id] ?? ''),
   varietyDetailTitle: 'Sortendetails',
   varietyDetailFirstObtained: 'Erstmals erhalten',
+  varietyDetailOwnedCountLabel: 'Aktuell im Besitz (Einheiten)',
   varietyDetailHarvestCount: (count) => `Insgesamt geerntet: ${count}x`,
   collectionAcquireHintTitle: 'So erhältst du sie',
   collectionGuideCurrentStage: 'Aktuelle Phase',

@@ -13,6 +13,7 @@ import {
   GALAXIES,
   GALAXY_VARIETIES,
   getCollectedVarietyHarvestCount,
+  getCollectedVarietyOwnedCount,
   HYBRID_GALAXY_PAIRS,
   HYBRID_VARIETIES,
   PRISMATIC_VARIETIES,
@@ -35,6 +36,39 @@ interface CollectionPageProps {
 
 type CollectionTab = 'pure' | 'hybrid' | 'prismatic' | 'dark-matter';
 
+function pickEarlierDate(currentDate: string, nextDate: string): string {
+  if (!currentDate) return nextDate;
+  if (!nextDate) return currentDate;
+  return currentDate <= nextDate ? currentDate : nextDate;
+}
+
+function buildDexCollectionMap(collection: CollectedVariety[]): Map<VarietyId, CollectedVariety> {
+  return collection.reduce((map, record) => {
+    const existing = map.get(record.varietyId);
+    const ownedCount = getCollectedVarietyOwnedCount(record);
+    const harvestCount = getCollectedVarietyHarvestCount(record);
+
+    if (!existing) {
+      map.set(record.varietyId, {
+        varietyId: record.varietyId,
+        firstObtainedDate: record.firstObtainedDate,
+        count: ownedCount,
+        harvestCount,
+      });
+      return map;
+    }
+
+    map.set(record.varietyId, {
+      varietyId: record.varietyId,
+      firstObtainedDate: pickEarlierDate(existing.firstObtainedDate, record.firstObtainedDate),
+      count: getCollectedVarietyOwnedCount(existing) + ownedCount,
+      harvestCount: getCollectedVarietyHarvestCount(existing) + harvestCount,
+    });
+
+    return map;
+  }, new Map<VarietyId, CollectedVariety>());
+}
+
 export function CollectionPage({ collection, milestoneRewards }: CollectionPageProps) {
   const theme = useTheme();
   const t = useI18n();
@@ -42,7 +76,7 @@ export function CollectionPage({ collection, milestoneRewards }: CollectionPageP
   const [selectedVarietyId, setSelectedVarietyId] = useState<VarietyId | null>(null);
 
   const collectionMap = useMemo(
-    () => new Map(collection.map(item => [item.varietyId, item] as const)),
+    () => buildDexCollectionMap(collection),
     [collection],
   );
 
@@ -905,8 +939,14 @@ function VarietyDetailModal({ varietyId, collected, collectionCount, totalCount,
               <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
                 {t.varietyDetailFirstObtained}
               </p>
-              <p className="text-sm font-medium mb-2" style={{ color: theme.text }}>
+              <p className="text-sm font-medium mb-3" style={{ color: theme.text }}>
                 {collected?.firstObtainedDate ?? '-'}
+              </p>
+              <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+                {t.varietyDetailOwnedCountLabel}
+              </p>
+              <p className="text-sm font-medium mb-2" style={{ color: theme.text }}>
+                {collected ? getCollectedVarietyOwnedCount(collected) : 0}
               </p>
               <p className="text-xs" style={{ color: theme.textMuted }}>
                 {t.varietyDetailHarvestCount(collected ? getCollectedVarietyHarvestCount(collected) : 0)}
