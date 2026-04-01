@@ -329,7 +329,7 @@ export function FarmPage({
         <div className="px-4">
           <SubTabHeader subTab={subTab} setSubTab={setSubTab} theme={theme} t={t} gentle={useFarmPlotBoardV2} />
         </div>
-        <CollectionPage collection={farm.collection} milestoneRewards={farm.milestoneRewards} />
+        <CollectionPage collection={farm.collection} geneInventory={geneInventory} milestoneRewards={farm.milestoneRewards} />
       </div>
     );
   }

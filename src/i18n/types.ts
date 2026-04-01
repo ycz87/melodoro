@@ -444,6 +444,7 @@ export interface Messages {
   varietyDetailTitle: string;
   varietyDetailFirstObtained: string;
   varietyDetailOwnedCountLabel: string;
+  varietyDetailGeneFragmentInventoryLabel: string;
   varietyDetailHarvestCount: (count: number) => string;
   collectionAcquireHintTitle: string;
   collectionGuideCurrentStage: string;
