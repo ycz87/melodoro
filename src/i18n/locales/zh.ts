@@ -793,6 +793,7 @@ export const zh: Messages = {
   varietyDetailOwnedCountLabel: '当前持有数量（实体）',
   varietyDetailGeneFragmentInventoryLabel: '基因碎片库存',
   varietyDetailHarvestCount: (count) => `累计收获 ${count} 次`,
+  varietyDetailRarityText: (stars) => `${stars}星稀有度`,
   collectionAcquireHintTitle: '获取条件',
   collectionGuideCurrentStage: '当前阶段',
   collectionGuideNextMilestone: '下一里程碑',
