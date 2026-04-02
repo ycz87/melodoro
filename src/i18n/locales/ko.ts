@@ -788,6 +788,7 @@ export const ko: Messages = {
   varietyDetailOwnedCountLabel: '현재 보유 수량(실체)',
   varietyDetailGeneFragmentInventoryLabel: '유전자 조각 보유량',
   varietyDetailHarvestCount: (count) => `누적 수확 ${count}회`,
+  varietyDetailRarityText: (stars) => `${stars}성 희귀도`,
   collectionAcquireHintTitle: '획득 조건',
   collectionGuideCurrentStage: '현재 단계',
   collectionGuideNextMilestone: '다음 마일스톤',

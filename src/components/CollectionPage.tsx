@@ -909,6 +909,7 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
 }) {
   const variety = VARIETY_DEFS[varietyId];
   const color = RARITY_COLOR[variety.rarity];
+  const rarityStars = RARITY_STARS[variety.rarity];
   const isCollected = Boolean(collected);
   const isDarkMatter = DARK_MATTER_VARIETIES.includes(varietyId as typeof DARK_MATTER_VARIETIES[number]);
 
@@ -943,9 +944,25 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
             {isCollected || isDarkMatter ? t.varietyName(varietyId) : '???'}
           </p>
           <div className="flex gap-1 mt-1">
-            {Array.from({ length: RARITY_STARS[variety.rarity] }).map((_, i) => (
+            {Array.from({ length: rarityStars }).map((_, i) => (
               <span key={i} style={{ color, fontSize: 14 }}>⭐</span>
             ))}
+          </div>
+          <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-2">
+            <div
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
+              style={{ backgroundColor: `${theme.accent}14`, color: theme.accent }}
+            >
+              <span aria-hidden="true">🌌</span>
+              <span>{t.galaxyName(variety.galaxy)}</span>
+            </div>
+            <div
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
+              style={{ backgroundColor: `${color}16`, color }}
+            >
+              <span aria-hidden="true">⭐</span>
+              <span>{t.varietyDetailRarityText(rarityStars)}</span>
+            </div>
           </div>
         </div>
         {isCollected ? (

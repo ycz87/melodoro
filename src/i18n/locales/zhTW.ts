@@ -793,6 +793,7 @@ export const zhTW: Messages = {
   varietyDetailOwnedCountLabel: '目前持有數量（實體）',
   varietyDetailGeneFragmentInventoryLabel: '基因碎片庫存',
   varietyDetailHarvestCount: (count) => `累計收穫 ${count} 次`,
+  varietyDetailRarityText: (stars) => `${stars}星稀有度`,
   collectionAcquireHintTitle: '取得條件',
   collectionGuideCurrentStage: '當前階段',
   collectionGuideNextMilestone: '下一里程碑',

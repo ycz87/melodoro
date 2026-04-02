@@ -788,6 +788,7 @@ export const fr: Messages = {
   varietyDetailOwnedCountLabel: 'Quantité actuellement possédée (entités)',
   varietyDetailGeneFragmentInventoryLabel: 'Inventaire des fragments génétiques',
   varietyDetailHarvestCount: (count) => `Récoltée ${count} fois`,
+  varietyDetailRarityText: (stars) => `Rareté ${stars} étoiles`,
   collectionAcquireHintTitle: 'Comment l’obtenir',
   collectionGuideCurrentStage: 'Étape actuelle',
   collectionGuideNextMilestone: 'Prochain jalon',

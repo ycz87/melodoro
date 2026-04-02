@@ -788,6 +788,7 @@ export const ja: Messages = {
   varietyDetailOwnedCountLabel: '現在の所持数（実体）',
   varietyDetailGeneFragmentInventoryLabel: '遺伝子断片の所持数',
   varietyDetailHarvestCount: (count) => `累計収穫回数：${count}回`,
+  varietyDetailRarityText: (stars) => `${stars}つ星レア度`,
   collectionAcquireHintTitle: '入手条件',
   collectionGuideCurrentStage: '現在の段階',
   collectionGuideNextMilestone: '次のマイルストーン',
