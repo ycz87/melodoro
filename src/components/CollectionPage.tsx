@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
+import type { GeneInventory } from '../types/gene';
 import type { CollectedVariety, FarmMilestoneState, VarietyId } from '../types/farm';
 import {
   ALL_VARIETY_IDS,
@@ -31,6 +32,7 @@ import {
 
 interface CollectionPageProps {
   collection: CollectedVariety[];
+  geneInventory: GeneInventory;
   milestoneRewards?: FarmMilestoneState;
 }
 
@@ -69,7 +71,14 @@ function buildDexCollectionMap(collection: CollectedVariety[]): Map<VarietyId, C
   }, new Map<VarietyId, CollectedVariety>());
 }
 
-export function CollectionPage({ collection, milestoneRewards }: CollectionPageProps) {
+function buildGeneFragmentInventoryMap(fragments: GeneInventory['fragments']): Map<VarietyId, number> {
+  return fragments.reduce((map, fragment) => {
+    map.set(fragment.varietyId, (map.get(fragment.varietyId) ?? 0) + 1);
+    return map;
+  }, new Map<VarietyId, number>());
+}
+
+export function CollectionPage({ collection, geneInventory, milestoneRewards }: CollectionPageProps) {
   const theme = useTheme();
   const t = useI18n();
   const [collectionTab, setCollectionTab] = useState<CollectionTab>('pure');
@@ -79,11 +88,18 @@ export function CollectionPage({ collection, milestoneRewards }: CollectionPageP
     () => buildDexCollectionMap(collection),
     [collection],
   );
+  const geneFragmentInventoryMap = useMemo(
+    () => buildGeneFragmentInventoryMap(geneInventory.fragments),
+    [geneInventory.fragments],
+  );
 
   const collectedIds = new Set(collectionMap.keys());
   const galaxyProgress = useMemo(() => getGalaxyProgressSnapshot(collection), [collection]);
   const collectionGuide = useMemo(() => getCollectionGuideSnapshot(collection), [collection]);
   const selectedVariety = selectedVarietyId ? collectionMap.get(selectedVarietyId) : undefined;
+  const selectedVarietyGeneFragmentInventory = selectedVarietyId
+    ? geneFragmentInventoryMap.get(selectedVarietyId) ?? 0
+    : 0;
 
   const milestoneRewardStatusList = useMemo(() => {
     if (!milestoneRewards) return [];
@@ -425,6 +441,7 @@ export function CollectionPage({ collection, milestoneRewards }: CollectionPageP
         <VarietyDetailModal
           varietyId={selectedVarietyId}
           collected={selectedVariety}
+          geneFragmentInventoryCount={selectedVarietyGeneFragmentInventory}
           collectionCount={collectedIds.size}
           totalCount={ALL_VARIETY_IDS.length}
           theme={theme}
@@ -880,9 +897,10 @@ function VarietyCard({ varietyId, collected, collectionCount, totalCount, theme,
   );
 }
 
-function VarietyDetailModal({ varietyId, collected, collectionCount, totalCount, theme, t, onClose }: {
+function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, collectionCount, totalCount, theme, t, onClose }: {
   varietyId: VarietyId;
   collected?: CollectedVariety;
+  geneFragmentInventoryCount: number;
   collectionCount: number;
   totalCount: number;
   theme: ReturnType<typeof useTheme>;
@@ -945,8 +963,14 @@ function VarietyDetailModal({ varietyId, collected, collectionCount, totalCount,
               <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
                 {t.varietyDetailOwnedCountLabel}
               </p>
-              <p className="text-sm font-medium mb-2" style={{ color: theme.text }}>
+              <p className="text-sm font-medium mb-3" style={{ color: theme.text }}>
                 {collected ? getCollectedVarietyOwnedCount(collected) : 0}
+              </p>
+              <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+                {t.varietyDetailGeneFragmentInventoryLabel}
+              </p>
+              <p className="text-sm font-medium mb-2" style={{ color: theme.text }}>
+                {geneFragmentInventoryCount}
               </p>
               <p className="text-xs" style={{ color: theme.textMuted }}>
                 {t.varietyDetailHarvestCount(collected ? getCollectedVarietyHarvestCount(collected) : 0)}

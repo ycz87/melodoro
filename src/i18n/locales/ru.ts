@@ -111,6 +111,7 @@ export const ru: Messages = {
     'cosmic-heart': 'Семя первозданного арбуза. Когда все осколки собраны, оно возвращается само.',
   }[id] ?? en.varietyStory(id)),
   varietyDetailOwnedCountLabel: 'Сейчас в наличии (единиц)',
+  varietyDetailGeneFragmentInventoryLabel: 'Запас генных фрагментов',
   collectionAcquireHintTitle: 'Условие получения',
   darkMatterGuideVoid: 'Слейте 5 разных призматических генов',
   darkMatterGuideBlackHole: 'Слейте 10 пар двойных элементных генов',

@@ -786,6 +786,7 @@ export const en: Messages = {
   varietyDetailTitle: 'Variety Details',
   varietyDetailFirstObtained: 'First Obtained',
   varietyDetailOwnedCountLabel: 'Current Owned (entities)',
+  varietyDetailGeneFragmentInventoryLabel: 'Gene Fragment Inventory',
   varietyDetailHarvestCount: (count) => `Total Harvests: ${count}`,
   collectionAcquireHintTitle: 'How to obtain',
   collectionGuideCurrentStage: 'Current stage',
