@@ -938,6 +938,10 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
   const prismaticAcquireHint = variety.breedType === 'prismatic'
     ? t.collectionPrismaticAcquireHint
     : null;
+  const showDarkMatterAcquireHint = variety.breedType === 'dark-matter';
+  const darkMatterGuideProgress = varietyId === 'cosmic-heart'
+    ? t.darkMatterGuideProgress(collectionCount, totalCount)
+    : null;
 
   return (
     <div
@@ -1027,6 +1031,21 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
                 </p>
               </div>
             )}
+            {showDarkMatterAcquireHint && (
+              <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
+                <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+                  {t.collectionAcquireHintTitle}
+                </p>
+                <p className="text-sm font-medium" style={{ color: theme.text }}>
+                  {darkMatterGuide}
+                </p>
+                {darkMatterGuideProgress && (
+                  <p className="text-xs mt-2" style={{ color: theme.textMuted }}>
+                    {darkMatterGuideProgress}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
               <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
                 {t.varietyDetailFirstObtained}
@@ -1059,9 +1078,9 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
             <p className="text-sm font-medium" style={{ color: theme.text }}>
               {darkMatterGuide}
             </p>
-            {varietyId === 'cosmic-heart' && (
+            {darkMatterGuideProgress && (
               <p className="text-xs mt-2" style={{ color: theme.textMuted }}>
-                {t.darkMatterGuideProgress(collectionCount, totalCount)}
+                {darkMatterGuideProgress}
               </p>
             )}
           </div>
