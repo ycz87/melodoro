@@ -116,6 +116,7 @@ export const ru: Messages = {
   varietyDetailSellPrice: (price) => `Цена продажи: ${price} 💰`,
   varietyDetailNotSellable: 'Продажа недоступна',
   collectionAcquireHintTitle: 'Условие получения',
+  collectionPrismaticAcquireHint: 'Резонанс Пяти Стихий открывает призматический путь. Слияние Пяти Стихий создаёт призматическое семя, и из этого семени вырастает этот сорт.',
   darkMatterGuideVoid: 'Слейте 5 разных призматических генов',
   darkMatterGuideBlackHole: 'Слейте 10 пар двойных элементных генов',
   darkMatterGuideCosmicHeart: 'Соберите все 78 сортов',
