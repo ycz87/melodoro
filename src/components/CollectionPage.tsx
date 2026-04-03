@@ -912,6 +912,9 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
   const rarityStars = RARITY_STARS[variety.rarity];
   const isCollected = Boolean(collected);
   const isDarkMatter = DARK_MATTER_VARIETIES.includes(varietyId as typeof DARK_MATTER_VARIETIES[number]);
+  const hybridPairName = variety.breedType === 'hybrid' && variety.hybridPair
+    ? t.hybridGalaxyPairName(variety.hybridPair)
+    : null;
   const showSellPrice = variety.sellPrice > 0
     && (variety.breedType === 'pure' || variety.breedType === 'hybrid' || variety.breedType === 'prismatic');
 
@@ -958,6 +961,15 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
               <span aria-hidden="true">🌌</span>
               <span>{t.galaxyName(variety.galaxy)}</span>
             </div>
+            {hybridPairName && (
+              <div
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
+                style={{ backgroundColor: `${theme.inputBg}90`, color: theme.text }}
+              >
+                <span aria-hidden="true">🧬</span>
+                <span>{hybridPairName}</span>
+              </div>
+            )}
             <div
               className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
               style={{ backgroundColor: `${color}16`, color }}
