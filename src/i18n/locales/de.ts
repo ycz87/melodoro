@@ -789,6 +789,7 @@ export const de: Messages = {
   varietyDetailGeneFragmentInventoryLabel: 'Genfragment-Bestand',
   varietyDetailHarvestCount: (count) => `Insgesamt geerntet: ${count}x`,
   varietyDetailRarityText: (stars) => `${stars}-Sterne-Seltenheit`,
+  varietyDetailSellPrice: (price) => `Verkaufspreis: ${price} 💰`,
   collectionAcquireHintTitle: 'So erhältst du sie',
   collectionGuideCurrentStage: 'Aktuelle Phase',
   collectionGuideNextMilestone: 'Nächster Meilenstein',
