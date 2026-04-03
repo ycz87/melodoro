@@ -935,6 +935,9 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
     : varietyId === 'blackhole-melon'
       ? t.darkMatterGuideBlackHole
       : t.darkMatterGuideCosmicHeart;
+  const prismaticAcquireHint = variety.breedType === 'prismatic'
+    ? t.collectionPrismaticAcquireHint
+    : null;
 
   return (
     <div
@@ -1014,6 +1017,16 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
             <p className="text-sm leading-relaxed mb-4" style={{ color: theme.textMuted }}>
               {t.varietyStory(varietyId)}
             </p>
+            {prismaticAcquireHint && (
+              <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
+                <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+                  {t.collectionAcquireHintTitle}
+                </p>
+                <p className="text-sm font-medium" style={{ color: theme.text }}>
+                  {prismaticAcquireHint}
+                </p>
+              </div>
+            )}
             <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
               <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
                 {t.varietyDetailFirstObtained}
@@ -1038,7 +1051,7 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
               </p>
             </div>
           </>
-        ) : (
+        ) : isDarkMatter ? (
           <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
             <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
               {t.collectionAcquireHintTitle}
@@ -1052,7 +1065,7 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
               </p>
             )}
           </div>
-        )}
+        ) : null}
         <button
           type="button"
           onClick={onClose}

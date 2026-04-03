@@ -792,6 +792,7 @@ export const ko: Messages = {
   varietyDetailSellPrice: (price) => `판매 가격: ${price} 💰`,
   varietyDetailNotSellable: '판매 불가',
   collectionAcquireHintTitle: '획득 조건',
+  collectionPrismaticAcquireHint: '오행 공명이 환채 루트를 해제하고, 오행 융합이 환채 씨앗을 만들며, 그 씨앗에서 이 품종이 자랍니다.',
   collectionGuideCurrentStage: '현재 단계',
   collectionGuideNextMilestone: '다음 마일스톤',
   collectionGuideFiveElementTitle: '오행 공명 진행도',

@@ -792,6 +792,7 @@ export const ja: Messages = {
   varietyDetailSellPrice: (price) => `売却価格：${price} 💰`,
   varietyDetailNotSellable: '売却不可',
   collectionAcquireHintTitle: '入手条件',
+  collectionPrismaticAcquireHint: '五行共鳴で幻彩ルートが解放され、五行融合で幻彩シードが作られ、そのシードからこの品種が育ちます。',
   collectionGuideCurrentStage: '現在の段階',
   collectionGuideNextMilestone: '次のマイルストーン',
   collectionGuideFiveElementTitle: '五行共鳴の進捗',
