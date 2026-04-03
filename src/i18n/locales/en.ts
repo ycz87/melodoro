@@ -789,6 +789,7 @@ export const en: Messages = {
   varietyDetailGeneFragmentInventoryLabel: 'Gene Fragment Inventory',
   varietyDetailHarvestCount: (count) => `Total Harvests: ${count}`,
   varietyDetailRarityText: (stars) => `${stars}-Star Rarity`,
+  varietyDetailSellPrice: (price) => `Sell Price: ${price} 💰`,
   collectionAcquireHintTitle: 'How to obtain',
   collectionGuideCurrentStage: 'Current stage',
   collectionGuideNextMilestone: 'Next milestone',

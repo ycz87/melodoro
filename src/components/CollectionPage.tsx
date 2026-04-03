@@ -912,6 +912,7 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
   const rarityStars = RARITY_STARS[variety.rarity];
   const isCollected = Boolean(collected);
   const isDarkMatter = DARK_MATTER_VARIETIES.includes(varietyId as typeof DARK_MATTER_VARIETIES[number]);
+  const showSellPrice = variety.breedType === 'pure';
 
   const darkMatterGuide = varietyId === 'void-melon'
     ? t.darkMatterGuideVoid
@@ -963,6 +964,15 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
               <span aria-hidden="true">⭐</span>
               <span>{t.varietyDetailRarityText(rarityStars)}</span>
             </div>
+            {showSellPrice && (
+              <div
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
+                style={{ backgroundColor: 'rgba(245, 158, 11, 0.14)', color: '#f59e0b' }}
+              >
+                <span aria-hidden="true">💰</span>
+                <span>{t.varietyDetailSellPrice(variety.sellPrice)}</span>
+              </div>
+            )}
           </div>
         </div>
         {isCollected ? (
