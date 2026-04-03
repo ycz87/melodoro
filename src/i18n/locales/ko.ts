@@ -790,6 +790,7 @@ export const ko: Messages = {
   varietyDetailHarvestCount: (count) => `누적 수확 ${count}회`,
   varietyDetailRarityText: (stars) => `${stars}성 희귀도`,
   varietyDetailSellPrice: (price) => `판매 가격: ${price} 💰`,
+  varietyDetailNotSellable: '판매 불가',
   collectionAcquireHintTitle: '획득 조건',
   collectionGuideCurrentStage: '현재 단계',
   collectionGuideNextMilestone: '다음 마일스톤',
