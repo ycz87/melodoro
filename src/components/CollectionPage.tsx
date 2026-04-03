@@ -912,7 +912,8 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
   const rarityStars = RARITY_STARS[variety.rarity];
   const isCollected = Boolean(collected);
   const isDarkMatter = DARK_MATTER_VARIETIES.includes(varietyId as typeof DARK_MATTER_VARIETIES[number]);
-  const showSellPrice = variety.breedType === 'pure';
+  const showSellPrice = variety.sellPrice > 0
+    && (variety.breedType === 'pure' || variety.breedType === 'hybrid' || variety.breedType === 'prismatic');
 
   const darkMatterGuide = varietyId === 'void-melon'
     ? t.darkMatterGuideVoid
