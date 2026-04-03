@@ -935,6 +935,10 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
     : varietyId === 'blackhole-melon'
       ? t.darkMatterGuideBlackHole
       : t.darkMatterGuideCosmicHeart;
+  const showDarkMatterAcquireHint = variety.breedType === 'dark-matter';
+  const darkMatterGuideProgress = varietyId === 'cosmic-heart'
+    ? t.darkMatterGuideProgress(collectionCount, totalCount)
+    : null;
 
   return (
     <div
@@ -1009,36 +1013,12 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
             )}
           </div>
         </div>
-        {isCollected ? (
-          <>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: theme.textMuted }}>
-              {t.varietyStory(varietyId)}
-            </p>
-            <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
-              <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
-                {t.varietyDetailFirstObtained}
-              </p>
-              <p className="text-sm font-medium mb-3" style={{ color: theme.text }}>
-                {collected?.firstObtainedDate ?? '-'}
-              </p>
-              <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
-                {t.varietyDetailOwnedCountLabel}
-              </p>
-              <p className="text-sm font-medium mb-3" style={{ color: theme.text }}>
-                {collected ? getCollectedVarietyOwnedCount(collected) : 0}
-              </p>
-              <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
-                {t.varietyDetailGeneFragmentInventoryLabel}
-              </p>
-              <p className="text-sm font-medium mb-2" style={{ color: theme.text }}>
-                {geneFragmentInventoryCount}
-              </p>
-              <p className="text-xs" style={{ color: theme.textMuted }}>
-                {t.varietyDetailHarvestCount(collected ? getCollectedVarietyHarvestCount(collected) : 0)}
-              </p>
-            </div>
-          </>
-        ) : (
+        {isCollected && (
+          <p className="text-sm leading-relaxed mb-4" style={{ color: theme.textMuted }}>
+            {t.varietyStory(varietyId)}
+          </p>
+        )}
+        {showDarkMatterAcquireHint && (
           <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
             <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
               {t.collectionAcquireHintTitle}
@@ -1046,11 +1026,36 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
             <p className="text-sm font-medium" style={{ color: theme.text }}>
               {darkMatterGuide}
             </p>
-            {varietyId === 'cosmic-heart' && (
+            {darkMatterGuideProgress && (
               <p className="text-xs mt-2" style={{ color: theme.textMuted }}>
-                {t.darkMatterGuideProgress(collectionCount, totalCount)}
+                {darkMatterGuideProgress}
               </p>
             )}
+          </div>
+        )}
+        {isCollected && (
+          <div className="rounded-xl border p-3 mb-4" style={{ borderColor: theme.border, backgroundColor: `${theme.inputBg}70` }}>
+            <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+              {t.varietyDetailFirstObtained}
+            </p>
+            <p className="text-sm font-medium mb-3" style={{ color: theme.text }}>
+              {collected?.firstObtainedDate ?? '-'}
+            </p>
+            <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+              {t.varietyDetailOwnedCountLabel}
+            </p>
+            <p className="text-sm font-medium mb-3" style={{ color: theme.text }}>
+              {collected ? getCollectedVarietyOwnedCount(collected) : 0}
+            </p>
+            <p className="text-xs mb-1" style={{ color: theme.textFaint }}>
+              {t.varietyDetailGeneFragmentInventoryLabel}
+            </p>
+            <p className="text-sm font-medium mb-2" style={{ color: theme.text }}>
+              {geneFragmentInventoryCount}
+            </p>
+            <p className="text-xs" style={{ color: theme.textMuted }}>
+              {t.varietyDetailHarvestCount(collected ? getCollectedVarietyHarvestCount(collected) : 0)}
+            </p>
           </div>
         )}
         <button
