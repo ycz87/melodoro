@@ -795,6 +795,7 @@ export const zh: Messages = {
   varietyDetailHarvestCount: (count) => `累计收获 ${count} 次`,
   varietyDetailRarityText: (stars) => `${stars}星稀有度`,
   varietyDetailSellPrice: (price) => `售价：${price} 💰`,
+  varietyDetailNotSellable: '不可出售',
   collectionAcquireHintTitle: '获取条件',
   collectionGuideCurrentStage: '当前阶段',
   collectionGuideNextMilestone: '下一里程碑',

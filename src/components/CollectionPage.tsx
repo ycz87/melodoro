@@ -915,8 +915,17 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
   const hybridPairName = variety.breedType === 'hybrid' && variety.hybridPair
     ? t.hybridGalaxyPairName(variety.hybridPair)
     : null;
-  const showSellPrice = variety.sellPrice > 0
+  const showStandardSellPrice = variety.sellPrice > 0
     && (variety.breedType === 'pure' || variety.breedType === 'hybrid' || variety.breedType === 'prismatic');
+  const showDarkMatterSellState = variety.breedType === 'dark-matter';
+  const isDarkMatterNotSellable = showDarkMatterSellState && variety.sellPrice <= 0;
+  const showSellChip = showStandardSellPrice || showDarkMatterSellState;
+  const sellChipLabel = isDarkMatterNotSellable
+    ? t.varietyDetailNotSellable
+    : t.varietyDetailSellPrice(variety.sellPrice);
+  const sellChipStyle = isDarkMatterNotSellable
+    ? { backgroundColor: theme.inputBg, color: theme.textMuted }
+    : { backgroundColor: 'rgba(245, 158, 11, 0.14)', color: '#f59e0b' };
 
   const darkMatterGuide = varietyId === 'void-melon'
     ? t.darkMatterGuideVoid
@@ -977,13 +986,13 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
               <span aria-hidden="true">⭐</span>
               <span>{t.varietyDetailRarityText(rarityStars)}</span>
             </div>
-            {showSellPrice && (
+            {showSellChip && (
               <div
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
-                style={{ backgroundColor: 'rgba(245, 158, 11, 0.14)', color: '#f59e0b' }}
+                style={sellChipStyle}
               >
-                <span aria-hidden="true">💰</span>
-                <span>{t.varietyDetailSellPrice(variety.sellPrice)}</span>
+                <span aria-hidden="true">{isDarkMatterNotSellable ? '🚫' : '💰'}</span>
+                <span>{sellChipLabel}</span>
               </div>
             )}
           </div>

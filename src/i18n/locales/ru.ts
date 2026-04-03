@@ -114,6 +114,7 @@ export const ru: Messages = {
   varietyDetailGeneFragmentInventoryLabel: 'Запас генных фрагментов',
   varietyDetailRarityText: (stars) => `Редкость: ${stars} звезды`,
   varietyDetailSellPrice: (price) => `Цена продажи: ${price} 💰`,
+  varietyDetailNotSellable: 'Продажа недоступна',
   collectionAcquireHintTitle: 'Условие получения',
   darkMatterGuideVoid: 'Слейте 5 разных призматических генов',
   darkMatterGuideBlackHole: 'Слейте 10 пар двойных элементных генов',

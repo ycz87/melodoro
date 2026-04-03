@@ -790,6 +790,7 @@ export const en: Messages = {
   varietyDetailHarvestCount: (count) => `Total Harvests: ${count}`,
   varietyDetailRarityText: (stars) => `${stars}-Star Rarity`,
   varietyDetailSellPrice: (price) => `Sell Price: ${price} 💰`,
+  varietyDetailNotSellable: 'Not sellable',
   collectionAcquireHintTitle: 'How to obtain',
   collectionGuideCurrentStage: 'Current stage',
   collectionGuideNextMilestone: 'Next milestone',
