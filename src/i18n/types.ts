@@ -450,6 +450,7 @@ export interface Messages {
   varietyDetailSellPrice: (price: number) => string;
   varietyDetailNotSellable: string;
   collectionAcquireHintTitle: string;
+  collectionPrismaticAcquireHint: string;
   collectionGuideCurrentStage: string;
   collectionGuideNextMilestone: string;
   collectionGuideFiveElementTitle: string;

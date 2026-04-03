@@ -797,6 +797,7 @@ export const zh: Messages = {
   varietyDetailSellPrice: (price) => `售价：${price} 💰`,
   varietyDetailNotSellable: '不可出售',
   collectionAcquireHintTitle: '获取条件',
+  collectionPrismaticAcquireHint: '五行共鸣会解锁幻彩路线；五行融合会生成幻彩种子，而这颗种子会长成该品种。',
   collectionGuideCurrentStage: '当前阶段',
   collectionGuideNextMilestone: '下一里程碑',
   collectionGuideFiveElementTitle: '五行共鸣进度',

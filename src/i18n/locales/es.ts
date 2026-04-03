@@ -792,6 +792,7 @@ export const es: Messages = {
   varietyDetailSellPrice: (price) => `Precio de venta: ${price} 💰`,
   varietyDetailNotSellable: 'No se puede vender',
   collectionAcquireHintTitle: 'Cómo obtenerla',
+  collectionPrismaticAcquireHint: 'La Resonancia de Cinco Elementos desbloquea la vía prismática. La Fusión de Cinco Elementos crea una semilla prismática, y de esa semilla nace esta variedad.',
   collectionGuideCurrentStage: 'Etapa actual',
   collectionGuideNextMilestone: 'Siguiente hito',
   collectionGuideFiveElementTitle: 'Progreso de resonancia de cinco elementos',

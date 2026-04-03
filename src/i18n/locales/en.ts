@@ -792,6 +792,7 @@ export const en: Messages = {
   varietyDetailSellPrice: (price) => `Sell Price: ${price} 💰`,
   varietyDetailNotSellable: 'Not sellable',
   collectionAcquireHintTitle: 'How to obtain',
+  collectionPrismaticAcquireHint: 'Five-Element Resonance unlocks the prismatic route. Five-Element Fusion creates a prismatic seed, and that seed grows this variety.',
   collectionGuideCurrentStage: 'Current stage',
   collectionGuideNextMilestone: 'Next milestone',
   collectionGuideFiveElementTitle: 'Five-Element Resonance',

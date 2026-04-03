@@ -792,6 +792,7 @@ export const de: Messages = {
   varietyDetailSellPrice: (price) => `Verkaufspreis: ${price} 💰`,
   varietyDetailNotSellable: 'Nicht verkaufbar',
   collectionAcquireHintTitle: 'So erhältst du sie',
+  collectionPrismaticAcquireHint: 'Die Fünf-Element-Resonanz schaltet den prismatischen Pfad frei. Die Fünf-Element-Fusion erzeugt einen Prismasamen, und aus diesem Samen wächst diese Sorte.',
   collectionGuideCurrentStage: 'Aktuelle Phase',
   collectionGuideNextMilestone: 'Nächster Meilenstein',
   collectionGuideFiveElementTitle: 'Fortschritt der Fünf-Elemente-Resonanz',
