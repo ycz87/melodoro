@@ -917,6 +917,9 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
     : null;
   const showStandardSellPrice = variety.sellPrice > 0
     && (variety.breedType === 'pure' || variety.breedType === 'hybrid' || variety.breedType === 'prismatic');
+  const showBaseDropRateChip = variety.breedType === 'pure' || variety.breedType === 'hybrid';
+  const baseDropRate = VARIETY_DEFS[varietyId].dropRate;
+  const baseDropRateLabel = `${Math.round(baseDropRate * 100)}%`;
   const showDarkMatterSellState = variety.breedType === 'dark-matter';
   const isDarkMatterNotSellable = showDarkMatterSellState && variety.sellPrice <= 0;
   const showSellChip = showStandardSellPrice || showDarkMatterSellState;
@@ -986,6 +989,15 @@ function VarietyDetailModal({ varietyId, collected, geneFragmentInventoryCount, 
               <span aria-hidden="true">⭐</span>
               <span>{t.varietyDetailRarityText(rarityStars)}</span>
             </div>
+            {showBaseDropRateChip && (
+              <div
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
+                style={{ backgroundColor: 'rgba(16, 185, 129, 0.14)', color: '#10b981' }}
+              >
+                <span aria-hidden="true">🎯</span>
+                <span>{baseDropRateLabel}</span>
+              </div>
+            )}
             {showSellChip && (
               <div
                 className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium sm:text-xs"
