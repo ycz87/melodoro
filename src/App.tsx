@@ -76,6 +76,7 @@ import {
   getWitherStatus,
   isLullabyGrowthBoostActive,
   isSupernovaBottleGrowthBoostActive,
+  rollVariety,
   type MutationOutcome,
   witherPlots,
 } from './farm/growth';
@@ -222,6 +223,8 @@ function App() {
     consumePrismaticSeed,
     addDarkMatterSeed,
     consumeDarkMatterSeed,
+    revealPendingNormalSeed,
+    consumePendingRevealedNormalSeed,
   } = useShedStorage();
   const [fusionHistory, setFusionHistory] = useLocalStorage<FusionHistory>(
     FUSION_HISTORY_KEY,
@@ -317,6 +320,10 @@ function App() {
   const activeMutationToast = mutationToastQueue[0] ?? null;
   const activeRecoveryToast = recoveryToastQueue[0] ?? null;
   const harvestedHybridVarietyCount = useMemo(() => getCollectedHybridVarietyCount(farm.collection), [farm.collection]);
+  const farmSeedCounts = useMemo(() => ({
+    ...shed.seeds,
+    normal: Math.max(0, shed.seeds.normal - (shed.pendingRevealedNormalSeed ? 1 : 0)),
+  }), [shed.pendingRevealedNormalSeed, shed.seeds]);
 
   const milestoneProgress = useMemo(() => getFarmMilestoneProgress(farm.collection), [farm.collection]);
   const currentAchievedMilestoneIds = useMemo(() => getAchievedFarmMilestoneIds(milestoneProgress), [milestoneProgress]);
@@ -811,6 +818,15 @@ function App() {
     return result;
   }, [addCoins, addFragment, harvestPlot, todayKey]);
 
+  const handleUseCrystalBall = useCallback(() => {
+    const crystalBallCount = (shed.items as Record<string, number>)['crystal-ball'] ?? 0;
+    if (crystalBallCount <= 0 || shed.seeds.normal <= 0 || shed.pendingRevealedNormalSeed) return;
+
+    const unlockedGalaxies = getUnlockedSeedPoolGalaxies(farm.collection);
+    const varietyId = rollVariety(unlockedGalaxies, 'normal');
+    revealPendingNormalSeed(varietyId);
+  }, [shed.items, shed.seeds.normal, shed.pendingRevealedNormalSeed, farm.collection, revealPendingNormalSeed]);
+
   const handleSellVariety = useCallback((varietyId: VarietyId, isMutant: boolean = false) => {
     const basePrice = VARIETY_DEFS[varietyId]?.sellPrice ?? 0;
     const price = basePrice * (isMutant ? 3 : 1);
@@ -1190,6 +1206,16 @@ function App() {
 
     return null;
   }, [geneInventory.fragments, setGeneInventory, addDarkMatterSeed]);
+
+  const handleFarmPlantPendingRevealedNormal = useCallback((plotId: number) => {
+    const pendingSeed = shed.pendingRevealedNormalSeed;
+    if (!pendingSeed) return;
+
+    const success = plantSeedWithVariety(plotId, pendingSeed.varietyId, 'normal', todayKey);
+    if (success) {
+      consumePendingRevealedNormalSeed();
+    }
+  }, [shed.pendingRevealedNormalSeed, plantSeedWithVariety, consumePendingRevealedNormalSeed, todayKey]);
 
   // ─── Plant injected seed handler ───
   const handleFarmPlantInjected = useCallback((plotId: number, seedId: string) => {
@@ -2033,17 +2059,19 @@ function App() {
             farm={farm}
             geneInventory={geneInventory}
             coinBalance={balance}
-            seeds={shed.seeds}
+            seeds={farmSeedCounts}
             items={shed.items}
             injectedSeeds={shed.injectedSeeds}
             hybridSeeds={shed.hybridSeeds}
             prismaticSeeds={shed.prismaticSeeds}
             darkMatterSeeds={shed.darkMatterSeeds}
+            pendingRevealedNormalSeed={shed.pendingRevealedNormalSeed}
             weather={weatherState.current}
             todayFocusMinutes={todayFocusMinutes}
             todayKey={todayKey}
             addSeeds={addSeeds}
             onPlant={handleFarmPlant}
+            onPlantPendingRevealedNormal={handleFarmPlantPendingRevealedNormal}
             onPlantInjected={handleFarmPlantInjected}
             onPlantHybrid={handleFarmPlantHybrid}
             onPlantPrismatic={handleFarmPlantPrismatic}
@@ -2052,6 +2080,7 @@ function App() {
             onClear={clearPlot}
             onUseLullaby={handleUseLullaby}
             onUseSupernovaBottle={handleUseSupernovaBottle}
+            onUseCrystalBall={handleUseCrystalBall}
             onUseMutationGun={handleUseMutationGun}
             onUseMoonDew={handleUseMoonDew}
             onUseStarDew={handleUseStarDew}

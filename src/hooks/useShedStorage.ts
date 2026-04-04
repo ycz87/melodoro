@@ -16,7 +16,7 @@ import type {
   DarkMatterSeed,
 } from '../types/slicing';
 import { DEFAULT_SHED_STORAGE, DEFAULT_PITY, DEFAULT_SEED_COUNTS } from '../types/slicing';
-import { DARK_MATTER_VARIETIES, HYBRID_GALAXY_PAIRS, PRISMATIC_VARIETIES } from '../types/farm';
+import { DARK_MATTER_VARIETIES, HYBRID_GALAXY_PAIRS, PRISMATIC_VARIETIES, VARIETY_DEFS } from '../types/farm';
 import { SHOP_SEED_ITEM_TO_QUALITY } from '../types/market';
 
 const SHED_KEY = 'watermelon-shed';
@@ -37,6 +37,7 @@ function migrateShed(raw: unknown): ShedStorage {
     hybridSeeds: [],
     prismaticSeeds: [],
     darkMatterSeeds: [],
+    pendingRevealedNormalSeed: null,
   };
 
   // Migrate seeds: old format was a single number, new format is { normal, epic, legendary }
@@ -140,6 +141,18 @@ function migrateShed(raw: unknown): ShedStorage {
     }
   }
 
+  if (s.pendingRevealedNormalSeed && typeof s.pendingRevealedNormalSeed === 'object') {
+    const candidate = s.pendingRevealedNormalSeed as Record<string, unknown>;
+    if (
+      typeof candidate.varietyId === 'string'
+      && Object.prototype.hasOwnProperty.call(VARIETY_DEFS, candidate.varietyId)
+    ) {
+      result.pendingRevealedNormalSeed = {
+        varietyId: candidate.varietyId as keyof typeof VARIETY_DEFS,
+      };
+    }
+  }
+
   return result;
 }
 
@@ -187,6 +200,7 @@ export function useShedStorage() {
       hybridSeeds: [],
       prismaticSeeds: [],
       darkMatterSeeds: [],
+      pendingRevealedNormalSeed: null,
     });
   }, [setShed]);
 
@@ -304,11 +318,42 @@ export function useShedStorage() {
     }
   }, [setShed]);
 
+  const revealPendingNormalSeed = useCallback((varietyId: keyof typeof VARIETY_DEFS): boolean => {
+    let success = false;
+    setShed(prev => {
+      const nextItems = prev.items as Record<string, number>;
+      const crystalBallCount = nextItems['crystal-ball'] ?? 0;
+      if (crystalBallCount <= 0 || prev.seeds.normal <= 0 || prev.pendingRevealedNormalSeed) return prev;
+      success = true;
+      return {
+        ...prev,
+        items: { ...nextItems, 'crystal-ball': crystalBallCount - 1 } as unknown as ShedStorage['items'],
+        pendingRevealedNormalSeed: { varietyId },
+      };
+    });
+    return success;
+  }, [setShed]);
+
+  const consumePendingRevealedNormalSeed = useCallback((): boolean => {
+    let success = false;
+    setShed(prev => {
+      if (!prev.pendingRevealedNormalSeed || prev.seeds.normal <= 0) return prev;
+      success = true;
+      return {
+        ...prev,
+        seeds: { ...prev.seeds, normal: prev.seeds.normal - 1 },
+        pendingRevealedNormalSeed: null,
+      };
+    });
+    return success;
+  }, [setShed]);
+
   /** 消耗一颗种子（种植时调用），返回是否成功 */
   const consumeSeed = useCallback((quality: SeedQuality): boolean => {
     let success = false;
     setShed(prev => {
-      if (prev.seeds[quality] <= 0) return prev;
+      const reservedNormalSeedCount = quality === 'normal' && prev.pendingRevealedNormalSeed ? 1 : 0;
+      if (prev.seeds[quality] <= reservedNormalSeedCount) return prev;
       success = true;
       return { ...prev, seeds: { ...prev.seeds, [quality]: prev.seeds[quality] - 1 } };
     });
@@ -358,6 +403,8 @@ export function useShedStorage() {
     consumePrismaticSeed,
     addDarkMatterSeed,
     consumeDarkMatterSeed,
+    revealPendingNormalSeed,
+    consumePendingRevealedNormalSeed,
     resetShed,
   };
 }

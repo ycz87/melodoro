@@ -90,6 +90,10 @@ export interface DarkMatterSeed {
   varietyId: DarkMatterVarietyId;
 }
 
+export interface PendingRevealedNormalSeed {
+  varietyId: VarietyId;
+}
+
 /** 瓜棚扩展存储（种子+道具+保底） */
 export interface ShedStorage {
   seeds: SeedCounts;
@@ -100,6 +104,7 @@ export interface ShedStorage {
   hybridSeeds: HybridSeed[];
   prismaticSeeds: PrismaticSeed[];
   darkMatterSeeds: DarkMatterSeed[];
+  pendingRevealedNormalSeed: PendingRevealedNormalSeed | null;
 }
 
 export const DEFAULT_SHED_STORAGE: ShedStorage = {
@@ -111,4 +116,5 @@ export const DEFAULT_SHED_STORAGE: ShedStorage = {
   hybridSeeds: [],
   prismaticSeeds: [],
   darkMatterSeeds: [],
+  pendingRevealedNormalSeed: null,
 };
