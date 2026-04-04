@@ -69,6 +69,7 @@ interface FarmPageProps {
   onClear: (plotId: number) => void;
   onUseMutationGun: (plotId: number) => void;
   onUseMoonDew: (plotId: number) => void;
+  onUseStarDew: (plotId: number) => void;
   onUseNectar: (plotId: number) => void;
   onUseStarTracker: (plotId: number) => void;
   onUseGuardianBarrier: () => void;
@@ -124,6 +125,7 @@ export function FarmPage({
   onClear,
   onUseMutationGun,
   onUseMoonDew,
+  onUseStarDew,
   onUseNectar,
   onUseStarTracker,
   onUseGuardianBarrier,
@@ -255,11 +257,13 @@ export function FarmPage({
   );
   const mutationGunCount = (items as Record<string, number>)['mutation-gun'] ?? 0;
   const moonDewCount = (items as Record<string, number>)['moon-dew'] ?? 0;
+  const starDewCount = (items as Record<string, number>)['star-dew'] ?? 0;
   const nectarCount = (items as Record<string, number>)['nectar'] ?? 0;
   const starTrackerCount = (items as Record<string, number>)['star-tracker'] ?? 0;
   const guardianBarrierCount = (items as Record<string, number>)['guardian-barrier'] ?? 0;
   const trapNetCount = (items as Record<string, number>)['trap-net'] ?? 0;
   const barrierActiveToday = farm.guardianBarrierDate === todayKey;
+  const canUseActivePlotStarDew = Boolean(activeGrowingPlot?.varietyId) && starDewCount > 0;
 
   const latestStolenRecordByPlotId = useMemo(() => {
     const latestByPlot = new Map<number, StolenRecord>();
@@ -451,6 +455,7 @@ export function FarmPage({
               stolenRecordByPlotId={latestStolenRecordByPlotId}
               mutationGunCount={mutationGunCount}
               moonDewCount={moonDewCount}
+              starDewCount={starDewCount}
               nectarCount={nectarCount}
               starTrackerCount={starTrackerCount}
               trapNetCount={trapNetCount}
@@ -462,6 +467,7 @@ export function FarmPage({
               onClear={onClear}
               onUseMutationGun={onUseMutationGun}
               onUseMoonDew={onUseMoonDew}
+              onUseStarDew={onUseStarDew}
               onUseNectar={onUseNectar}
               onUseStarTracker={onUseStarTracker}
               onUseTrapNet={onUseTrapNet}
@@ -509,6 +515,17 @@ export function FarmPage({
           )}
           {activeGrowingSnapshot.needsFocusHint && (
             <div className="mt-1 text-[11px]" style={{ color: theme.textMuted }}>{t.farmFocusBoostHint}</div>
+          )}
+          {canUseActivePlotStarDew && activeGrowingPlot && (
+            <button
+              type="button"
+              onClick={() => onUseStarDew(activeGrowingPlot.id)}
+              data-testid="farm-v2-star-dew-action"
+              className="mt-2 w-full rounded-[var(--radius-sm)] px-3 py-2 text-[11px] font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5"
+              style={{ color: '#000', background: 'linear-gradient(135deg, #fde68a 0%, #fbbf24 58%, #fb7185 100%)' }}
+            >
+              ✨ {t.itemName('star-dew')} · {starDewCount}
+            </button>
           )}
         </div>
       )}
@@ -675,6 +692,8 @@ export interface PlotCardProps {
   onUseMutationGun: () => void;
   moonDewCount: number;
   onUseMoonDew: () => void;
+  starDewCount: number;
+  onUseStarDew: () => void;
   nectarCount: number;
   onUseNectar: () => void;
   starTrackerCount: number;
@@ -683,7 +702,7 @@ export interface PlotCardProps {
   onUseTrapNet: () => void;
 }
 
-export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
+export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltipOpen, onTooltipToggle, onPlantClick, onHarvestClick, onClearClick, mutationGunCount, onUseMutationGun, moonDewCount, onUseMoonDew, starDewCount, onUseStarDew, nectarCount, onUseNectar, starTrackerCount, onUseStarTracker, trapNetCount, onUseTrapNet }: PlotCardProps) {
   const variety = plot.varietyId ? VARIETY_DEFS[plot.varietyId] : null;
   const varietyLabel = plot.varietyId
     ? `${t.varietyName(plot.varietyId)}${plot.isMutant ? ` · ${t.mutationPositive}` : ''}`
@@ -702,6 +721,7 @@ export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltip
     && mutationGunCount > 0
     && !isMutationResolved
     && plot.progress < 0.20;
+  const canUseStarDew = plot.state === 'growing' && Boolean(plot.varietyId) && starDewCount > 0;
   const canUseMoonDew = plot.state === 'mature' && moonDewCount > 0;
   const canUseNectar = plot.state === 'withered' && nectarCount > 0;
   const canUseStarTracker = (plot.state === 'growing' || plot.state === 'mature') && starTrackerCount > 0 && !plot.hasTracker;
@@ -1010,6 +1030,16 @@ export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltip
                         {`🔦 ${t.mutationGunUse} · ${mutationGunCount}`}
                       </button>
                     </>
+                  )}
+                  {canUseStarDew && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onUseStarDew(); }}
+                      data-testid="farm-legacy-star-dew-action"
+                      className="w-full px-3 py-2 text-[11px] font-medium cursor-pointer transition-all duration-200 ease-out hover:-translate-y-0.5"
+                      style={{ color: '#000', background: 'linear-gradient(135deg, #fde68a 0%, #fbbf24 58%, #fb7185 100%)' }}
+                    >
+                      ✨ {t.itemName('star-dew')} · {starDewCount}
+                    </button>
                   )}
                   {canUseStarTracker && (
                     <button

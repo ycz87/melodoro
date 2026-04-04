@@ -20,6 +20,7 @@ interface SimpleFarmGridProps {
   stolenRecordByPlotId?: Map<number, StolenRecord>;
   mutationGunCount: number;
   moonDewCount: number;
+  starDewCount: number;
   nectarCount: number;
   starTrackerCount: number;
   trapNetCount: number;
@@ -29,6 +30,7 @@ interface SimpleFarmGridProps {
   onClear: (plotId: number) => void;
   onUseMutationGun: (plotId: number) => void;
   onUseMoonDew: (plotId: number) => void;
+  onUseStarDew: (plotId: number) => void;
   onUseNectar: (plotId: number) => void;
   onUseStarTracker: (plotId: number) => void;
   onUseTrapNet: (plotId: number) => void;
@@ -213,6 +215,7 @@ export function SimpleFarmGrid({
   stolenRecordByPlotId,
   mutationGunCount,
   moonDewCount,
+  starDewCount,
   nectarCount,
   starTrackerCount,
   trapNetCount,
@@ -222,6 +225,7 @@ export function SimpleFarmGrid({
   onClear,
   onUseMutationGun,
   onUseMoonDew,
+  onUseStarDew,
   onUseNectar,
   onUseStarTracker,
   onUseTrapNet,
@@ -549,6 +553,8 @@ export function SimpleFarmGrid({
                         onUseMutationGun={() => onUseMutationGun(plot.id)}
                         moonDewCount={moonDewCount}
                         onUseMoonDew={() => onUseMoonDew(plot.id)}
+                        starDewCount={starDewCount}
+                        onUseStarDew={() => onUseStarDew(plot.id)}
                         nectarCount={nectarCount}
                         onUseNectar={() => onUseNectar(plot.id)}
                         starTrackerCount={starTrackerCount}

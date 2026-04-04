@@ -239,6 +239,7 @@ function App() {
     markStolenRecordRecovered,
     revivePlot,
     upgradePlotRarity,
+    halvePlotRemainingMatureTime,
   } = useFarmStorage();
   const { geneInventory, setGeneInventory, addFragment, removeFragment, removeFragmentsByGalaxy } = useGeneStorage();
   const { balance, addCoins, spendCoins, setBalance } = useMelonCoin();
@@ -777,6 +778,23 @@ function App() {
     }
     enqueueRecoveryToast(t.itemMoonDewSuccess);
   }, [farm.plots, consumeShopItem, upgradePlotRarity, addShedItem, enqueueRecoveryToast, t]);
+
+  const handleUseStarDew = useCallback((plotId: number) => {
+    const plot = farm.plots.find((item) => item.id === plotId);
+    if (!plot || plot.state !== 'growing' || !plot.varietyId) return;
+
+    const consumed = consumeShopItem('star-dew');
+    if (!consumed) return;
+
+    const result = halvePlotRemainingMatureTime(plotId);
+    if (!result.success) {
+      addShedItem('star-dew', 1);
+      return;
+    }
+    if (result.mutationOutcome) {
+      enqueueMutationToasts([result.mutationOutcome]);
+    }
+  }, [farm.plots, consumeShopItem, halvePlotRemainingMatureTime, addShedItem, enqueueMutationToasts]);
 
   const handleUseNectar = useCallback((plotId: number) => {
     const plot = farm.plots.find((item) => item.id === plotId);
@@ -1888,6 +1906,7 @@ function App() {
             onClear={clearPlot}
             onUseMutationGun={handleUseMutationGun}
             onUseMoonDew={handleUseMoonDew}
+            onUseStarDew={handleUseStarDew}
             onUseNectar={handleUseNectar}
             onUseStarTracker={handleUseStarTracker}
             onUseGuardianBarrier={handleUseGuardianBarrier}
