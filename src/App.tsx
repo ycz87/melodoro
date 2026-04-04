@@ -59,6 +59,7 @@ import { ThemeProvider } from './hooks/useTheme';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useDragScroll } from './hooks/useDragScroll';
 import { useWeather } from './hooks/useWeather';
+import { useAlienVisit } from './hooks/useAlienVisit';
 import { withOpacity } from './utils/color';
 import {
   requestNotificationPermission, sendBrowserNotification,
@@ -324,6 +325,15 @@ function App() {
     ...shed.seeds,
     normal: Math.max(0, shed.seeds.normal - (shed.pendingRevealedNormalSeed ? 1 : 0)),
   }), [shed.pendingRevealedNormalSeed, shed.seeds]);
+  const plantedMelonCount = useMemo(
+    () => farm.plots.filter((plot) => plot.state === 'growing' || plot.state === 'mature').length,
+    [farm.plots],
+  );
+  const { alienVisit } = useAlienVisit({
+    plantedMelonCount,
+    todayKey,
+    mutationDoctorSignal,
+  });
 
   const milestoneProgress = useMemo(() => getFarmMilestoneProgress(farm.collection), [farm.collection]);
   const currentAchievedMilestoneIds = useMemo(() => getAchievedFarmMilestoneIds(milestoneProgress), [milestoneProgress]);
@@ -2069,6 +2079,7 @@ function App() {
             weather={weatherState.current}
             todayFocusMinutes={todayFocusMinutes}
             todayKey={todayKey}
+            activeAlienVisit={alienVisit.current}
             addSeeds={addSeeds}
             onPlant={handleFarmPlant}
             onPlantPendingRevealedNormal={handleFarmPlantPendingRevealedNormal}
@@ -2088,7 +2099,6 @@ function App() {
             onUseStarTracker={handleUseStarTracker}
             onUseGuardianBarrier={handleUseGuardianBarrier}
             onUseTrapNet={handleUseTrapNet}
-            mutationDoctorSignal={mutationDoctorSignal}
             onInject={handleGeneInject}
             onFusion={handleGeneFusion}
             onFiveElementFusion={handleFiveElementFusion}
