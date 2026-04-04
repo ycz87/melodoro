@@ -178,26 +178,31 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
       return false;
     }
 
-    const cleanedVisit = clearExpiredAppearance(alienVisit, now);
-
-    if (cleanedVisit.current && cleanedVisit.current.expiresAt > now) {
-      activeAlienExpiresAtRef.current = cleanedVisit.current.expiresAt;
-      return false;
-    }
-
     const candidate = DRIFT_BOTTLE_SUMMON_CANDIDATES[
       Math.floor(Math.random() * DRIFT_BOTTLE_SUMMON_CANDIDATES.length)
     ];
     const idSuffix = Math.random().toString(36).slice(2, 8);
     const appearance = createAppearance(candidate.type, candidate.messageKey, now, idSuffix);
-    activeAlienExpiresAtRef.current = appearance.expiresAt;
+    let success = false;
 
-    setAlienVisit({
-      ...cleanedVisit,
-      current: appearance,
+    setAlienVisit((prev) => {
+      const cleanedVisit = clearExpiredAppearance(prev, now);
+
+      if (cleanedVisit.current && cleanedVisit.current.expiresAt > now) {
+        activeAlienExpiresAtRef.current = cleanedVisit.current.expiresAt;
+        return cleanedVisit;
+      }
+
+      activeAlienExpiresAtRef.current = appearance.expiresAt;
+      success = true;
+      return {
+        ...cleanedVisit,
+        current: appearance,
+      };
     });
-    return true;
-  }, [alienVisit, setAlienVisit]);
+
+    return success;
+  }, [setAlienVisit]);
 
   return {
     alienVisit,
