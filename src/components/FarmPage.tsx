@@ -8,6 +8,8 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
 import type {
+  AlienAppearance,
+  AlienType,
   Plot,
   VarietyId,
   FarmStorage,
@@ -55,6 +57,7 @@ interface FarmPageProps {
   weather: Weather | null;
   todayFocusMinutes: number;
   todayKey: string;
+  activeAlienVisit: AlienAppearance | null;
   addSeeds: (count: number, quality?: SeedQuality) => void;
   onPlant: (plotId: number, quality: SeedQuality) => VarietyId;
   onPlantPendingRevealedNormal: (plotId: number) => void;
@@ -86,7 +89,6 @@ interface FarmPageProps {
   onUseStarTracker: (plotId: number) => void;
   onUseGuardianBarrier: () => void;
   onUseTrapNet: (plotId: number) => void;
-  mutationDoctorSignal: number;
   onGoWarehouse: () => void;
   compactShell?: boolean;
 }
@@ -108,6 +110,38 @@ const HARVEST_DURATION_NEW_MS = 4200;
 const HARVEST_DURATION_REPEAT_MS = 2800;
 const REVEAL_RARE_PLUS_MIN_STARS = 2;
 
+const ALIEN_VISITOR_VISUALS: Record<AlienType, {
+  avatar: string;
+  align: 'left' | 'right';
+  bubbleBackground: string;
+  borderColor: string;
+  textColor: string;
+  glow: string;
+  avatarBackground: string;
+  avatarBorderColor: string;
+}> = {
+  'melon-alien': {
+    avatar: '👽',
+    align: 'right',
+    bubbleBackground: 'linear-gradient(135deg, rgba(227,255,219,0.97) 0%, rgba(188,255,238,0.95) 100%)',
+    borderColor: 'rgba(32, 171, 141, 0.42)',
+    textColor: '#18453b',
+    glow: 'radial-gradient(circle, rgba(105,255,214,0.38) 0%, rgba(105,255,214,0) 72%)',
+    avatarBackground: 'linear-gradient(180deg, rgba(226,255,238,0.99) 0%, rgba(152,236,216,0.95) 100%)',
+    avatarBorderColor: 'rgba(28, 150, 120, 0.45)',
+  },
+  'mutation-doctor': {
+    avatar: '🧪',
+    align: 'left',
+    bubbleBackground: 'linear-gradient(135deg, rgba(255,232,255,0.98) 0%, rgba(233,225,255,0.96) 100%)',
+    borderColor: 'rgba(155, 92, 240, 0.44)',
+    textColor: '#4a2570',
+    glow: 'radial-gradient(circle, rgba(201,143,255,0.38) 0%, rgba(201,143,255,0) 74%)',
+    avatarBackground: 'linear-gradient(180deg, rgba(255,245,255,0.99) 0%, rgba(234,214,255,0.96) 100%)',
+    avatarBorderColor: 'rgba(152, 85, 244, 0.46)',
+  },
+};
+
 export function FarmPage({
   farm,
   geneInventory,
@@ -122,6 +156,7 @@ export function FarmPage({
   weather,
   todayFocusMinutes,
   todayKey,
+  activeAlienVisit,
   addSeeds,
   onPlant,
   onPlantPendingRevealedNormal,
@@ -304,6 +339,9 @@ export function FarmPage({
     : 0;
   const barrierActiveToday = farm.guardianBarrierDate === todayKey;
   const canUseActivePlotStarDew = Boolean(activeGrowingPlot?.varietyId) && starDewCount > 0;
+  const activeAlienSceneVisit = activeAlienVisit && activeAlienVisit.expiresAt > nowTimestamp
+    ? activeAlienVisit
+    : null;
 
   const latestStolenRecordByPlotId = useMemo(() => {
     const latestByPlot = new Map<number, StolenRecord>();
@@ -559,13 +597,21 @@ export function FarmPage({
 
       {/* 农场场景 */}
       <div
-        className={`farm-page min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-3 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
+        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-3 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
         style={compactShell
           ? {
             background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
           }
           : undefined}
       >
+          {activeAlienSceneVisit && (
+            <AlienVisitSceneOverlay
+              visit={activeAlienSceneVisit}
+              compactShell={compactShell}
+              useFarmPlotBoardV2={useFarmPlotBoardV2}
+              t={t}
+            />
+          )}
           {useFarmPlotBoardV2 ? (
             <FarmPlotBoardV2
               compactMode={compactShell}
@@ -734,6 +780,100 @@ export function FarmPage({
           t={t}
         />
       )}
+    </div>
+  );
+}
+
+function AlienVisitSceneOverlay({
+  visit,
+  compactShell,
+  useFarmPlotBoardV2,
+  t,
+}: {
+  visit: AlienAppearance;
+  compactShell: boolean;
+  useFarmPlotBoardV2: boolean;
+  t: ReturnType<typeof useI18n>;
+}) {
+  const visual = ALIEN_VISITOR_VISUALS[visit.type];
+  const directionClass = visual.align === 'left' ? 'justify-start' : 'justify-end';
+  const rowClass = visual.align === 'left' ? 'flex-row' : 'flex-row-reverse';
+  const bubbleTailStyle = visual.align === 'left'
+    ? { left: '-7px' }
+    : { right: '-7px' };
+
+  return (
+    <div
+      className={`pointer-events-none absolute inset-x-0 z-30 flex ${directionClass} select-none`}
+      style={{
+        top: useFarmPlotBoardV2
+          ? `calc(env(safe-area-inset-top, 0px) + ${compactShell ? 56 : 58}px)`
+          : 'calc(env(safe-area-inset-top, 0px) + 20px)',
+        paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 12px)',
+        paddingRight: 'calc(env(safe-area-inset-right, 0px) + 12px)',
+      }}
+    >
+      <div
+        className={`relative flex max-w-full items-end gap-2 sm:gap-3 ${rowClass}`}
+        data-testid="farm-alien-visit-overlay"
+        data-alien-type={visit.type}
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          className="absolute inset-x-3 -inset-y-2 rounded-[28px] blur-2xl"
+          aria-hidden="true"
+          style={{ background: visual.glow }}
+        />
+
+        <div className="relative z-10 shrink-0 self-end">
+          <div
+            className="grid h-11 w-11 place-items-center rounded-full border text-xl shadow-[0_10px_22px_rgba(34,24,18,0.16)] sm:h-12 sm:w-12 sm:text-2xl"
+            style={{
+              background: visual.avatarBackground,
+              borderColor: visual.avatarBorderColor,
+            }}
+            aria-hidden="true"
+          >
+            {visual.avatar}
+          </div>
+          <div
+            className="absolute inset-x-2 -bottom-1 h-2 rounded-full blur-sm"
+            aria-hidden="true"
+            style={{ background: visual.glow, opacity: 0.85 }}
+          />
+        </div>
+
+        <div
+          className="relative z-10 rounded-[22px] border px-3 py-2.5 shadow-[0_12px_30px_rgba(50,36,24,0.14)] backdrop-blur-[6px] sm:px-4 sm:py-3"
+          style={{
+            maxWidth: compactShell
+              ? 'min(84vw, 18rem)'
+              : useFarmPlotBoardV2
+                ? 'min(82vw, 22rem)'
+                : 'min(84vw, 20rem)',
+            background: visual.bubbleBackground,
+            borderColor: visual.borderColor,
+            color: visual.textColor,
+          }}
+        >
+          <span
+            className="absolute bottom-3 h-3 w-3 rotate-45 rounded-[4px] border"
+            aria-hidden="true"
+            style={{
+              ...bubbleTailStyle,
+              background: visual.bubbleBackground,
+              borderColor: visual.borderColor,
+            }}
+          />
+          <p
+            data-testid="farm-alien-visit-message"
+            className="relative text-[11px] font-semibold leading-5 sm:text-xs"
+          >
+            {t[visit.messageKey]}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
