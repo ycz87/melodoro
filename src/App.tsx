@@ -329,7 +329,7 @@ function App() {
     () => farm.plots.filter((plot) => plot.state === 'growing' || plot.state === 'mature').length,
     [farm.plots],
   );
-  const { alienVisit } = useAlienVisit({
+  const { alienVisit, summonDriftBottleVisit } = useAlienVisit({
     plantedMelonCount,
     todayKey,
     mutationDoctorSignal,
@@ -1004,6 +1004,16 @@ function App() {
     consumeShopItem('guardian-barrier');
     enqueueRecoveryToast(t.itemGuardianBarrierActive);
   }, [farm.guardianBarrierDate, farm.plots, shed.items, todayKey, consumeShopItem, activateGuardianBarrier, enqueueRecoveryToast, t]);
+
+  const handleUseDriftBottle = useCallback(() => {
+    const consumed = consumeShopItem('drift-bottle');
+    if (!consumed) return;
+
+    const summoned = summonDriftBottleVisit();
+    if (!summoned) {
+      addShedItem('drift-bottle', 1);
+    }
+  }, [consumeShopItem, summonDriftBottleVisit, addShedItem]);
 
   const handleUseTrapNet = useCallback((plotId: number) => {
     const targetPlot = farm.plots.find((p) => p.id === plotId);
@@ -2098,6 +2108,7 @@ function App() {
             onUseNectar={handleUseNectar}
             onUseStarTracker={handleUseStarTracker}
             onUseGuardianBarrier={handleUseGuardianBarrier}
+            onUseDriftBottle={handleUseDriftBottle}
             onUseTrapNet={handleUseTrapNet}
             onInject={handleGeneInject}
             onFusion={handleGeneFusion}

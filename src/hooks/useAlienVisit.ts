@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import type {
   AlienAppearance,
@@ -10,6 +10,13 @@ import { DEFAULT_ALIEN_VISIT } from '../types/farm';
 
 const ALIEN_VISIT_STORAGE_KEY = 'alienVisit';
 const ALIEN_DISPLAY_DURATION_MS = 3_000;
+const DRIFT_BOTTLE_SUMMON_CANDIDATES: readonly {
+  type: AlienType;
+  messageKey: AlienDialogueKey;
+}[] = [
+  { type: 'melon-alien', messageKey: 'alienMelonGreeting' },
+  { type: 'mutation-doctor', messageKey: 'alienMutationDoctor' },
+];
 
 interface UseAlienVisitOptions {
   plantedMelonCount: number;
@@ -89,6 +96,11 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
   );
   const previousSignalRef = useRef(mutationDoctorSignal);
   const currentAlienExpiresAt = alienVisit.current?.expiresAt;
+  const activeAlienExpiresAtRef = useRef(currentAlienExpiresAt ?? 0);
+
+  useEffect(() => {
+    activeAlienExpiresAtRef.current = currentAlienExpiresAt ?? 0;
+  }, [currentAlienExpiresAt]);
 
   // App open / day check: melon alien appears with 10% chance when 3+ melons exist.
   useEffect(() => {
@@ -160,8 +172,36 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
     };
   }, [currentAlienExpiresAt, setAlienVisit]);
 
+  const summonDriftBottleVisit = useCallback(() => {
+    const now = Date.now();
+    if (activeAlienExpiresAtRef.current > now) {
+      return false;
+    }
+
+    const cleanedVisit = clearExpiredAppearance(alienVisit, now);
+
+    if (cleanedVisit.current && cleanedVisit.current.expiresAt > now) {
+      activeAlienExpiresAtRef.current = cleanedVisit.current.expiresAt;
+      return false;
+    }
+
+    const candidate = DRIFT_BOTTLE_SUMMON_CANDIDATES[
+      Math.floor(Math.random() * DRIFT_BOTTLE_SUMMON_CANDIDATES.length)
+    ];
+    const idSuffix = Math.random().toString(36).slice(2, 8);
+    const appearance = createAppearance(candidate.type, candidate.messageKey, now, idSuffix);
+    activeAlienExpiresAtRef.current = appearance.expiresAt;
+
+    setAlienVisit({
+      ...cleanedVisit,
+      current: appearance,
+    });
+    return true;
+  }, [alienVisit, setAlienVisit]);
+
   return {
     alienVisit,
     setAlienVisit,
+    summonDriftBottleVisit,
   };
 }

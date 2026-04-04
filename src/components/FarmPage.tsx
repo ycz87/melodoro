@@ -88,6 +88,7 @@ interface FarmPageProps {
   onUseNectar: (plotId: number) => void;
   onUseStarTracker: (plotId: number) => void;
   onUseGuardianBarrier: () => void;
+  onUseDriftBottle: () => void;
   onUseTrapNet: (plotId: number) => void;
   onGoWarehouse: () => void;
   compactShell?: boolean;
@@ -181,6 +182,7 @@ export function FarmPage({
   onUseNectar,
   onUseStarTracker,
   onUseGuardianBarrier,
+  onUseDriftBottle,
   onUseTrapNet,
   onGoWarehouse,
   compactShell = false,
@@ -320,6 +322,7 @@ export function FarmPage({
   const nectarCount = (items as Record<string, number>)['nectar'] ?? 0;
   const starTrackerCount = (items as Record<string, number>)['star-tracker'] ?? 0;
   const guardianBarrierCount = (items as Record<string, number>)['guardian-barrier'] ?? 0;
+  const driftBottleCount = (items as Record<string, number>)['drift-bottle'] ?? 0;
   const trapNetCount = (items as Record<string, number>)['trap-net'] ?? 0;
   const crystalBallCount = (items as Record<string, number>)['crystal-ball'] ?? 0;
   const crystalBallPendingVarietyName = pendingRevealedNormalSeed
@@ -342,6 +345,7 @@ export function FarmPage({
   const activeAlienSceneVisit = activeAlienVisit && activeAlienVisit.expiresAt > nowTimestamp
     ? activeAlienVisit
     : null;
+  const driftBottleDisabled = Boolean(activeAlienSceneVisit);
 
   const latestStolenRecordByPlotId = useMemo(() => {
     const latestByPlot = new Map<number, StolenRecord>();
@@ -573,6 +577,29 @@ export function FarmPage({
               >
                 <span>🎪</span>
                 <span>{barrierActiveToday ? t.itemGuardianBarrierActive : `${t.itemName('guardian-barrier')} · ${guardianBarrierCount}`}</span>
+              </button>
+            )}
+            {driftBottleCount > 0 && (
+              <button
+                type="button"
+                onClick={onUseDriftBottle}
+                disabled={driftBottleDisabled}
+                data-testid="farm-drift-bottle-chip"
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button disabled:hover:translate-y-0"
+                style={{
+                  background: driftBottleDisabled
+                    ? `${theme.surface}cc`
+                    : `${theme.accent}18`,
+                  borderColor: driftBottleDisabled ? theme.border : theme.accent,
+                  color: driftBottleDisabled ? theme.textMuted : theme.accent,
+                  boxShadow: 'var(--shadow-card)',
+                  cursor: driftBottleDisabled ? 'not-allowed' : 'pointer',
+                  opacity: driftBottleDisabled ? 0.72 : 1,
+                }}
+                title={t.itemDescription('drift-bottle')}
+              >
+                <span>🍾</span>
+                <span>{`${t.itemName('drift-bottle')} · ${driftBottleCount}`}</span>
               </button>
             )}
             {trapNetCount > 0 && (
