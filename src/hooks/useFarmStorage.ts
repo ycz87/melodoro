@@ -28,7 +28,7 @@ import {
 } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { getPlotCount } from '../farm/galaxy';
-import { rollVariety } from '../farm/growth';
+import { rollVariety, updatePlotGrowth, type MutationOutcome } from '../farm/growth';
 
 const FARM_KEY = 'watermelon-farm';
 const MAX_PLOT_COUNT = 9;
@@ -870,6 +870,38 @@ export function useFarmStorage() {
     return true;
   }, [farm.plots, setFarm]);
 
+  /** 星露精华：立刻将当前剩余成熟时间减半 */
+  const halvePlotRemainingMatureTime = useCallback((plotId: number): { success: boolean; mutationOutcome?: MutationOutcome } => {
+    const plot = farm.plots.find((p) => p.id === plotId);
+    if (!plot || plot.state !== 'growing' || !plot.varietyId) return { success: false };
+
+    const matureMinutes = VARIETY_DEFS[plot.varietyId]?.matureMinutes ?? 10000;
+    const accumulatedMinutes = Math.max(
+      0,
+      Math.floor(plot.accumulatedMinutes > 0 ? plot.accumulatedMinutes : plot.progress * matureMinutes),
+    );
+    const remainingMinutes = Math.max(0, matureMinutes - accumulatedMinutes);
+    const boostMinutes = Math.min(remainingMinutes, Math.ceil(remainingMinutes / 2));
+    if (boostMinutes <= 0) return { success: false };
+
+    const nowTimestamp = Date.now();
+    const growthResult = updatePlotGrowth(plot, boostMinutes, nowTimestamp);
+    const mutationOutcome = growthResult.mutationOutcome?.status === 'positive' && growthResult.plot.isMutant === true
+      ? growthResult.mutationOutcome
+      : undefined;
+
+    setFarm((prev) => ({
+      ...prev,
+      plots: prev.plots.map((p) => (
+        p.id === plotId && p.state === 'growing' && p.varietyId
+          ? growthResult.plot
+          : p
+      )),
+    }));
+
+    return mutationOutcome ? { success: true, mutationOutcome } : { success: true };
+  }, [farm.plots, setFarm]);
+
   return {
     farm,
     setFarm,
@@ -888,5 +920,6 @@ export function useFarmStorage() {
     markStolenRecordRecovered,
     revivePlot,
     upgradePlotRarity,
+    halvePlotRemainingMatureTime,
   };
 }
