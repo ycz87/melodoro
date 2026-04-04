@@ -1,4 +1,5 @@
 import type { Rarity, VarietyId } from './farm';
+import type { SeedQuality } from './slicing';
 
 export type ShopItemId =
   | 'star-dew' | 'trap-net' | 'lullaby' | 'crystal-ball' | 'guardian-barrier'
@@ -28,6 +29,11 @@ export const SHOP_ITEMS: ShopItemDef[] = [
   { id: 'premium-seed', emoji: '💎', price: 200, category: 'seed' },
   { id: 'nectar', emoji: '⭐', price: 300, category: 'special' },
 ];
+
+export const SHOP_SEED_ITEM_TO_QUALITY = {
+  'mystery-seed': 'normal',
+  'premium-seed': 'epic',
+} as const satisfies Partial<Record<ShopItemId, SeedQuality>>;
 
 export const PLOT_PRICES: Record<number, number> = {
   4: 200,
