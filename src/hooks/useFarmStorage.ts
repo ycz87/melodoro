@@ -28,7 +28,13 @@ import {
 } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { getPlotCount } from '../farm/galaxy';
-import { rollVariety, updatePlotGrowth, type MutationOutcome } from '../farm/growth';
+import {
+  isLullabyGrowthBoostActive,
+  isSupernovaBottleGrowthBoostActive,
+  rollVariety,
+  updatePlotGrowth,
+  type MutationOutcome,
+} from '../farm/growth';
 
 const FARM_KEY = 'watermelon-farm';
 const MAX_PLOT_COUNT = 9;
@@ -396,6 +402,8 @@ function migrateFarm(raw: unknown): FarmStorage {
     consecutiveInactiveDays: 0,
     lastActivityTimestamp: 0,
     guardianBarrierDate: '',
+    lullabyActivatedAt: 0,
+    supernovaBottleActivatedAt: 0,
     stolenRecords: [],
   };
   const storedUnlockedPlotCount = typeof s.unlockedPlotCount === 'number' && Number.isFinite(s.unlockedPlotCount)
@@ -488,6 +496,12 @@ function migrateFarm(raw: unknown): FarmStorage {
   if (typeof s.consecutiveInactiveDays === 'number') result.consecutiveInactiveDays = s.consecutiveInactiveDays;
   if (typeof s.lastActivityTimestamp === 'number') result.lastActivityTimestamp = s.lastActivityTimestamp;
   if (typeof s.guardianBarrierDate === 'string') result.guardianBarrierDate = s.guardianBarrierDate;
+  if (typeof s.lullabyActivatedAt === 'number' && Number.isFinite(s.lullabyActivatedAt)) {
+    result.lullabyActivatedAt = Math.max(0, s.lullabyActivatedAt);
+  }
+  if (typeof s.supernovaBottleActivatedAt === 'number' && Number.isFinite(s.supernovaBottleActivatedAt)) {
+    result.supernovaBottleActivatedAt = Math.max(0, s.supernovaBottleActivatedAt);
+  }
   if (Array.isArray(s.stolenRecords)) {
     result.stolenRecords = s.stolenRecords
       .map((record) => normalizeStolenRecord(record))
@@ -774,6 +788,34 @@ export function useFarmStorage() {
     return true;
   }, [setFarm]);
 
+  /** 激活原初摇篮曲（当天有效） */
+  const activateLullaby = useCallback((nowTimestamp: number = Date.now()): boolean => {
+    if (!Number.isFinite(nowTimestamp) || nowTimestamp <= 0) return false;
+    if (isLullabyGrowthBoostActive(farmRef.current.lullabyActivatedAt, nowTimestamp)) return false;
+
+    const nextFarm: FarmStorage = {
+      ...farmRef.current,
+      lullabyActivatedAt: nowTimestamp,
+    };
+    farmRef.current = nextFarm;
+    setFarm(nextFarm);
+    return true;
+  }, [setFarm]);
+
+  /** 激活超新星之瓶（24 小时有效） */
+  const activateSupernovaBottle = useCallback((nowTimestamp: number = Date.now()): boolean => {
+    if (!Number.isFinite(nowTimestamp) || nowTimestamp <= 0) return false;
+    if (isSupernovaBottleGrowthBoostActive(farmRef.current.supernovaBottleActivatedAt, nowTimestamp)) return false;
+
+    const nextFarm: FarmStorage = {
+      ...farmRef.current,
+      supernovaBottleActivatedAt: nowTimestamp,
+    };
+    farmRef.current = nextFarm;
+    setFarm(nextFarm);
+    return true;
+  }, [setFarm]);
+
   /** 为地块安装星际追踪器 */
   const addPlotTracker = useCallback((plotId: number): boolean => {
     const plot = farm.plots.find((p) => p.id === plotId);
@@ -915,6 +957,8 @@ export function useFarmStorage() {
     buyPlot,
     updateActiveDate,
     activateGuardianBarrier,
+    activateLullaby,
+    activateSupernovaBottle,
     addPlotTracker,
     addStolenRecord,
     markStolenRecordRecovered,

@@ -70,9 +70,12 @@ import { getTodayKey } from './utils/time';
 import { getStreak, getDayMinutes } from './utils/stats';
 import {
   applyGrowthWithMutation as applyGrowthWithMutationEngine,
+  calculateFarmGrowthBonusMinutes,
   calculateOfflineGrowth,
   calculateFocusBoost,
   getWitherStatus,
+  isLullabyGrowthBoostActive,
+  isSupernovaBottleGrowthBoostActive,
   type MutationOutcome,
   witherPlots,
 } from './farm/growth';
@@ -122,6 +125,12 @@ import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from './typ
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FUSION_HISTORY_KEY = 'watermelon-fusion-history';
 const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow', 'snowy', 'stormy'];
+
+interface FarmGrowthSegment {
+  growthMinutes: number;
+  intervalStartTimestamp?: number;
+  intervalEndTimestamp?: number;
+}
 
 function migrateFusionHistory(raw: unknown): FusionHistory {
   if (!raw || typeof raw !== 'object') return DEFAULT_FUSION_HISTORY;
@@ -234,6 +243,8 @@ function App() {
     buyPlot,
     updateActiveDate,
     activateGuardianBarrier,
+    activateLullaby,
+    activateSupernovaBottle,
     addPlotTracker,
     addStolenRecord,
     markStolenRecordRecovered,
@@ -269,6 +280,7 @@ function App() {
   const previousFarmPlotsRef = useRef<Plot[] | null>(null);
   const updatePlotsRef = useRef(updatePlots);
   const growthCarryMinutesRef = useRef(0);
+  const growthBoostCarryMinutesRef = useRef(0);
   const sellingRef = useRef(false);
   const mutationGunMutexRef = useRef(false);
 
@@ -282,6 +294,12 @@ function App() {
 
   useEffect(() => {
     farmPlotsRef.current = farm.plots;
+  }, [farm.plots]);
+
+  useEffect(() => {
+    if (!farm.plots.some((plot) => plot.state === 'growing')) {
+      growthBoostCarryMinutesRef.current = 0;
+    }
   }, [farm.plots]);
 
   useEffect(() => {
@@ -468,18 +486,87 @@ function App() {
     previousFarmPlotsRef.current = farm.plots;
   }, [farm.plots, enqueueRecoveryToast, t]);
 
+  const resolveFarmGrowthMinutes = useCallback((
+    plots: Plot[],
+    segment: FarmGrowthSegment,
+  ) => {
+    const safeGrowthMinutes = Number.isFinite(segment.growthMinutes)
+      ? Math.max(0, segment.growthMinutes)
+      : 0;
+    if (safeGrowthMinutes <= 0) return 0;
+
+    const hasGrowingPlots = plots.some((plot) => plot.state === 'growing');
+    if (!hasGrowingPlots) {
+      growthBoostCarryMinutesRef.current = 0;
+      return Math.floor(safeGrowthMinutes);
+    }
+
+    const safeEndTimestamp = Number.isFinite(segment.intervalEndTimestamp) && (segment.intervalEndTimestamp ?? 0) > 0
+      ? (segment.intervalEndTimestamp as number)
+      : Date.now();
+    const fallbackStartTimestamp = safeEndTimestamp - safeGrowthMinutes * 60 * 1000;
+    const safeStartTimestamp = Number.isFinite(segment.intervalStartTimestamp) && (segment.intervalStartTimestamp ?? 0) > 0
+      ? Math.min(segment.intervalStartTimestamp as number, safeEndTimestamp)
+      : fallbackStartTimestamp;
+
+    const bonusGrowthMinutes = calculateFarmGrowthBonusMinutes(
+      safeGrowthMinutes,
+      safeStartTimestamp,
+      safeEndTimestamp,
+      farm.lullabyActivatedAt,
+      farm.supernovaBottleActivatedAt,
+    );
+    const rawGrowthMinutes = safeGrowthMinutes + bonusGrowthMinutes + growthBoostCarryMinutesRef.current;
+    const appliedGrowthMinutes = Math.max(0, Math.floor(rawGrowthMinutes));
+    growthBoostCarryMinutesRef.current = rawGrowthMinutes - appliedGrowthMinutes;
+    return appliedGrowthMinutes;
+  }, [farm.lullabyActivatedAt, farm.supernovaBottleActivatedAt]);
+
   const runFarmGrowth = useCallback((
     plots: Plot[],
-    growthMinutes: number,
+    segments: FarmGrowthSegment[],
     nowTimestamp: number,
     enableThiefRoll: boolean = true,
-  ) => applyGrowthWithMutationEngine(plots, growthMinutes, {
-    nowTimestamp,
-    todayKey,
-    focusMinutesToday: todayFocusMinutes,
-    guardianBarrierDate: farm.guardianBarrierDate,
-    enableThiefRoll,
-  }), [todayKey, todayFocusMinutes, farm.guardianBarrierDate]);
+  ) => {
+    const activeSegments = segments.filter((segment) => (
+      Number.isFinite(segment.growthMinutes) && segment.growthMinutes > 0
+    ));
+
+    if (activeSegments.length === 0) {
+      return applyGrowthWithMutationEngine(plots, 0, {
+        nowTimestamp,
+        todayKey,
+        focusMinutesToday: todayFocusMinutes,
+        guardianBarrierDate: farm.guardianBarrierDate,
+        enableThiefRoll,
+      });
+    }
+
+    let nextPlots = plots;
+    const mutationToasts: MutationOutcome[] = [];
+    const stolenRecords: import('./types/farm').StolenRecord[] = [];
+    const lastSegmentIndex = activeSegments.length - 1;
+
+    activeSegments.forEach((segment, index) => {
+      const adjustedGrowthMinutes = resolveFarmGrowthMinutes(nextPlots, segment);
+      const result = applyGrowthWithMutationEngine(nextPlots, adjustedGrowthMinutes, {
+        nowTimestamp,
+        todayKey,
+        focusMinutesToday: todayFocusMinutes,
+        guardianBarrierDate: farm.guardianBarrierDate,
+        enableThiefRoll: enableThiefRoll && index === lastSegmentIndex,
+      });
+      nextPlots = result.plots;
+      mutationToasts.push(...result.mutationToasts);
+      stolenRecords.push(...result.stolenRecords);
+    });
+
+    return {
+      plots: nextPlots,
+      mutationToasts,
+      stolenRecords,
+    };
+  }, [todayKey, todayFocusMinutes, farm.guardianBarrierDate, resolveFarmGrowthMinutes]);
 
   useEffect(() => {
     const previousFocusMinutes = appliedFocusMinutesRef.current;
@@ -500,9 +587,14 @@ function App() {
     if (focusBoostMinutes <= 0) return;
 
     const nowTimestamp = Date.now();
+    const focusIntervalStartTimestamp = nowTimestamp - deltaFocusMinutes * 60 * 1000;
     const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
       farmPlotsRef.current,
-      focusBoostMinutes * timeMultiplierRef.current,
+      [{
+        growthMinutes: focusBoostMinutes * timeMultiplierRef.current,
+        intervalStartTimestamp: focusIntervalStartTimestamp,
+        intervalEndTimestamp: nowTimestamp,
+      }],
       nowTimestamp,
     );
     updatePlotsRef.current(newPlots);
@@ -517,7 +609,7 @@ function App() {
       // First visit or same day — still settle overdue thief countdown once.
       const { plots: settledPlots, stolenRecords } = runFarmGrowth(
         farm.plots,
-        0,
+        [],
         nowTimestamp,
         false,
       );
@@ -547,11 +639,32 @@ function App() {
       updatePlots(witherPlots(farm.plots, nowTimestamp, effectiveLastActivityTs));
       updateActiveDate(todayKey, witherStatus.inactiveDays, nowTimestamp);
     } else {
-      // Apply minute-based growth: offline growth + focus boost
+      // Apply offline growth and focus boost separately so boost windows can clip each segment correctly.
       const offlineGrowthMinutes = calculateOfflineGrowth(witherStatus.inactiveMinutes);
       const focusBoostMinutes = calculateFocusBoost(todayFocusMinutes);
-      const totalGrowthMinutes = (offlineGrowthMinutes + focusBoostMinutes) * timeMultiplierRef.current;
-      const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(farm.plots, totalGrowthMinutes, nowTimestamp);
+      const growthSegments: FarmGrowthSegment[] = [];
+
+      if (offlineGrowthMinutes > 0) {
+        growthSegments.push({
+          growthMinutes: offlineGrowthMinutes * timeMultiplierRef.current,
+          intervalStartTimestamp: effectiveLastActivityTs,
+          intervalEndTimestamp: effectiveLastActivityTs + offlineGrowthMinutes * 60 * 1000,
+        });
+      }
+
+      if (focusBoostMinutes > 0) {
+        growthSegments.push({
+          growthMinutes: focusBoostMinutes * timeMultiplierRef.current,
+          intervalStartTimestamp: nowTimestamp - todayFocusMinutes * 60 * 1000,
+          intervalEndTimestamp: nowTimestamp,
+        });
+      }
+
+      const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
+        farm.plots,
+        growthSegments,
+        nowTimestamp,
+      );
       updatePlots(newPlots);
       enqueueMutationToasts(mutationToasts);
       stolenRecords.forEach(addStolenRecord);
@@ -569,9 +682,16 @@ function App() {
       if (minutesPerTick <= 0) return;
 
       const nowTimestamp = Date.now();
+      const intervalDurationMs = timeMultiplier > 0
+        ? (minutesPerTick / timeMultiplier) * 60 * 1000
+        : minutesPerTick * 60 * 1000;
       const { plots: newPlots, mutationToasts, stolenRecords } = runFarmGrowth(
         farmPlotsRef.current,
-        minutesPerTick,
+        [{
+          growthMinutes: minutesPerTick,
+          intervalStartTimestamp: nowTimestamp - intervalDurationMs,
+          intervalEndTimestamp: nowTimestamp,
+        }],
         nowTimestamp,
         false,
       );
@@ -589,7 +709,7 @@ function App() {
       const nowTimestamp = Date.now();
       const { plots: newPlots, stolenRecords } = runFarmGrowth(
         farmPlotsRef.current,
-        0,
+        [],
         nowTimestamp,
         false,
       );
@@ -734,6 +854,32 @@ function App() {
       addCoins(price);
     }
   }, [farm.unlockedPlotCount, spendCoins, buyPlot, addCoins]);
+
+  const handleUseLullaby = useCallback(() => {
+    const nowTimestamp = Date.now();
+    if (isLullabyGrowthBoostActive(farm.lullabyActivatedAt, nowTimestamp)) return;
+
+    const consumed = consumeShopItem('lullaby');
+    if (!consumed) return;
+
+    const activated = activateLullaby(nowTimestamp);
+    if (!activated) {
+      addShedItem('lullaby', 1);
+    }
+  }, [farm.lullabyActivatedAt, consumeShopItem, activateLullaby, addShedItem]);
+
+  const handleUseSupernovaBottle = useCallback(() => {
+    const nowTimestamp = Date.now();
+    if (isSupernovaBottleGrowthBoostActive(farm.supernovaBottleActivatedAt, nowTimestamp)) return;
+
+    const consumed = consumeShopItem('supernova-bottle');
+    if (!consumed) return;
+
+    const activated = activateSupernovaBottle(nowTimestamp);
+    if (!activated) {
+      addShedItem('supernova-bottle', 1);
+    }
+  }, [farm.supernovaBottleActivatedAt, consumeShopItem, activateSupernovaBottle, addShedItem]);
 
   const handleUseMutationGun = useCallback((plotId: number) => {
     if (mutationGunMutexRef.current) return;
@@ -1904,6 +2050,8 @@ function App() {
             onPlantDarkMatter={handleFarmPlantDarkMatter}
             onHarvest={handleFarmHarvest}
             onClear={clearPlot}
+            onUseLullaby={handleUseLullaby}
+            onUseSupernovaBottle={handleUseSupernovaBottle}
             onUseMutationGun={handleUseMutationGun}
             onUseMoonDew={handleUseMoonDew}
             onUseStarDew={handleUseStarDew}
