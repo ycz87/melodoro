@@ -46,6 +46,10 @@ export function WarehousePage({ warehouse, shed, onSynthesize, onSynthesizeAll, 
   const [synthAnim, setSynthAnim] = useState<string | null>(null);
   const [flavorTooltip, setFlavorTooltip] = useState<ItemId | null>(null);
 
+  const visibleSeedCounts = {
+    ...shed.seeds,
+    normal: Math.max(0, shed.seeds.normal - (shed.pendingRevealedNormalSeed ? 1 : 0)),
+  };
   const legendaryUnlocked = warehouse.items.legendary > 0;
   const canSliceRipe = warehouse.items.ripe > 0;
   const canSliceLegendary = warehouse.items.legendary > 0;
@@ -269,39 +273,39 @@ export function WarehousePage({ warehouse, shed, onSynthesize, onSynthesizeAll, 
       ) : (
         <>
           {/* ─── Seeds Section ─── */}
-          {(shed.seeds.normal > 0 || shed.seeds.epic > 0 || shed.seeds.legendary > 0) && (
+          {(visibleSeedCounts.normal > 0 || visibleSeedCounts.epic > 0 || visibleSeedCounts.legendary > 0) && (
             <div>
               <h3 className="text-sm font-semibold mb-3" style={{ color: theme.text }}>{t.shedSeedsTitle}</h3>
               <div className="flex flex-col gap-2">
-                {shed.seeds.normal > 0 && (
+                {visibleSeedCounts.normal > 0 && (
                   <div className="flex items-center justify-between p-3 rounded-[var(--radius-card)] border"
                     style={{ backgroundColor: theme.inputBg, borderColor: theme.border, boxShadow: 'var(--shadow-card)' }}>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">🌱</span>
                       <span className="text-sm font-medium" style={{ color: theme.text }}>
-                        {t.seedQualityLabel('normal')} {t.shedSeedsCount(shed.seeds.normal)}
+                        {t.seedQualityLabel('normal')} {t.shedSeedsCount(visibleSeedCounts.normal)}
                       </span>
                     </div>
                   </div>
                 )}
-                {shed.seeds.epic > 0 && (
+                {visibleSeedCounts.epic > 0 && (
                   <div className="flex items-center justify-between p-3 rounded-[var(--radius-card)] border"
                     style={{ backgroundColor: '#a78bfa08', borderColor: '#a78bfa30', boxShadow: 'var(--shadow-card)' }}>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">💎</span>
                       <span className="text-sm font-medium" style={{ color: '#a78bfa' }}>
-                        {t.seedQualityLabel('epic')} {t.shedSeedsCount(shed.seeds.epic)}
+                        {t.seedQualityLabel('epic')} {t.shedSeedsCount(visibleSeedCounts.epic)}
                       </span>
                     </div>
                   </div>
                 )}
-                {shed.seeds.legendary > 0 && (
+                {visibleSeedCounts.legendary > 0 && (
                   <div className="flex items-center justify-between p-3 rounded-[var(--radius-card)] border"
                     style={{ backgroundColor: '#fbbf2408', borderColor: '#fbbf2430', boxShadow: 'var(--shadow-card)' }}>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">🌟</span>
                       <span className="text-sm font-medium" style={{ color: '#fbbf24' }}>
-                        {t.seedQualityLabel('legendary')} {t.shedSeedsCount(shed.seeds.legendary)}
+                        {t.seedQualityLabel('legendary')} {t.shedSeedsCount(visibleSeedCounts.legendary)}
                       </span>
                     </div>
                   </div>

@@ -512,6 +512,8 @@ export interface Messages {
   darkMatterSeedHint: string;
   darkMatterSeedLabel: (varietyName: string) => string;
   darkMatterSeedCountLabel: (count: number) => string;
+  revealedNormalSeedLabel: (varietyName: string) => string;
+  revealedNormalSeedHint: string;
 
   // ─── Gene Fusion (v0.28.0) ───
   geneFusionTitle: string;

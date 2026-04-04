@@ -25,6 +25,7 @@ import type {
   HybridSeed,
   PrismaticSeed,
   DarkMatterSeed,
+  PendingRevealedNormalSeed,
   ItemId,
 } from '../types/slicing';
 import { VARIETY_DEFS, RARITY_COLOR, RARITY_STARS } from '../types/farm';
@@ -50,11 +51,13 @@ interface FarmPageProps {
   hybridSeeds: HybridSeed[];
   prismaticSeeds: PrismaticSeed[];
   darkMatterSeeds: DarkMatterSeed[];
+  pendingRevealedNormalSeed: PendingRevealedNormalSeed | null;
   weather: Weather | null;
   todayFocusMinutes: number;
   todayKey: string;
   addSeeds: (count: number, quality?: SeedQuality) => void;
   onPlant: (plotId: number, quality: SeedQuality) => VarietyId;
+  onPlantPendingRevealedNormal: (plotId: number) => void;
   onPlantInjected: (plotId: number, seedId: string) => void;
   onPlantHybrid: (plotId: number, seedId: string) => void;
   onPlantPrismatic: (plotId: number, seedId: string) => void;
@@ -75,6 +78,7 @@ interface FarmPageProps {
   onClear: (plotId: number) => void;
   onUseLullaby: () => void;
   onUseSupernovaBottle: () => void;
+  onUseCrystalBall: () => void;
   onUseMutationGun: (plotId: number) => void;
   onUseMoonDew: (plotId: number) => void;
   onUseStarDew: (plotId: number) => void;
@@ -114,11 +118,13 @@ export function FarmPage({
   hybridSeeds,
   prismaticSeeds,
   darkMatterSeeds,
+  pendingRevealedNormalSeed,
   weather,
   todayFocusMinutes,
   todayKey,
   addSeeds,
   onPlant,
+  onPlantPendingRevealedNormal,
   onPlantInjected,
   onPlantHybrid,
   onPlantPrismatic,
@@ -133,6 +139,7 @@ export function FarmPage({
   onClear,
   onUseLullaby,
   onUseSupernovaBottle,
+  onUseCrystalBall,
   onUseMutationGun,
   onUseMoonDew,
   onUseStarDew,
@@ -260,7 +267,12 @@ export function FarmPage({
   }, [activeGrowingPlot, nowTimestamp]);
 
   const totalBaseSeeds = seeds.normal + seeds.epic + seeds.legendary;
-  const totalPlantableSeeds = totalBaseSeeds + injectedSeeds.length + hybridSeeds.length + prismaticSeeds.length + darkMatterSeeds.length;
+  const totalPlantableSeeds = totalBaseSeeds
+    + injectedSeeds.length
+    + hybridSeeds.length
+    + prismaticSeeds.length
+    + darkMatterSeeds.length
+    + (pendingRevealedNormalSeed ? 1 : 0);
   const harvestablePlotCount = useMemo(
     () => farm.plots.filter((plot) => plot.state === 'mature').length,
     [farm.plots],
@@ -274,6 +286,11 @@ export function FarmPage({
   const starTrackerCount = (items as Record<string, number>)['star-tracker'] ?? 0;
   const guardianBarrierCount = (items as Record<string, number>)['guardian-barrier'] ?? 0;
   const trapNetCount = (items as Record<string, number>)['trap-net'] ?? 0;
+  const crystalBallCount = (items as Record<string, number>)['crystal-ball'] ?? 0;
+  const crystalBallPendingVarietyName = pendingRevealedNormalSeed
+    ? t.varietyName(pendingRevealedNormalSeed.varietyId)
+    : null;
+  const canUseCrystalBall = crystalBallCount > 0 && !pendingRevealedNormalSeed && seeds.normal > 0;
   const lullabyActive = isLullabyGrowthBoostActive(farm.lullabyActivatedAt, nowTimestamp);
   const supernovaBottleActive = isSupernovaBottleGrowthBoostActive(
     farm.supernovaBottleActivatedAt,
@@ -304,6 +321,12 @@ export function FarmPage({
     onPlant(plantingPlotId, quality);
     setPlantingPlotId(null);
   }, [plantingPlotId, onPlant]);
+
+  const handlePlantPendingRevealedNormal = useCallback(() => {
+    if (plantingPlotId === null) return;
+    onPlantPendingRevealedNormal(plantingPlotId);
+    setPlantingPlotId(null);
+  }, [plantingPlotId, onPlantPendingRevealedNormal]);
 
   const handlePlantInjected = useCallback((seedId: string) => {
     if (plantingPlotId === null) return;
@@ -454,6 +477,48 @@ export function FarmPage({
                     ? `${t.itemName('supernova-bottle')} · +50% · ${t.formatDuration(supernovaBottleRemainingMinutes)}`
                     : `${t.itemName('supernova-bottle')} · ${supernovaBottleCount}`}
                 </span>
+              </button>
+            )}
+            {pendingRevealedNormalSeed ? (
+              <div
+                data-testid="farm-crystal-ball-chip"
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(232,214,255,0.95) 0%, rgba(219,177,255,0.94) 100%)',
+                  borderColor: '#a855f7',
+                  color: '#581c87',
+                  boxShadow: 'var(--shadow-card)',
+                }}
+                title={t.revealedNormalSeedHint}
+              >
+                <span>🔮</span>
+                <span>
+                  {crystalBallCount > 0
+                    ? `${crystalBallPendingVarietyName} · ${crystalBallCount}`
+                    : crystalBallPendingVarietyName}
+                </span>
+              </div>
+            ) : crystalBallCount > 0 && (
+              <button
+                type="button"
+                onClick={onUseCrystalBall}
+                disabled={!canUseCrystalBall}
+                data-testid="farm-crystal-ball-chip"
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button disabled:hover:translate-y-0"
+                style={{
+                  background: canUseCrystalBall
+                    ? 'linear-gradient(135deg, rgba(236,225,255,0.97) 0%, rgba(223,190,255,0.95) 100%)'
+                    : `${theme.surface}cc`,
+                  borderColor: canUseCrystalBall ? '#a855f7' : theme.border,
+                  color: canUseCrystalBall ? '#581c87' : theme.textMuted,
+                  boxShadow: 'var(--shadow-card)',
+                  cursor: canUseCrystalBall ? 'pointer' : 'not-allowed',
+                  opacity: canUseCrystalBall ? 1 : 0.7,
+                }}
+                title={t.itemDescription('crystal-ball')}
+              >
+                <span>🔮</span>
+                <span>{`${t.itemName('crystal-ball')} · ${crystalBallCount}`}</span>
               </button>
             )}
             {(guardianBarrierCount > 0 || barrierActiveToday) && (
@@ -632,9 +697,11 @@ export function FarmPage({
             hybridSeeds={hybridSeeds}
             prismaticSeeds={prismaticSeeds}
             darkMatterSeeds={darkMatterSeeds}
+            pendingRevealedNormalSeed={pendingRevealedNormalSeed}
             theme={theme}
             t={t}
             onSelect={handlePlant}
+            onSelectPendingRevealedNormal={handlePlantPendingRevealedNormal}
             onSelectInjected={handlePlantInjected}
             onSelectHybrid={handlePlantHybrid}
             onSelectPrismatic={handlePlantPrismatic}
@@ -1411,15 +1478,17 @@ export function PlotCard({ plot, stolenRecord, nowTimestamp, theme, t, isTooltip
 }
 
 // ─── 种植弹窗 ───
-function PlantModal({ seeds, injectedSeeds, hybridSeeds, prismaticSeeds, darkMatterSeeds, theme, t, onSelect, onSelectInjected, onSelectHybrid, onSelectPrismatic, onSelectDarkMatter, onClose }: {
+function PlantModal({ seeds, injectedSeeds, hybridSeeds, prismaticSeeds, darkMatterSeeds, pendingRevealedNormalSeed, theme, t, onSelect, onSelectPendingRevealedNormal, onSelectInjected, onSelectHybrid, onSelectPrismatic, onSelectDarkMatter, onClose }: {
   seeds: SeedCounts;
   injectedSeeds: InjectedSeed[];
   hybridSeeds: import('../types/slicing').HybridSeed[];
   prismaticSeeds: PrismaticSeed[];
   darkMatterSeeds: DarkMatterSeed[];
+  pendingRevealedNormalSeed: PendingRevealedNormalSeed | null;
   theme: ReturnType<typeof useTheme>;
   t: ReturnType<typeof useI18n>;
   onSelect: (quality: SeedQuality) => void;
+  onSelectPendingRevealedNormal: () => void;
   onSelectInjected: (seedId: string) => void;
   onSelectHybrid: (seedId: string) => void;
   onSelectPrismatic: (seedId: string) => void;
@@ -1481,6 +1550,38 @@ function PlantModal({ seeds, injectedSeeds, hybridSeeds, prismaticSeeds, darkMat
       <div className="absolute inset-0 animate-fade-in" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} />
       <div className="relative rounded-[var(--radius-panel)] border p-5 mx-4 max-w-sm w-full animate-fade-up" style={{ backgroundColor: theme.surface, borderColor: theme.border, boxShadow: 'var(--shadow-elevated)' }}>
         <h3 className="text-base font-semibold text-center mb-4" style={{ color: theme.text }}>{t.farmSelectSeed}</h3>
+
+        {pendingRevealedNormalSeed && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={onSelectPendingRevealedNormal}
+              data-testid="farm-plant-modal-revealed-normal-seed"
+              className="w-full rounded-[var(--radius-card)] border p-3 text-left transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-card"
+              style={{
+                background: 'linear-gradient(135deg, rgba(241,233,255,0.96) 0%, rgba(230,209,255,0.95) 100%)',
+                borderColor: '#a855f780',
+                boxShadow: 'var(--shadow-card)',
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold" style={{ color: '#581c87' }}>
+                  {t.revealedNormalSeedLabel(t.varietyName(pendingRevealedNormalSeed.varietyId))}
+                </span>
+                <span
+                  className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
+                  style={{ color: '#581c87', backgroundColor: 'rgba(168,85,247,0.16)' }}
+                >
+                  {t.seedQualityLabel('normal')}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-relaxed" style={{ color: '#6b21a8' }}>
+                {t.revealedNormalSeedHint}
+              </p>
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
           {options.map(opt => (
             <button
