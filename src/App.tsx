@@ -115,7 +115,7 @@ import type {
   VarietyId,
   Weather,
 } from './types/farm';
-import { SHOP_ITEMS, PLOT_PRICES } from './types/market';
+import { SHOP_ITEMS, PLOT_PRICES, SHOP_SEED_ITEM_TO_QUALITY } from './types/market';
 import type { ShopItemId, WeeklyItem } from './types/market';
 import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from './types/gene';
 
@@ -712,8 +712,15 @@ function App() {
     if (!itemDef) return;
     const spent = spendCoins(itemDef.price);
     if (!spent) return;
+
+    const seedQuality = SHOP_SEED_ITEM_TO_QUALITY[itemId as keyof typeof SHOP_SEED_ITEM_TO_QUALITY];
+    if (seedQuality) {
+      addSeeds(1, seedQuality);
+      return;
+    }
+
     addShedItem(itemId, 1);
-  }, [addShedItem, spendCoins]);
+  }, [addSeeds, addShedItem, spendCoins]);
 
   const handleBuyPlot = useCallback((plotIndex: number) => {
     const price = PLOT_PRICES[plotIndex];

@@ -17,6 +17,7 @@ import type {
 } from '../types/slicing';
 import { DEFAULT_SHED_STORAGE, DEFAULT_PITY, DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { DARK_MATTER_VARIETIES, HYBRID_GALAXY_PAIRS, PRISMATIC_VARIETIES } from '../types/farm';
+import { SHOP_SEED_ITEM_TO_QUALITY } from '../types/market';
 
 const SHED_KEY = 'watermelon-shed';
 const INJECTED_SEED_QUALITIES: SeedQuality[] = ['normal', 'epic', 'legendary'];
@@ -54,9 +55,16 @@ function migrateShed(raw: unknown): ShedStorage {
     const items = s.items as Record<string, unknown>;
     const nextItems = result.items as Record<string, number>;
     for (const [id, value] of Object.entries(items)) {
-      if (typeof value === 'number' && Number.isFinite(value)) {
-        nextItems[id] = value;
+      if (typeof value !== 'number' || !Number.isFinite(value)) continue;
+
+      const normalizedCount = Math.max(0, Math.floor(value));
+      const migratedSeedQuality = SHOP_SEED_ITEM_TO_QUALITY[id as keyof typeof SHOP_SEED_ITEM_TO_QUALITY];
+      if (migratedSeedQuality) {
+        result.seeds[migratedSeedQuality] += normalizedCount;
+        continue;
       }
+
+      nextItems[id] = normalizedCount;
     }
   }
 
