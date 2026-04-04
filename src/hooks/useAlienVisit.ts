@@ -96,11 +96,21 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
   );
   const previousSignalRef = useRef(mutationDoctorSignal);
   const currentAlienExpiresAt = alienVisit.current?.expiresAt;
+  const alienVisitRef = useRef(alienVisit);
   const activeAlienExpiresAtRef = useRef(currentAlienExpiresAt ?? 0);
 
   useEffect(() => {
+    alienVisitRef.current = alienVisit;
     activeAlienExpiresAtRef.current = currentAlienExpiresAt ?? 0;
-  }, [currentAlienExpiresAt]);
+  }, [alienVisit, currentAlienExpiresAt]);
+
+  const applyAlienVisitUpdate = useCallback((updater: (prev: AlienVisit) => AlienVisit) => {
+    const next = updater(alienVisitRef.current);
+    alienVisitRef.current = next;
+    setAlienVisit(next);
+    activeAlienExpiresAtRef.current = next.current?.expiresAt ?? 0;
+    return next;
+  }, [setAlienVisit]);
 
   // App open / day check: melon alien appears with 10% chance when 3+ melons exist.
   useEffect(() => {
@@ -109,7 +119,7 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
     const now = Date.now();
     const melonAlienChanceRoll = Math.random();
     const melonAlienIdSuffix = Math.random().toString(36).slice(2, 8);
-    setAlienVisit((prev) => {
+    applyAlienVisitUpdate((prev) => {
       const cleaned = clearExpiredAppearance(prev, now);
 
       if (plantedMelonCount < 3) {
@@ -133,7 +143,7 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
         current: createAppearance('melon-alien', 'alienMelonGreeting', now, melonAlienIdSuffix),
       };
     });
-  }, [plantedMelonCount, todayKey, setAlienVisit]);
+  }, [plantedMelonCount, todayKey, applyAlienVisitUpdate]);
 
   // Mutation doctor: 15% chance when gene modifier is consumed.
   useEffect(() => {
@@ -148,29 +158,29 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
 
     const now = Date.now();
     const mutationDoctorIdSuffix = Math.random().toString(36).slice(2, 8);
-    setAlienVisit((prev) => ({
+    applyAlienVisitUpdate((prev) => ({
       ...clearExpiredAppearance(prev, now),
       current: createAppearance('mutation-doctor', 'alienMutationDoctor', now, mutationDoctorIdSuffix),
     }));
-  }, [mutationDoctorSignal, setAlienVisit]);
+  }, [mutationDoctorSignal, applyAlienVisitUpdate]);
 
   // Auto-hide active alien bubble after 3 seconds.
   useEffect(() => {
     if (!currentAlienExpiresAt) return;
     const remainingMs = currentAlienExpiresAt - Date.now();
     if (remainingMs <= 0) {
-      setAlienVisit((prev) => clearExpiredAppearance(prev, Date.now()));
+      applyAlienVisitUpdate((prev) => clearExpiredAppearance(prev, Date.now()));
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      setAlienVisit((prev) => clearExpiredAppearance(prev, Date.now()));
+      applyAlienVisitUpdate((prev) => clearExpiredAppearance(prev, Date.now()));
     }, remainingMs + 10);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [currentAlienExpiresAt, setAlienVisit]);
+  }, [currentAlienExpiresAt, applyAlienVisitUpdate]);
 
   const summonDriftBottleVisit = useCallback(() => {
     const now = Date.now();
@@ -183,30 +193,25 @@ export function useAlienVisit({ plantedMelonCount, todayKey, mutationDoctorSigna
     ];
     const idSuffix = Math.random().toString(36).slice(2, 8);
     const appearance = createAppearance(candidate.type, candidate.messageKey, now, idSuffix);
-    let success = false;
 
-    setAlienVisit((prev) => {
+    const next = applyAlienVisitUpdate((prev) => {
       const cleanedVisit = clearExpiredAppearance(prev, now);
 
       if (cleanedVisit.current && cleanedVisit.current.expiresAt > now) {
-        activeAlienExpiresAtRef.current = cleanedVisit.current.expiresAt;
         return cleanedVisit;
       }
 
-      activeAlienExpiresAtRef.current = appearance.expiresAt;
-      success = true;
       return {
         ...cleanedVisit,
         current: appearance,
       };
     });
 
-    return success;
-  }, [setAlienVisit]);
+    return next.current?.id === appearance.id;
+  }, [applyAlienVisitUpdate]);
 
   return {
     alienVisit,
-    setAlienVisit,
     summonDriftBottleVisit,
   };
 }
