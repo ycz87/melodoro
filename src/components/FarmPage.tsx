@@ -28,7 +28,13 @@ import type {
   ItemId,
 } from '../types/slicing';
 import { VARIETY_DEFS, RARITY_COLOR, RARITY_STARS } from '../types/farm';
-import { getGrowthStage, isVarietyRevealed } from '../farm/growth';
+import {
+  getGrowthStage,
+  getSupernovaBottleGrowthBoostEndTimestamp,
+  isLullabyGrowthBoostActive,
+  isSupernovaBottleGrowthBoostActive,
+  isVarietyRevealed,
+} from '../farm/growth';
 import { CollectionPage } from './CollectionPage';
 import { GeneLabPage } from './GeneLabPage';
 import { SimpleFarmGrid } from './farm/SimpleFarmGrid';
@@ -67,6 +73,8 @@ interface FarmPageProps {
     rewardSeedQuality?: SeedQuality;
   };
   onClear: (plotId: number) => void;
+  onUseLullaby: () => void;
+  onUseSupernovaBottle: () => void;
   onUseMutationGun: (plotId: number) => void;
   onUseMoonDew: (plotId: number) => void;
   onUseStarDew: (plotId: number) => void;
@@ -123,6 +131,8 @@ export function FarmPage({
   fusionHistory,
   onHarvest,
   onClear,
+  onUseLullaby,
+  onUseSupernovaBottle,
   onUseMutationGun,
   onUseMoonDew,
   onUseStarDew,
@@ -255,6 +265,8 @@ export function FarmPage({
     () => farm.plots.filter((plot) => plot.state === 'mature').length,
     [farm.plots],
   );
+  const lullabyCount = (items as Record<string, number>).lullaby ?? 0;
+  const supernovaBottleCount = (items as Record<string, number>)['supernova-bottle'] ?? 0;
   const mutationGunCount = (items as Record<string, number>)['mutation-gun'] ?? 0;
   const moonDewCount = (items as Record<string, number>)['moon-dew'] ?? 0;
   const starDewCount = (items as Record<string, number>)['star-dew'] ?? 0;
@@ -262,6 +274,17 @@ export function FarmPage({
   const starTrackerCount = (items as Record<string, number>)['star-tracker'] ?? 0;
   const guardianBarrierCount = (items as Record<string, number>)['guardian-barrier'] ?? 0;
   const trapNetCount = (items as Record<string, number>)['trap-net'] ?? 0;
+  const lullabyActive = isLullabyGrowthBoostActive(farm.lullabyActivatedAt, nowTimestamp);
+  const supernovaBottleActive = isSupernovaBottleGrowthBoostActive(
+    farm.supernovaBottleActivatedAt,
+    nowTimestamp,
+  );
+  const supernovaBottleRemainingMinutes = supernovaBottleActive
+    ? Math.max(
+        1,
+        Math.ceil((getSupernovaBottleGrowthBoostEndTimestamp(farm.supernovaBottleActivatedAt) - nowTimestamp) / 60000),
+      )
+    : 0;
   const barrierActiveToday = farm.guardianBarrierDate === todayKey;
   const canUseActivePlotStarDew = Boolean(activeGrowingPlot?.varietyId) && starDewCount > 0;
 
@@ -379,6 +402,60 @@ export function FarmPage({
 
           {/* 道具快捷栏 */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            {(lullabyCount > 0 || lullabyActive) && (
+              <button
+                type="button"
+                onClick={onUseLullaby}
+                disabled={lullabyActive}
+                data-testid="farm-lullaby-boost-chip"
+                data-active={lullabyActive ? 'true' : 'false'}
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button disabled:hover:translate-y-0"
+                style={{
+                  background: lullabyActive
+                    ? 'linear-gradient(135deg, rgba(241,255,220,0.95) 0%, rgba(217,244,170,0.95) 100%)'
+                    : `${theme.surface}cc`,
+                  borderColor: lullabyActive ? '#84cc16' : theme.border,
+                  color: lullabyActive ? '#47611b' : theme.text,
+                  boxShadow: 'var(--shadow-card)',
+                  cursor: lullabyActive ? 'default' : 'pointer',
+                }}
+                title={t.itemDescription('lullaby')}
+              >
+                <span>🎵</span>
+                <span>
+                  {lullabyActive
+                    ? `${t.itemName('lullaby')} · +30% · ${t.today}`
+                    : `${t.itemName('lullaby')} · ${lullabyCount}`}
+                </span>
+              </button>
+            )}
+            {(supernovaBottleCount > 0 || supernovaBottleActive) && (
+              <button
+                type="button"
+                onClick={onUseSupernovaBottle}
+                disabled={supernovaBottleActive}
+                data-testid="farm-supernova-boost-chip"
+                data-active={supernovaBottleActive ? 'true' : 'false'}
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button disabled:hover:translate-y-0"
+                style={{
+                  background: supernovaBottleActive
+                    ? 'linear-gradient(135deg, rgba(255,238,196,0.97) 0%, rgba(255,198,109,0.95) 100%)'
+                    : `${theme.surface}cc`,
+                  borderColor: supernovaBottleActive ? '#f97316' : theme.border,
+                  color: supernovaBottleActive ? '#8a3b12' : theme.text,
+                  boxShadow: 'var(--shadow-card)',
+                  cursor: supernovaBottleActive ? 'default' : 'pointer',
+                }}
+                title={t.itemDescription('supernova-bottle')}
+              >
+                <span>💥</span>
+                <span>
+                  {supernovaBottleActive
+                    ? `${t.itemName('supernova-bottle')} · +50% · ${t.formatDuration(supernovaBottleRemainingMinutes)}`
+                    : `${t.itemName('supernova-bottle')} · ${supernovaBottleCount}`}
+                </span>
+              </button>
+            )}
             {(guardianBarrierCount > 0 || barrierActiveToday) && (
               <button
                 onClick={onUseGuardianBarrier}

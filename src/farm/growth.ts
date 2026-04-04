@@ -18,6 +18,101 @@ const PRISMATIC_REWIND_MAX = 0.50;
 const MUTATION_TRIGGER_PROGRESS = 0.20;
 const THIEF_STEAL_DELAY_MINUTES = 30;
 const THIEF_STEAL_DELAY_MS = THIEF_STEAL_DELAY_MINUTES * 60 * 1000;
+const DAY_IN_MS = MINUTES_PER_DAY * 60 * 1000;
+
+export const LULLABY_FARM_GROWTH_BONUS_RATE = 0.30;
+export const SUPERNOVA_BOTTLE_FARM_GROWTH_BONUS_RATE = 0.50;
+export const SUPERNOVA_BOTTLE_DURATION_MS = DAY_IN_MS;
+
+function getLocalDayEndTimestamp(timestamp: number): number {
+  const dayEnd = new Date(timestamp);
+  dayEnd.setHours(24, 0, 0, 0);
+  return dayEnd.getTime();
+}
+
+function getTimeOverlapMs(
+  rangeStart: number,
+  rangeEnd: number,
+  windowStart: number,
+  windowEnd: number,
+): number {
+  return Math.max(0, Math.min(rangeEnd, windowEnd) - Math.max(rangeStart, windowStart));
+}
+
+function getLullabyGrowthBoostWindow(activatedAt: number): { start: number; end: number } | null {
+  if (!Number.isFinite(activatedAt) || activatedAt <= 0) return null;
+  return {
+    start: activatedAt,
+    end: getLocalDayEndTimestamp(activatedAt),
+  };
+}
+
+function getSupernovaBottleGrowthBoostWindow(activatedAt: number): { start: number; end: number } | null {
+  if (!Number.isFinite(activatedAt) || activatedAt <= 0) return null;
+  return {
+    start: activatedAt,
+    end: activatedAt + SUPERNOVA_BOTTLE_DURATION_MS,
+  };
+}
+
+export function getSupernovaBottleGrowthBoostEndTimestamp(activatedAt: number): number {
+  return getSupernovaBottleGrowthBoostWindow(activatedAt)?.end ?? 0;
+}
+
+export function isLullabyGrowthBoostActive(
+  activatedAt: number,
+  nowTimestamp: number = Date.now(),
+): boolean {
+  const window = getLullabyGrowthBoostWindow(activatedAt);
+  if (!window) return false;
+  return nowTimestamp >= window.start && nowTimestamp < window.end;
+}
+
+export function isSupernovaBottleGrowthBoostActive(
+  activatedAt: number,
+  nowTimestamp: number = Date.now(),
+): boolean {
+  const window = getSupernovaBottleGrowthBoostWindow(activatedAt);
+  if (!window) return false;
+  return nowTimestamp >= window.start && nowTimestamp < window.end;
+}
+
+export function calculateFarmGrowthBonusMinutes(
+  baseGrowthMinutes: number,
+  intervalStartTimestamp: number,
+  intervalEndTimestamp: number,
+  lullabyActivatedAt: number,
+  supernovaBottleActivatedAt: number,
+): number {
+  const safeBaseGrowthMinutes = Number.isFinite(baseGrowthMinutes) ? Math.max(0, baseGrowthMinutes) : 0;
+  if (safeBaseGrowthMinutes <= 0) return 0;
+
+  const safeEndTimestamp = Number.isFinite(intervalEndTimestamp) && intervalEndTimestamp > 0
+    ? intervalEndTimestamp
+    : Date.now();
+  const fallbackStartTimestamp = safeEndTimestamp - safeBaseGrowthMinutes * 60 * 1000;
+  const safeStartTimestamp = Number.isFinite(intervalStartTimestamp) && intervalStartTimestamp > 0
+    ? Math.min(intervalStartTimestamp, safeEndTimestamp)
+    : fallbackStartTimestamp;
+  const intervalDurationMs = Math.max(1, safeEndTimestamp - safeStartTimestamp);
+
+  const lullabyOverlapMs = (() => {
+    const window = getLullabyGrowthBoostWindow(lullabyActivatedAt);
+    if (!window) return 0;
+    return getTimeOverlapMs(safeStartTimestamp, safeEndTimestamp, window.start, window.end);
+  })();
+
+  const supernovaOverlapMs = (() => {
+    const window = getSupernovaBottleGrowthBoostWindow(supernovaBottleActivatedAt);
+    if (!window) return 0;
+    return getTimeOverlapMs(safeStartTimestamp, safeEndTimestamp, window.start, window.end);
+  })();
+
+  const weightedBonusRate = (lullabyOverlapMs / intervalDurationMs) * LULLABY_FARM_GROWTH_BONUS_RATE
+    + (supernovaOverlapMs / intervalDurationMs) * SUPERNOVA_BOTTLE_FARM_GROWTH_BONUS_RATE;
+
+  return safeBaseGrowthMinutes * weightedBonusRate;
+}
 
 /**
  * 星际大盗出现概率（按当天专注分钟）：
