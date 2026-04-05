@@ -1006,14 +1006,16 @@ function App() {
   }, [farm.guardianBarrierDate, farm.plots, shed.items, todayKey, consumeShopItem, activateGuardianBarrier, enqueueRecoveryToast, t]);
 
   const handleUseDriftBottle = useCallback(() => {
-    const consumed = consumeShopItem('drift-bottle');
-    if (!consumed) return;
+    const driftBottleCount = (shed.items as Record<string, number>)['drift-bottle'] ?? 0;
+    if (driftBottleCount <= 0) return;
 
     const summoned = summonDriftBottleVisit();
     if (!summoned) {
-      addShedItem('drift-bottle', 1);
+      return;
     }
-  }, [consumeShopItem, summonDriftBottleVisit, addShedItem]);
+
+    consumeShopItem('drift-bottle');
+  }, [shed.items, summonDriftBottleVisit, consumeShopItem]);
 
   const handleUseTrapNet = useCallback((plotId: number) => {
     const targetPlot = farm.plots.find((p) => p.id === plotId);
