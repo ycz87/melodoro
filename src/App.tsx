@@ -82,6 +82,7 @@ import {
   witherPlots,
 } from './farm/growth';
 import { getUnlockedSeedPoolGalaxies, getCollectedHybridVarietyCount } from './farm/galaxy';
+import { rollTrapNetThiefRewardItemId } from './farm/trapNetRewards';
 import {
   FARM_MILESTONE_DEFINITIONS,
   getAchievedFarmMilestoneIds,
@@ -251,6 +252,7 @@ function App() {
     activateSupernovaBottle,
     addPlotTracker,
     addStolenRecord,
+    settleCaughtThief,
     markStolenRecordRecovered,
     revivePlot,
     upgradePlotRarity,
@@ -1022,17 +1024,16 @@ function App() {
     const consumed = consumeShopItem('trap-net');
     if (!consumed) return;
 
-    setFarm((prev) => ({
-      ...prev,
-      plots: prev.plots.map((p) => (
-        p.id === plotId
-          ? { ...p, thief: undefined }
-          : p
-      )),
-    }));
-    addCoins(100);
+    const settled = settleCaughtThief(plotId);
+    if (!settled) {
+      addShedItem('trap-net', 1);
+      return;
+    }
+
+    addSeeds(2, 'epic');
+    addShedItem(rollTrapNetThiefRewardItemId(), 1);
     enqueueRecoveryToast(t.thiefCaught);
-  }, [farm.plots, consumeShopItem, setFarm, addCoins, enqueueRecoveryToast, t]);
+  }, [farm.plots, consumeShopItem, settleCaughtThief, addShedItem, addSeeds, enqueueRecoveryToast, t]);
 
   // ─── Gene injection handler ───
   const handleGeneInject = useCallback((galaxyId: import('./types/farm').GalaxyId, quality: import('./types/slicing').SeedQuality) => {

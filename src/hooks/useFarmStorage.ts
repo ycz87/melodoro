@@ -28,6 +28,7 @@ import {
 } from '../types/farm';
 import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { getPlotCount } from '../farm/galaxy';
+import { clearPersistedCaughtThieves, settleCaughtThiefSnapshot } from '../farm/trapNetRewards';
 import {
   isLullabyGrowthBoostActive,
   isSupernovaBottleGrowthBoostActive,
@@ -508,6 +509,8 @@ function migrateFarm(raw: unknown): FarmStorage {
       .filter((record): record is StolenRecord => record !== null);
   }
 
+  result.plots = clearPersistedCaughtThieves(result.plots, result.stolenRecords);
+
   return result;
 }
 
@@ -518,6 +521,16 @@ export function useFarmStorage() {
   useEffect(() => {
     farmRef.current = farm;
   }, [farm]);
+
+  const commitFarm = useCallback((nextFarm: FarmStorage) => {
+    farmRef.current = nextFarm;
+    setFarm(nextFarm);
+    try {
+      localStorage.setItem(FARM_KEY, JSON.stringify(nextFarm));
+    } catch {
+      // Storage unavailable — ignore immediate persistence.
+    }
+  }, [setFarm]);
 
   useEffect(() => {
     const targetUnlockedPlotCount = resolveUnlockedPlotCount(
@@ -838,6 +851,14 @@ export function useFarmStorage() {
     }));
   }, [setFarm]);
 
+  const settleCaughtThief = useCallback((plotId: number): boolean => {
+    const { nextFarm, settled } = settleCaughtThiefSnapshot(farmRef.current, plotId);
+    if (nextFarm !== farmRef.current) {
+      commitFarm(nextFarm);
+    }
+    return settled;
+  }, [commitFarm]);
+
   /** 标记被偷记录为已追回（按 stolenAt 定位） */
   const markStolenRecordRecovered = useCallback((stolenAt: number): boolean => {
     if (!Number.isFinite(stolenAt) || stolenAt <= 0) return false;
@@ -961,6 +982,7 @@ export function useFarmStorage() {
     activateSupernovaBottle,
     addPlotTracker,
     addStolenRecord,
+    settleCaughtThief,
     markStolenRecordRecovered,
     revivePlot,
     upgradePlotRarity,
