@@ -158,29 +158,44 @@ function migrateShed(raw: unknown): ShedStorage {
 
 export function useShedStorage() {
   const [shed, setShed] = useLocalStorage<ShedStorage>(SHED_KEY, DEFAULT_SHED_STORAGE, migrateShed);
+  const shedRef = useRef(shed);
   const consumePrismaticSeedMutexRef = useRef(false);
   const consumePrismaticSeedResultRef = useRef(false);
   const consumeDarkMatterSeedMutexRef = useRef(false);
   const consumeDarkMatterSeedResultRef = useRef(false);
 
-  const addSeeds = useCallback((count: number, quality: SeedQuality = 'normal') => {
-    setShed(prev => ({
-      ...prev,
-      seeds: { ...prev.seeds, [quality]: prev.seeds[quality] + count },
-    }));
+  shedRef.current = shed;
+
+  const commitShed = useCallback((nextShed: ShedStorage) => {
+    shedRef.current = nextShed;
+    setShed(nextShed);
+    try {
+      localStorage.setItem(SHED_KEY, JSON.stringify(nextShed));
+    } catch {
+      // Storage unavailable — ignore immediate persistence.
+    }
   }, [setShed]);
+
+  const addSeeds = useCallback((count: number, quality: SeedQuality = 'normal') => {
+    const nextShed: ShedStorage = {
+      ...shedRef.current,
+      seeds: {
+        ...shedRef.current.seeds,
+        [quality]: shedRef.current.seeds[quality] + count,
+      },
+    };
+    commitShed(nextShed);
+  }, [commitShed]);
 
   const addItem = useCallback((itemId: string, count: number = 1) => {
     if (count <= 0) return;
-    setShed(prev => {
-      const nextItems = prev.items as Record<string, number>;
-      const current = nextItems[itemId] ?? 0;
-      return {
-        ...prev,
-        items: { ...nextItems, [itemId]: current + count } as ShedStorage['items'],
-      };
+    const nextItems = shedRef.current.items as Record<string, number>;
+    const current = nextItems[itemId] ?? 0;
+    commitShed({
+      ...shedRef.current,
+      items: { ...nextItems, [itemId]: current + count } as ShedStorage['items'],
     });
-  }, [setShed]);
+  }, [commitShed]);
 
   const incrementSliced = useCallback(() => {
     setShed(prev => ({ ...prev, totalSliced: prev.totalSliced + 1 }));
@@ -373,18 +388,15 @@ export function useShedStorage() {
 
   /** 消耗一个商城道具（返回是否成功） */
   const consumeShopItem = useCallback((itemId: string): boolean => {
-    let success = false;
-    setShed(prev => {
-      const items = prev.items as Record<string, number>;
-      if ((items[itemId] ?? 0) <= 0) return prev;
-      success = true;
-      return {
-        ...prev,
-        items: { ...items, [itemId]: items[itemId] - 1 } as ShedStorage['items'],
-      };
+    const items = shedRef.current.items as Record<string, number>;
+    if ((items[itemId] ?? 0) <= 0) return false;
+
+    commitShed({
+      ...shedRef.current,
+      items: { ...items, [itemId]: items[itemId] - 1 } as ShedStorage['items'],
     });
-    return success;
-  }, [setShed]);
+    return true;
+  }, [commitShed]);
 
   return {
     shed,
