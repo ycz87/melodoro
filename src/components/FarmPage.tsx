@@ -34,6 +34,7 @@ import { VARIETY_DEFS, RARITY_COLOR, RARITY_STARS } from '../types/farm';
 import {
   getGrowthStage,
   getSupernovaBottleGrowthBoostEndTimestamp,
+  isCircusTentGrowthBoostActive,
   isLullabyGrowthBoostActive,
   isSupernovaBottleGrowthBoostActive,
   isVarietyRevealed,
@@ -88,6 +89,7 @@ interface FarmPageProps {
   onUseNectar: (plotId: number) => void;
   onUseStarTracker: (plotId: number) => void;
   onUseGuardianBarrier: () => void;
+  onUseCircusTent: () => void;
   onUseDriftBottle: () => void;
   onUseTrapNet: (plotId: number) => void;
   onGoWarehouse: () => void;
@@ -182,6 +184,7 @@ export function FarmPage({
   onUseNectar,
   onUseStarTracker,
   onUseGuardianBarrier,
+  onUseCircusTent,
   onUseDriftBottle,
   onUseTrapNet,
   onGoWarehouse,
@@ -322,6 +325,7 @@ export function FarmPage({
   const nectarCount = (items as Record<string, number>)['nectar'] ?? 0;
   const starTrackerCount = (items as Record<string, number>)['star-tracker'] ?? 0;
   const guardianBarrierCount = (items as Record<string, number>)['guardian-barrier'] ?? 0;
+  const circusTentCount = (items as Record<string, number>)['circus-tent'] ?? 0;
   const driftBottleCount = (items as Record<string, number>)['drift-bottle'] ?? 0;
   const trapNetCount = (items as Record<string, number>)['trap-net'] ?? 0;
   const crystalBallCount = (items as Record<string, number>)['crystal-ball'] ?? 0;
@@ -329,6 +333,8 @@ export function FarmPage({
     ? t.varietyName(pendingRevealedNormalSeed.varietyId)
     : null;
   const canUseCrystalBall = crystalBallCount > 0 && !pendingRevealedNormalSeed && seeds.normal > 0;
+  const barrierActiveToday = farm.guardianBarrierDate === todayKey;
+  const circusTentActive = barrierActiveToday && isCircusTentGrowthBoostActive(farm.circusTentActivatedAt, nowTimestamp);
   const lullabyActive = isLullabyGrowthBoostActive(farm.lullabyActivatedAt, nowTimestamp);
   const supernovaBottleActive = isSupernovaBottleGrowthBoostActive(
     farm.supernovaBottleActivatedAt,
@@ -340,7 +346,6 @@ export function FarmPage({
         Math.ceil((getSupernovaBottleGrowthBoostEndTimestamp(farm.supernovaBottleActivatedAt) - nowTimestamp) / 60000),
       )
     : 0;
-  const barrierActiveToday = farm.guardianBarrierDate === todayKey;
   const canUseActivePlotStarDew = Boolean(activeGrowingPlot?.varietyId) && starDewCount > 0;
   const activeAlienSceneVisit = activeAlienVisit && activeAlienVisit.expiresAt > nowTimestamp
     ? activeAlienVisit
@@ -577,6 +582,33 @@ export function FarmPage({
               >
                 <span>🎪</span>
                 <span>{barrierActiveToday ? t.itemGuardianBarrierActive : `${t.itemName('guardian-barrier')} · ${guardianBarrierCount}`}</span>
+              </button>
+            )}
+            {(circusTentCount > 0 || circusTentActive) && (
+              <button
+                type="button"
+                onClick={onUseCircusTent}
+                disabled={circusTentActive}
+                data-testid="farm-circus-tent-chip"
+                data-active={circusTentActive ? 'true' : 'false'}
+                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-[var(--radius-sm)] border text-xs font-medium transition-all duration-200 ease-in-out hover:-translate-y-0.5 ui-hover-button disabled:hover:translate-y-0"
+                style={{
+                  background: circusTentActive
+                    ? 'linear-gradient(135deg, rgba(255,244,205,0.97) 0%, rgba(255,219,124,0.95) 100%)'
+                    : `${theme.surface}cc`,
+                  borderColor: circusTentActive ? '#f59e0b' : theme.border,
+                  color: circusTentActive ? '#92400e' : theme.text,
+                  boxShadow: 'var(--shadow-card)',
+                  cursor: circusTentActive ? 'default' : 'pointer',
+                }}
+                title={t.itemDescription('circus-tent')}
+              >
+                <span>🎪</span>
+                <span>
+                  {circusTentActive
+                    ? `${t.itemName('circus-tent')} · +20% · ${t.today}`
+                    : `${t.itemName('circus-tent')} · ${circusTentCount}`}
+                </span>
               </button>
             )}
             {driftBottleCount > 0 && (

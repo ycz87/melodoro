@@ -749,6 +749,7 @@ export interface FarmStorage {
   consecutiveInactiveDays: number; // 连续未活跃天数（用于枯萎检测）
   lastActivityTimestamp: number; // 最近活跃时间戳（ms）
   guardianBarrierDate: string; // 守护结界生效日期 (YYYY-MM-DD)
+  circusTentActivatedAt: number; // 马戏团帐篷激活时间（ms，仅用于当天 +20% bonus 起点；active 仍以 guardianBarrierDate 为准）
   lullabyActivatedAt: number; // 原初摇篮曲激活时间（ms）
   supernovaBottleActivatedAt: number; // 超新星之瓶激活时间（ms）
   stolenRecords: StolenRecord[]; // 用于追回机制
@@ -789,6 +790,7 @@ export const DEFAULT_FARM_STORAGE: FarmStorage = {
   consecutiveInactiveDays: 0,
   lastActivityTimestamp: 0,
   guardianBarrierDate: '',
+  circusTentActivatedAt: 0,
   lullabyActivatedAt: 0,
   supernovaBottleActivatedAt: 0,
   stolenRecords: [],
