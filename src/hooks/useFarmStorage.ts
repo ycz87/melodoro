@@ -403,6 +403,7 @@ function migrateFarm(raw: unknown): FarmStorage {
     consecutiveInactiveDays: 0,
     lastActivityTimestamp: 0,
     guardianBarrierDate: '',
+    circusTentActivatedAt: 0,
     lullabyActivatedAt: 0,
     supernovaBottleActivatedAt: 0,
     stolenRecords: [],
@@ -497,6 +498,9 @@ function migrateFarm(raw: unknown): FarmStorage {
   if (typeof s.consecutiveInactiveDays === 'number') result.consecutiveInactiveDays = s.consecutiveInactiveDays;
   if (typeof s.lastActivityTimestamp === 'number') result.lastActivityTimestamp = s.lastActivityTimestamp;
   if (typeof s.guardianBarrierDate === 'string') result.guardianBarrierDate = s.guardianBarrierDate;
+  if (typeof s.circusTentActivatedAt === 'number' && Number.isFinite(s.circusTentActivatedAt)) {
+    result.circusTentActivatedAt = Math.max(0, s.circusTentActivatedAt);
+  }
   if (typeof s.lullabyActivatedAt === 'number' && Number.isFinite(s.lullabyActivatedAt)) {
     result.lullabyActivatedAt = Math.max(0, s.lullabyActivatedAt);
   }
@@ -801,6 +805,23 @@ export function useFarmStorage() {
     return true;
   }, [setFarm]);
 
+  /** 激活马戏团帐篷（active 复用 guardianBarrierDate，timestamp 只记录 bonus 起点） */
+  const activateCircusTent = useCallback((todayKey: string, nowTimestamp: number = Date.now()): boolean => {
+    if (!todayKey) return false;
+    if (!Number.isFinite(nowTimestamp) || nowTimestamp <= 0) return false;
+    if (farmRef.current.guardianBarrierDate === todayKey) return false;
+
+    const nextFarm: FarmStorage = {
+      ...farmRef.current,
+      guardianBarrierDate: todayKey,
+      circusTentActivatedAt: nowTimestamp,
+      plots: farmRef.current.plots.map((plot) => (plot.thief ? { ...plot, thief: undefined } : plot)),
+    };
+    farmRef.current = nextFarm;
+    setFarm(nextFarm);
+    return true;
+  }, [setFarm]);
+
   /** 激活原初摇篮曲（当天有效） */
   const activateLullaby = useCallback((nowTimestamp: number = Date.now()): boolean => {
     if (!Number.isFinite(nowTimestamp) || nowTimestamp <= 0) return false;
@@ -978,6 +999,7 @@ export function useFarmStorage() {
     buyPlot,
     updateActiveDate,
     activateGuardianBarrier,
+    activateCircusTent,
     activateLullaby,
     activateSupernovaBottle,
     addPlotTracker,

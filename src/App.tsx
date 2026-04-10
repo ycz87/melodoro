@@ -248,6 +248,7 @@ function App() {
     buyPlot,
     updateActiveDate,
     activateGuardianBarrier,
+    activateCircusTent,
     activateLullaby,
     activateSupernovaBottle,
     addPlotTracker,
@@ -532,6 +533,7 @@ function App() {
       safeGrowthMinutes,
       safeStartTimestamp,
       safeEndTimestamp,
+      farm.circusTentActivatedAt,
       farm.lullabyActivatedAt,
       farm.supernovaBottleActivatedAt,
     );
@@ -539,7 +541,7 @@ function App() {
     const appliedGrowthMinutes = Math.max(0, Math.floor(rawGrowthMinutes));
     growthBoostCarryMinutesRef.current = rawGrowthMinutes - appliedGrowthMinutes;
     return appliedGrowthMinutes;
-  }, [farm.lullabyActivatedAt, farm.supernovaBottleActivatedAt]);
+  }, [farm.circusTentActivatedAt, farm.lullabyActivatedAt, farm.supernovaBottleActivatedAt]);
 
   const runFarmGrowth = useCallback((
     plots: Plot[],
@@ -996,7 +998,7 @@ function App() {
   const handleUseGuardianBarrier = useCallback(() => {
     const isAlreadyActive = farm.guardianBarrierDate === todayKey;
     const hasThiefToScare = farm.plots.some((p) => p.thief);
-    
+
     if (isAlreadyActive && !hasThiefToScare) return;
 
     const barrierCount = (shed.items as Record<string, number>)['guardian-barrier'] ?? 0;
@@ -1006,6 +1008,25 @@ function App() {
     consumeShopItem('guardian-barrier');
     enqueueRecoveryToast(t.itemGuardianBarrierActive);
   }, [farm.guardianBarrierDate, farm.plots, shed.items, todayKey, consumeShopItem, activateGuardianBarrier, enqueueRecoveryToast, t]);
+
+  const handleUseCircusTent = useCallback(() => {
+    if (farm.guardianBarrierDate === todayKey) return;
+
+    const nowTimestamp = Date.now();
+    const circusTentCount = (shed.items as Record<string, number>)['circus-tent'] ?? 0;
+    if (circusTentCount <= 0) return;
+
+    const consumed = consumeShopItem('circus-tent');
+    if (!consumed) return;
+
+    const activated = activateCircusTent(todayKey, nowTimestamp);
+    if (!activated) {
+      addShedItem('circus-tent', 1);
+      return;
+    }
+
+    enqueueRecoveryToast(`🎪 ${t.itemName('circus-tent')} · +20% · ${t.today}`);
+  }, [farm.guardianBarrierDate, todayKey, shed.items, consumeShopItem, activateCircusTent, addShedItem, enqueueRecoveryToast, t]);
 
   const handleUseDriftBottle = useCallback(() => {
     const driftBottleCount = (shed.items as Record<string, number>)['drift-bottle'] ?? 0;
@@ -2109,6 +2130,7 @@ function App() {
             onUseNectar={handleUseNectar}
             onUseStarTracker={handleUseStarTracker}
             onUseGuardianBarrier={handleUseGuardianBarrier}
+            onUseCircusTent={handleUseCircusTent}
             onUseDriftBottle={handleUseDriftBottle}
             onUseTrapNet={handleUseTrapNet}
             onInject={handleGeneInject}

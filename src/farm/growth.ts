@@ -20,6 +20,7 @@ const THIEF_STEAL_DELAY_MINUTES = 30;
 const THIEF_STEAL_DELAY_MS = THIEF_STEAL_DELAY_MINUTES * 60 * 1000;
 const DAY_IN_MS = MINUTES_PER_DAY * 60 * 1000;
 
+export const CIRCUS_TENT_FARM_GROWTH_BONUS_RATE = 0.20;
 export const LULLABY_FARM_GROWTH_BONUS_RATE = 0.30;
 export const SUPERNOVA_BOTTLE_FARM_GROWTH_BONUS_RATE = 0.50;
 export const SUPERNOVA_BOTTLE_DURATION_MS = DAY_IN_MS;
@@ -37,6 +38,14 @@ function getTimeOverlapMs(
   windowEnd: number,
 ): number {
   return Math.max(0, Math.min(rangeEnd, windowEnd) - Math.max(rangeStart, windowStart));
+}
+
+function getCircusTentGrowthBoostWindow(activatedAt: number): { start: number; end: number } | null {
+  if (!Number.isFinite(activatedAt) || activatedAt <= 0) return null;
+  return {
+    start: activatedAt,
+    end: getLocalDayEndTimestamp(activatedAt),
+  };
 }
 
 function getLullabyGrowthBoostWindow(activatedAt: number): { start: number; end: number } | null {
@@ -57,6 +66,15 @@ function getSupernovaBottleGrowthBoostWindow(activatedAt: number): { start: numb
 
 export function getSupernovaBottleGrowthBoostEndTimestamp(activatedAt: number): number {
   return getSupernovaBottleGrowthBoostWindow(activatedAt)?.end ?? 0;
+}
+
+export function isCircusTentGrowthBoostActive(
+  activatedAt: number,
+  nowTimestamp: number = Date.now(),
+): boolean {
+  const window = getCircusTentGrowthBoostWindow(activatedAt);
+  if (!window) return false;
+  return nowTimestamp >= window.start && nowTimestamp < window.end;
 }
 
 export function isLullabyGrowthBoostActive(
@@ -81,6 +99,7 @@ export function calculateFarmGrowthBonusMinutes(
   baseGrowthMinutes: number,
   intervalStartTimestamp: number,
   intervalEndTimestamp: number,
+  circusTentActivatedAt: number,
   lullabyActivatedAt: number,
   supernovaBottleActivatedAt: number,
 ): number {
@@ -96,6 +115,12 @@ export function calculateFarmGrowthBonusMinutes(
     : fallbackStartTimestamp;
   const intervalDurationMs = Math.max(1, safeEndTimestamp - safeStartTimestamp);
 
+  const circusTentOverlapMs = (() => {
+    const window = getCircusTentGrowthBoostWindow(circusTentActivatedAt);
+    if (!window) return 0;
+    return getTimeOverlapMs(safeStartTimestamp, safeEndTimestamp, window.start, window.end);
+  })();
+
   const lullabyOverlapMs = (() => {
     const window = getLullabyGrowthBoostWindow(lullabyActivatedAt);
     if (!window) return 0;
@@ -108,7 +133,8 @@ export function calculateFarmGrowthBonusMinutes(
     return getTimeOverlapMs(safeStartTimestamp, safeEndTimestamp, window.start, window.end);
   })();
 
-  const weightedBonusRate = (lullabyOverlapMs / intervalDurationMs) * LULLABY_FARM_GROWTH_BONUS_RATE
+  const weightedBonusRate = (circusTentOverlapMs / intervalDurationMs) * CIRCUS_TENT_FARM_GROWTH_BONUS_RATE
+    + (lullabyOverlapMs / intervalDurationMs) * LULLABY_FARM_GROWTH_BONUS_RATE
     + (supernovaOverlapMs / intervalDurationMs) * SUPERNOVA_BOTTLE_FARM_GROWTH_BONUS_RATE;
 
   return safeBaseGrowthMinutes * weightedBonusRate;
