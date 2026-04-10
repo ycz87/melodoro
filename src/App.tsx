@@ -75,6 +75,7 @@ import {
   calculateOfflineGrowth,
   calculateFocusBoost,
   getWitherStatus,
+  isCircusTentGrowthBoostActive,
   isLullabyGrowthBoostActive,
   isSupernovaBottleGrowthBoostActive,
   rollVariety,
@@ -1010,9 +1011,9 @@ function App() {
   }, [farm.guardianBarrierDate, farm.plots, shed.items, todayKey, consumeShopItem, activateGuardianBarrier, enqueueRecoveryToast, t]);
 
   const handleUseCircusTent = useCallback(() => {
-    if (farm.guardianBarrierDate === todayKey) return;
-
     const nowTimestamp = Date.now();
+    if (isCircusTentGrowthBoostActive(farm.circusTentActivatedAt, nowTimestamp)) return;
+
     const circusTentCount = (shed.items as Record<string, number>)['circus-tent'] ?? 0;
     if (circusTentCount <= 0) return;
 
@@ -1026,7 +1027,7 @@ function App() {
     }
 
     enqueueRecoveryToast(`🎪 ${t.itemName('circus-tent')} · +20% · ${t.today}`);
-  }, [farm.guardianBarrierDate, todayKey, shed.items, consumeShopItem, activateCircusTent, addShedItem, enqueueRecoveryToast, t]);
+  }, [farm.circusTentActivatedAt, shed.items, consumeShopItem, activateCircusTent, todayKey, addShedItem, enqueueRecoveryToast, t]);
 
   const handleUseDriftBottle = useCallback(() => {
     const driftBottleCount = (shed.items as Record<string, number>)['drift-bottle'] ?? 0;

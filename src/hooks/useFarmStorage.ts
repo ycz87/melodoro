@@ -30,6 +30,7 @@ import { DEFAULT_SEED_COUNTS } from '../types/slicing';
 import { getPlotCount } from '../farm/galaxy';
 import { clearPersistedCaughtThieves, settleCaughtThiefSnapshot } from '../farm/trapNetRewards';
 import {
+  isCircusTentGrowthBoostActive,
   isLullabyGrowthBoostActive,
   isSupernovaBottleGrowthBoostActive,
   rollVariety,
@@ -805,11 +806,11 @@ export function useFarmStorage() {
     return true;
   }, [setFarm]);
 
-  /** 激活马戏团帐篷（active 复用 guardianBarrierDate，timestamp 只记录 bonus 起点） */
+  /** 激活马戏团帐篷（保护仍复用 guardianBarrierDate，只拦它自己当天重复激活） */
   const activateCircusTent = useCallback((todayKey: string, nowTimestamp: number = Date.now()): boolean => {
     if (!todayKey) return false;
     if (!Number.isFinite(nowTimestamp) || nowTimestamp <= 0) return false;
-    if (farmRef.current.guardianBarrierDate === todayKey) return false;
+    if (isCircusTentGrowthBoostActive(farmRef.current.circusTentActivatedAt, nowTimestamp)) return false;
 
     const nextFarm: FarmStorage = {
       ...farmRef.current,

@@ -52,7 +52,38 @@ Observed UI state after reload:
 - Farm chip still rendered as `Melon Circus Tent · +20% · Today`
 - Chip remained disabled
 
-### 3. Same-day repeat use is a no-op
+### 3. Barrier-first path still allows circus-tent to grant `+20%`
+Setup before click, with same-day protection already present from `guardian-barrier` but `circus-tent` not yet activated:
+
+```json
+{
+  "guardianBarrierDate": "2026-04-10",
+  "circusTentActivatedAt": 0,
+  "circusTentCount": 1,
+  "buttonDisabled": false,
+  "buttonText": "Melon Circus Tent · 1"
+}
+```
+
+After clicking the Farm chip and waiting for the write to settle:
+
+```json
+{
+  "beforeBarrierDate": "2026-04-10",
+  "beforeActivatedAt": 0,
+  "beforeCount": 1,
+  "afterBarrierDate": "2026-04-10",
+  "afterActivatedAt": 1775787939648,
+  "afterCount": 0
+}
+```
+
+Observed UI state after the click:
+- Farm chip switched to `Melon Circus Tent · +20% · Today`
+- Chip became disabled after the first successful `circus-tent` activation
+- The pre-existing same-day barrier stayed intact while `circusTentActivatedAt` moved from `0` to a real timestamp, proving this path still gains the buff instead of being short-circuited by `guardianBarrierDate`
+
+### 4. Same-day repeat use is a no-op
 Attempted a second activation on the same day by clicking the disabled Farm chip again:
 
 ```json
@@ -69,7 +100,7 @@ Attempted a second activation on the same day by clicking the disabled Farm chip
 
 This confirms the repeat action does not re-activate, does not move the bonus start timestamp, and does not deduct inventory again.
 
-### 4. Cross-day persisted state expires automatically
+### 5. Cross-day persisted state expires automatically
 Simulated next-day persisted storage by writing yesterday's `guardianBarrierDate` and `circusTentActivatedAt`, then forcing a full reload:
 
 ```json
