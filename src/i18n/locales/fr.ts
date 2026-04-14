@@ -454,7 +454,7 @@ export const fr: Messages = {
   sliceButton: '🔪 Couper',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ Engrais stellaire',
-    'alien-flare': '🛸 Fusée éclairante alien',
+    'alien-flare': 'Bouteille Interstellaire',
     'thief-trap': '🪤 Piège à voleur',
     'star-telescope': '🔮 Télescope stellaire',
     'moonlight-dew': '🌙 Rosée de lune',
@@ -485,6 +485,7 @@ export const fr: Messages = {
     'crystal-ball': 'Boule de cristal prophétique : révèle 1 graine mystère normale avant de planter',
     'guardian-barrier': 'Barrière gardienne, protège la ferme des catastrophes',
     'mutation-gun': 'Pistolet à rayon mutant, provoque des mutations magiques',
+    'alien-flare': 'Bouteille à la dérive interstellaire, peut apporter des surprises',
     'drift-bottle': 'Bouteille à la dérive interstellaire, peut apporter des surprises',
     'gene-modifier': 'Modificateur génétique, crée de nouvelles variétés hybrides',
     'supernova-bottle': 'Bouteille supernova, libère une énergie puissante',
@@ -497,7 +498,8 @@ export const fr: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': 'Engrais mystérieux d\'une galaxie lointaine — sent la poussière d\'étoiles',
     'supernova-bottle': 'Contient l\'énergie explosive d\'une micro supernova',
-    'alien-flare': 'Criez "Il y a des pastèques ici !" dans le cosmos et priez',
+    'alien-flare': 'Lancez une bouteille à la dérive dans le cosmos et attendez une visite inattendue',
+    'drift-bottle': 'Lancez une bouteille à la dérive dans le cosmos et attendez une visite inattendue',
     'thief-trap': 'Ressemble à une pastèque ordinaire, mais c\'est en fait une cage',
     'star-telescope': 'Serait une relique d\'un observatoire alien',
     'moonlight-dew': 'Gouttes de rosée mystérieuses qui ne se forment qu\'à la pleine lune',

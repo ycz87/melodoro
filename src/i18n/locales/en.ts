@@ -454,7 +454,7 @@ export const en: Messages = {
   sliceButton: '🔪 Slice',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ Starlight Fertilizer',
-    'alien-flare': '🛸 Alien Flare',
+    'alien-flare': 'Interstellar Drift Bottle',
     'thief-trap': '🪤 Thief Trap',
     'star-telescope': '🔮 Star Telescope',
     'moonlight-dew': '🌙 Moonlight Dew',
@@ -485,6 +485,7 @@ export const en: Messages = {
     'crystal-ball': 'Prophet crystal ball, reveal 1 normal mystery seed before planting',
     'guardian-barrier': 'Guardian barrier, protect farm from disasters',
     'mutation-gun': 'Mutation ray gun, make crops mutate magically',
+    'alien-flare': 'Interstellar drift bottle, may bring surprises',
     'drift-bottle': 'Interstellar drift bottle, may bring surprises',
     'gene-modifier': 'Gene modifier, create new hybrid varieties',
     'supernova-bottle': 'Supernova bottle, release powerful energy',
@@ -497,7 +498,8 @@ export const en: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': 'Mysterious fertilizer from a distant galaxy — smells like stardust',
     'supernova-bottle': 'Contains the explosive energy of a micro supernova',
-    'alien-flare': 'Shout "Melons here!" into the cosmos and hope for friendly visitors',
+    'alien-flare': 'Send a drift bottle into the cosmos and wait for an unexpected visitor',
+    'drift-bottle': 'Send a drift bottle into the cosmos and wait for an unexpected visitor',
     'thief-trap': 'Looks like an ordinary melon, but it\'s actually a cage',
     'star-telescope': 'Said to be a relic from an alien observatory',
     'moonlight-dew': 'Mysterious dewdrops that only form under a full moon',

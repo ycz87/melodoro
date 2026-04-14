@@ -454,7 +454,7 @@ export const es: Messages = {
   sliceButton: '🔪 Cortar',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ Fertilizante estelar',
-    'alien-flare': '🛸 Bengala alienígena',
+    'alien-flare': 'Botella Interestelar',
     'thief-trap': '🪤 Trampa para ladrones',
     'star-telescope': '🔮 Telescopio estelar',
     'moonlight-dew': '🌙 Rocío lunar',
@@ -485,6 +485,7 @@ export const es: Messages = {
     'crystal-ball': 'Bola de cristal profética: revela 1 semilla misteriosa normal antes de plantar',
     'guardian-barrier': 'Barrera guardiana, protege la granja de desastres',
     'mutation-gun': 'Pistola de rayos mutantes, provoca mutaciones mágicas en los cultivos',
+    'alien-flare': 'Botella a la deriva interestelar, puede traer sorpresas',
     'drift-bottle': 'Botella a la deriva interestelar, puede traer sorpresas',
     'gene-modifier': 'Modificador genético, crea nuevas variedades híbridas',
     'supernova-bottle': 'Botella supernova, libera una energía poderosa',
@@ -497,7 +498,8 @@ export const es: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': 'Fertilizante misterioso de una galaxia lejana — huele a polvo de estrellas',
     'supernova-bottle': 'Contiene la energía explosiva de una micro supernova',
-    'alien-flare': 'Grita "¡Aquí hay sandías!" al cosmos y reza por visitantes amigables',
+    'alien-flare': 'Lanza una botella a la deriva al cosmos y espera una visita inesperada',
+    'drift-bottle': 'Lanza una botella a la deriva al cosmos y espera una visita inesperada',
     'thief-trap': 'Parece una sandía normal, pero en realidad es una jaula',
     'star-telescope': 'Se dice que es una reliquia de un observatorio alienígena',
     'moonlight-dew': 'Gotas de rocío misteriosas que solo se forman con luna llena',
