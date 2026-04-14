@@ -1,0 +1,25 @@
+{
+  "legacyOnlyDriftBottle": 2,
+  "mixedInventoryDriftBottle": 5,
+  "postConsumeDriftBottle": 4,
+  "reloadStableDriftBottle": 4,
+  "commonDropPool": [
+    "starlight-fertilizer",
+    "drift-bottle",
+    "thief-trap",
+    "star-telescope",
+    "circus-tent",
+    "lullaby-record"
+  ],
+  "activeWarehouseItemIds": [
+    "starlight-fertilizer",
+    "supernova-bottle",
+    "drift-bottle",
+    "thief-trap",
+    "star-telescope",
+    "moonlight-dew",
+    "circus-tent",
+    "gene-modifier",
+    "lullaby-record"
+  ]
+}

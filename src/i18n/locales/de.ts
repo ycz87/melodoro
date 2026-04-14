@@ -454,7 +454,7 @@ export const de: Messages = {
   sliceButton: '🔪 Schneiden',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ Sternenlicht-Dünger',
-    'alien-flare': '🛸 Alien-Signalrakete',
+    'alien-flare': 'Interstellare Flaschenpost',
     'thief-trap': '🪤 Diebfalle',
     'star-telescope': '🔮 Sternenteleskop',
     'moonlight-dew': '🌙 Mondlichttau',
@@ -485,6 +485,7 @@ export const de: Messages = {
     'crystal-ball': 'Propheten-Kristallkugel enthüllt 1 normales Mysteriensamen vor dem Pflanzen',
     'guardian-barrier': 'Schutzbarriere bewahrt das Feld vor Katastrophen',
     'mutation-gun': 'Mutationsstrahlenkanone löst magische Mutationen aus',
+    'alien-flare': 'Interstellare Treibflasche kann Überraschungen bringen',
     'drift-bottle': 'Interstellare Treibflasche kann Überraschungen bringen',
     'gene-modifier': 'Genmodifikator erschafft neue Hybrid-Sorten',
     'supernova-bottle': 'Supernova-Flasche setzt gewaltige Energie frei',
@@ -497,7 +498,8 @@ export const de: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': 'Mysteriöser Dünger aus einer fernen Galaxie — riecht nach Sternenstaub',
     'supernova-bottle': 'Enthält die explosive Energie einer Mikro-Supernova',
-    'alien-flare': 'Rufe "Hier gibt es Melonen!" ins All und hoffe auf freundliche Besucher',
+    'alien-flare': 'Schicke eine Flaschenpost ins All und warte auf unerwarteten Besuch',
+    'drift-bottle': 'Schicke eine Flaschenpost ins All und warte auf unerwarteten Besuch',
     'thief-trap': 'Sieht aus wie eine normale Melone, ist aber ein Käfig',
     'star-telescope': 'Angeblich ein Relikt eines Alien-Observatoriums',
     'moonlight-dew': 'Geheimnisvolle Tautropfen, die nur bei Vollmond entstehen',

@@ -24,8 +24,16 @@ const INJECTED_SEED_QUALITIES: SeedQuality[] = ['normal', 'epic', 'legendary'];
 const INJECTED_SEED_GALAXIES: InjectedSeed['targetGalaxyId'][] = [
   'thick-earth', 'fire', 'water', 'wood', 'metal', 'rainbow', 'dark-matter',
 ];
+// Keep legacy shed item ids readable but store and consume them through the current product id.
+const LEGACY_SHED_ITEM_ALIASES = {
+  'alien-flare': 'drift-bottle',
+} as const;
 
-function migrateShed(raw: unknown): ShedStorage {
+export function normalizeShedItemId(itemId: string): string {
+  return LEGACY_SHED_ITEM_ALIASES[itemId as keyof typeof LEGACY_SHED_ITEM_ALIASES] ?? itemId;
+}
+
+export function migrateShed(raw: unknown): ShedStorage {
   if (!raw || typeof raw !== 'object') return DEFAULT_SHED_STORAGE;
   const s = raw as Record<string, unknown>;
   const result: ShedStorage = {
@@ -59,13 +67,14 @@ function migrateShed(raw: unknown): ShedStorage {
       if (typeof value !== 'number' || !Number.isFinite(value)) continue;
 
       const normalizedCount = Math.max(0, Math.floor(value));
-      const migratedSeedQuality = SHOP_SEED_ITEM_TO_QUALITY[id as keyof typeof SHOP_SEED_ITEM_TO_QUALITY];
+      const normalizedItemId = normalizeShedItemId(id);
+      const migratedSeedQuality = SHOP_SEED_ITEM_TO_QUALITY[normalizedItemId as keyof typeof SHOP_SEED_ITEM_TO_QUALITY];
       if (migratedSeedQuality) {
         result.seeds[migratedSeedQuality] += normalizedCount;
         continue;
       }
 
-      nextItems[id] = normalizedCount;
+      nextItems[normalizedItemId] = (nextItems[normalizedItemId] ?? 0) + normalizedCount;
     }
   }
 
@@ -156,6 +165,28 @@ function migrateShed(raw: unknown): ShedStorage {
   return result;
 }
 
+export function consumeShopItemSnapshot(
+  shed: ShedStorage,
+  itemId: string,
+): { nextShed: ShedStorage; consumed: boolean } {
+  const normalizedItemId = normalizeShedItemId(itemId);
+  const items = shed.items as Record<string, number>;
+  if ((items[normalizedItemId] ?? 0) <= 0) {
+    return { nextShed: shed, consumed: false };
+  }
+
+  return {
+    nextShed: {
+      ...shed,
+      items: {
+        ...items,
+        [normalizedItemId]: items[normalizedItemId] - 1,
+      } as ShedStorage['items'],
+    },
+    consumed: true,
+  };
+}
+
 export function useShedStorage() {
   const [shed, setShed] = useLocalStorage<ShedStorage>(SHED_KEY, DEFAULT_SHED_STORAGE, migrateShed);
   const shedRef = useRef(shed);
@@ -189,11 +220,12 @@ export function useShedStorage() {
 
   const addItem = useCallback((itemId: string, count: number = 1) => {
     if (count <= 0) return;
+    const normalizedItemId = normalizeShedItemId(itemId);
     const nextItems = shedRef.current.items as Record<string, number>;
-    const current = nextItems[itemId] ?? 0;
+    const current = nextItems[normalizedItemId] ?? 0;
     commitShed({
       ...shedRef.current,
-      items: { ...nextItems, [itemId]: current + count } as ShedStorage['items'],
+      items: { ...nextItems, [normalizedItemId]: current + count } as ShedStorage['items'],
     });
   }, [commitShed]);
 
@@ -388,13 +420,10 @@ export function useShedStorage() {
 
   /** 消耗一个商城道具（返回是否成功） */
   const consumeShopItem = useCallback((itemId: string): boolean => {
-    const items = shedRef.current.items as Record<string, number>;
-    if ((items[itemId] ?? 0) <= 0) return false;
+    const { nextShed, consumed } = consumeShopItemSnapshot(shedRef.current, itemId);
+    if (!consumed) return false;
 
-    commitShed({
-      ...shedRef.current,
-      items: { ...items, [itemId]: items[itemId] - 1 } as ShedStorage['items'],
-    });
+    commitShed(nextShed);
     return true;
   }, [commitShed]);
 

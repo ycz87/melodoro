@@ -454,7 +454,7 @@ export const ja: Messages = {
   sliceButton: '🔪 カット',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ スターライト肥料',
-    'alien-flare': '🛸 エイリアン信号弾',
+    'alien-flare': '星間漂流ボトル',
     'thief-trap': '🪤 泥棒トラップ',
     'star-telescope': '🔮 星間望遠鏡',
     'moonlight-dew': '🌙 月光の雫',
@@ -485,6 +485,7 @@ export const ja: Messages = {
     'crystal-ball': '予知水晶球。普通の神秘の種を植える前に 1 個だけ正体を明かす',
     'guardian-barrier': '守護結界で畑を災害から守る',
     'mutation-gun': '変異レイガンで作物に不思議な変異を起こす',
+    'alien-flare': '星間漂流ボトルが思わぬサプライズを運ぶかも',
     'drift-bottle': '星間漂流ボトルが思わぬサプライズを運ぶかも',
     'gene-modifier': '遺伝子改造器で新しい交配品種を作る',
     'supernova-bottle': 'スーパーノヴァボトルで強大なエネルギーを解放',
@@ -497,7 +498,8 @@ export const ja: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': '遠い銀河からの神秘的な肥料、星の香りがする',
     'supernova-bottle': '超新星の爆発エネルギーが詰まっている',
-    'alien-flare': '宇宙に「ここにスイカがある！」と叫んで、良い人が来ることを祈る',
+    'alien-flare': '宇宙へ漂流ボトルを流して、思いがけない来訪者を待とう',
+    'drift-bottle': '宇宙へ漂流ボトルを流して、思いがけない来訪者を待とう',
     'thief-trap': '普通のスイカに見えるが、実は檻',
     'star-telescope': 'エイリアン天文台の遺物と言われている',
     'moonlight-dew': '満月の夜にだけ凝結する神秘的な露',

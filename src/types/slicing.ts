@@ -7,7 +7,7 @@ import type { DarkMatterVarietyId, GalaxyId, HybridGalaxyPair, VarietyId } from 
 export type ItemId =
   | 'starlight-fertilizer'    // ⚡ 星光肥料（普通）
   | 'supernova-bottle'        // ☀️ 超新星能量瓶（稀有）
-  | 'alien-flare'             // 🛸 外星信号弹（普通）
+  | 'drift-bottle'            // 🍾 星际漂流瓶（普通）
   | 'thief-trap'              // 🪤 瓜贼陷阱（普通）
   | 'star-telescope'          // 🔮 星际望远镜（普通）
   | 'moonlight-dew'           // 🌙 月光露水（稀有）
@@ -26,7 +26,7 @@ export interface ItemDef {
 export const ITEM_DEFS: Record<ItemId, ItemDef> = {
   'starlight-fertilizer': { id: 'starlight-fertilizer', emoji: '⚡', rarity: 'common' },
   'supernova-bottle': { id: 'supernova-bottle', emoji: '☀️', rarity: 'rare' },
-  'alien-flare': { id: 'alien-flare', emoji: '🛸', rarity: 'common' },
+  'drift-bottle': { id: 'drift-bottle', emoji: '🍾', rarity: 'common' },
   'thief-trap': { id: 'thief-trap', emoji: '🪤', rarity: 'common' },
   'star-telescope': { id: 'star-telescope', emoji: '🔮', rarity: 'common' },
   'moonlight-dew': { id: 'moonlight-dew', emoji: '🌙', rarity: 'rare' },

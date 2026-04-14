@@ -454,7 +454,7 @@ export const zh: Messages = {
   sliceButton: '🔪 切瓜',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ 星光肥料',
-    'alien-flare': '🛸 外星信号弹',
+    'alien-flare': '星际漂流瓶',
     'thief-trap': '🪤 瓜贼陷阱',
     'star-telescope': '🔮 星际望远镜',
     'moonlight-dew': '🌙 月光露水',
@@ -485,6 +485,7 @@ export const zh: Messages = {
     'crystal-ball': '预言水晶球，提前揭晓 1 颗普通神秘种子',
     'guardian-barrier': '守护结界，保护瓜田免受灾害',
     'mutation-gun': '变异射线枪，让作物产生神奇变异',
+    'alien-flare': '星际漂流瓶，可能带来意外惊喜',
     'drift-bottle': '星际漂流瓶，可能带来意外惊喜',
     'gene-modifier': '基因改造器，创造全新杂交品种',
     'supernova-bottle': '超新星瓶，释放强大能量',
@@ -497,7 +498,8 @@ export const zh: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': '来自遥远星系的神秘肥料，闻起来像星星的味道',
     'supernova-bottle': '装着一颗微型超新星的爆发能量',
-    'alien-flare': '向宇宙喊一声"这里有瓜！"然后祈祷来的是好人',
+    'alien-flare': '把消息装进漂流瓶抛向宇宙，等一位意外访客顺流而来',
+    'drift-bottle': '把消息装进漂流瓶抛向宇宙，等一位意外访客顺流而来',
     'thief-trap': '看起来像个普通西瓜，其实是个笼子',
     'star-telescope': '据说是外星天文台的遗物',
     'moonlight-dew': '只在满月时凝结的神秘露珠',

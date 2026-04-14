@@ -454,7 +454,7 @@ export const ko: Messages = {
   sliceButton: '🔪 자르기',
   itemName: (id) => ({
     'starlight-fertilizer': '⚡ 별빛 비료',
-    'alien-flare': '🛸 외계인 신호탄',
+    'alien-flare': '성간 표류병',
     'thief-trap': '🪤 도둑 함정',
     'star-telescope': '🔮 성간 망원경',
     'moonlight-dew': '🌙 달빛 이슬',
@@ -485,6 +485,7 @@ export const ko: Messages = {
     'crystal-ball': '예언 수정구로 일반 미스터리 씨앗 1개의 정체를 심기 전에 미리 밝힙니다',
     'guardian-barrier': '수호 결계로 농장을 재해로부터 보호',
     'mutation-gun': '변이 광선총으로 작물에 신비한 변이를 유도',
+    'alien-flare': '성간 표류 병이 뜻밖의 놀라움을 가져올 수도 있음',
     'drift-bottle': '성간 표류 병이 뜻밖의 놀라움을 가져올 수도 있음',
     'gene-modifier': '유전자 개조기로 새로운 교배 품종 창조',
     'supernova-bottle': '초신성 병으로 강력한 에너지 방출',
@@ -497,7 +498,8 @@ export const ko: Messages = {
   itemFlavor: (id) => ({
     'starlight-fertilizer': '먼 은하에서 온 신비한 비료, 별의 향기가 난다',
     'supernova-bottle': '초소형 초신성의 폭발 에너지가 담겨 있다',
-    'alien-flare': '우주를 향해 "여기 수박 있어요!"라고 외치고 좋은 사람이 오길 기도하자',
+    'alien-flare': '우주로 표류병을 띄워 보내고 뜻밖의 방문객을 기다리자',
+    'drift-bottle': '우주로 표류병을 띄워 보내고 뜻밖의 방문객을 기다리자',
     'thief-trap': '평범한 수박처럼 보이지만 사실은 우리',
     'star-telescope': '외계 천문대의 유물이라고 한다',
     'moonlight-dew': '보름달에만 맺히는 신비한 이슬',
