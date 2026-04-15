@@ -13,7 +13,7 @@ export type ItemId =
   | 'moonlight-dew'           // 🌙 月光露水（稀有）
   | 'circus-tent'             // 🎪 西瓜马戏团帐篷（普通）
   | 'gene-modifier'           // 🧬 基因改造液（稀有）
-  | 'lullaby-record';         // 🎵 西瓜摇篮曲唱片（普通）
+  | 'lullaby';                // 🎵 原初摇篮曲（普通）
 
 export type ItemRarity = 'common' | 'rare';
 
@@ -32,7 +32,7 @@ export const ITEM_DEFS: Record<ItemId, ItemDef> = {
   'moonlight-dew': { id: 'moonlight-dew', emoji: '🌙', rarity: 'rare' },
   'circus-tent': { id: 'circus-tent', emoji: '🎪', rarity: 'common' },
   'gene-modifier': { id: 'gene-modifier', emoji: '🧬', rarity: 'rare' },
-  'lullaby-record': { id: 'lullaby-record', emoji: '🎵', rarity: 'common' },
+  lullaby: { id: 'lullaby', emoji: '🎵', rarity: 'common' },
 };
 
 export const COMMON_ITEMS: ItemId[] = Object.values(ITEM_DEFS)

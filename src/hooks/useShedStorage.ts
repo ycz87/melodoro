@@ -27,6 +27,7 @@ const INJECTED_SEED_GALAXIES: InjectedSeed['targetGalaxyId'][] = [
 // Keep legacy shed item ids readable but store and consume them through the current product id.
 const LEGACY_SHED_ITEM_ALIASES = {
   'alien-flare': 'drift-bottle',
+  'lullaby-record': 'lullaby',
 } as const;
 
 export function normalizeShedItemId(itemId: string): string {
