@@ -15,7 +15,12 @@ import type {
   PrismaticSeed,
   DarkMatterSeed,
 } from '../types/slicing';
-import { DEFAULT_SHED_STORAGE, DEFAULT_PITY, DEFAULT_SEED_COUNTS } from '../types/slicing';
+import {
+  DEFAULT_SHED_STORAGE,
+  DEFAULT_PITY,
+  DEFAULT_SEED_COUNTS,
+  normalizeShedItemId,
+} from '../types/slicing';
 import { DARK_MATTER_VARIETIES, HYBRID_GALAXY_PAIRS, PRISMATIC_VARIETIES, VARIETY_DEFS } from '../types/farm';
 import { SHOP_SEED_ITEM_TO_QUALITY } from '../types/market';
 
@@ -24,16 +29,6 @@ const INJECTED_SEED_QUALITIES: SeedQuality[] = ['normal', 'epic', 'legendary'];
 const INJECTED_SEED_GALAXIES: InjectedSeed['targetGalaxyId'][] = [
   'thick-earth', 'fire', 'water', 'wood', 'metal', 'rainbow', 'dark-matter',
 ];
-// Keep legacy shed item ids readable but store and consume them through the current product id.
-const LEGACY_SHED_ITEM_ALIASES = {
-  'alien-flare': 'drift-bottle',
-  'lullaby-record': 'lullaby',
-} as const;
-
-export function normalizeShedItemId(itemId: string): string {
-  return LEGACY_SHED_ITEM_ALIASES[itemId as keyof typeof LEGACY_SHED_ITEM_ALIASES] ?? itemId;
-}
-
 export function migrateShed(raw: unknown): ShedStorage {
   if (!raw || typeof raw !== 'object') return DEFAULT_SHED_STORAGE;
   const s = raw as Record<string, unknown>;
@@ -166,6 +161,24 @@ export function migrateShed(raw: unknown): ShedStorage {
   return result;
 }
 
+export function addShedItemSnapshot(
+  shed: ShedStorage,
+  itemId: string,
+  count: number = 1,
+): ShedStorage {
+  if (count <= 0) return shed;
+
+  const normalizedItemId = normalizeShedItemId(itemId);
+  const items = shed.items as Record<string, number>;
+  return {
+    ...shed,
+    items: {
+      ...items,
+      [normalizedItemId]: (items[normalizedItemId] ?? 0) + count,
+    } as ShedStorage['items'],
+  };
+}
+
 export function consumeShopItemSnapshot(
   shed: ShedStorage,
   itemId: string,
@@ -221,13 +234,7 @@ export function useShedStorage() {
 
   const addItem = useCallback((itemId: string, count: number = 1) => {
     if (count <= 0) return;
-    const normalizedItemId = normalizeShedItemId(itemId);
-    const nextItems = shedRef.current.items as Record<string, number>;
-    const current = nextItems[normalizedItemId] ?? 0;
-    commitShed({
-      ...shedRef.current,
-      items: { ...nextItems, [normalizedItemId]: current + count } as ShedStorage['items'],
-    });
+    commitShed(addShedItemSnapshot(shedRef.current, itemId, count));
   }, [commitShed]);
 
   const incrementSliced = useCallback(() => {
