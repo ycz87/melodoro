@@ -3,17 +3,42 @@
  */
 import type { DarkMatterVarietyId, GalaxyId, HybridGalaxyPair, VarietyId } from './farm';
 
-// 9种道具ID
+// 当前活跃的瓜棚道具 ID（不含周商店装饰品等动态 key）。
 export type ItemId =
-  | 'starlight-fertilizer'    // ⚡ 星光肥料（普通）
-  | 'supernova-bottle'        // ☀️ 超新星能量瓶（稀有）
+  | 'star-dew'                // ✨ 星露精华（普通）
+  | 'supernova-bottle'        // 💥 超新星能量瓶（稀有）
   | 'drift-bottle'            // 🍾 星际漂流瓶（普通）
-  | 'thief-trap'              // 🪤 瓜贼陷阱（普通）
-  | 'star-telescope'          // 🔮 星际望远镜（普通）
-  | 'moonlight-dew'           // 🌙 月光露水（稀有）
+  | 'trap-net'                // 🕸️ 瓜瓜星人捕网（普通）
+  | 'crystal-ball'            // 🔮 先知水晶球（普通）
+  | 'moon-dew'                // 🌙 月神甘露（稀有）
   | 'circus-tent'             // 🎪 西瓜马戏团帐篷（普通）
   | 'gene-modifier'           // 🧬 基因改造液（稀有）
-  | 'lullaby';                // 🎵 原初摇篮曲（普通）
+  | 'lullaby'                 // 🎵 原初摇篮曲（普通）
+  | 'guardian-barrier'        // 🛡️ 守护结界（稀有）
+  | 'mutation-gun'            // 🔫 射线枪（稀有）
+  | 'star-tracker'            // 🛰️ 星轨追踪器（稀有）
+  | 'nectar';                 // ⭐ 琼浆玉露（稀有）
+
+export type LegacyItemId =
+  | 'starlight-fertilizer'
+  | 'alien-flare'
+  | 'thief-trap'
+  | 'star-telescope'
+  | 'moonlight-dew'
+  | 'lullaby-record';
+
+export const LEGACY_ITEM_ID_ALIASES = {
+  'starlight-fertilizer': 'star-dew',
+  'alien-flare': 'drift-bottle',
+  'thief-trap': 'trap-net',
+  'star-telescope': 'crystal-ball',
+  'moonlight-dew': 'moon-dew',
+  'lullaby-record': 'lullaby',
+} as const satisfies Record<LegacyItemId, ItemId>;
+
+export function normalizeShedItemId(itemId: string): string {
+  return LEGACY_ITEM_ID_ALIASES[itemId as LegacyItemId] ?? itemId;
+}
 
 export type ItemRarity = 'common' | 'rare';
 
@@ -24,21 +49,40 @@ export interface ItemDef {
 }
 
 export const ITEM_DEFS: Record<ItemId, ItemDef> = {
-  'starlight-fertilizer': { id: 'starlight-fertilizer', emoji: '⚡', rarity: 'common' },
-  'supernova-bottle': { id: 'supernova-bottle', emoji: '☀️', rarity: 'rare' },
+  'star-dew': { id: 'star-dew', emoji: '✨', rarity: 'common' },
+  'supernova-bottle': { id: 'supernova-bottle', emoji: '💥', rarity: 'rare' },
   'drift-bottle': { id: 'drift-bottle', emoji: '🍾', rarity: 'common' },
-  'thief-trap': { id: 'thief-trap', emoji: '🪤', rarity: 'common' },
-  'star-telescope': { id: 'star-telescope', emoji: '🔮', rarity: 'common' },
-  'moonlight-dew': { id: 'moonlight-dew', emoji: '🌙', rarity: 'rare' },
+  'trap-net': { id: 'trap-net', emoji: '🕸️', rarity: 'common' },
+  'crystal-ball': { id: 'crystal-ball', emoji: '🔮', rarity: 'common' },
+  'moon-dew': { id: 'moon-dew', emoji: '🌙', rarity: 'rare' },
   'circus-tent': { id: 'circus-tent', emoji: '🎪', rarity: 'common' },
   'gene-modifier': { id: 'gene-modifier', emoji: '🧬', rarity: 'rare' },
   lullaby: { id: 'lullaby', emoji: '🎵', rarity: 'common' },
+  'guardian-barrier': { id: 'guardian-barrier', emoji: '🛡️', rarity: 'rare' },
+  'mutation-gun': { id: 'mutation-gun', emoji: '🔫', rarity: 'rare' },
+  'star-tracker': { id: 'star-tracker', emoji: '🛰️', rarity: 'rare' },
+  nectar: { id: 'nectar', emoji: '⭐', rarity: 'rare' },
 };
 
-export const COMMON_ITEMS: ItemId[] = Object.values(ITEM_DEFS)
-  .filter(d => d.rarity === 'common').map(d => d.id);
-export const RARE_ITEMS: ItemId[] = Object.values(ITEM_DEFS)
-  .filter(d => d.rarity === 'rare').map(d => d.id);
+const LEGACY_COMMON_SLICING_ITEM_IDS = [
+  'starlight-fertilizer',
+  'alien-flare',
+  'thief-trap',
+  'star-telescope',
+  'circus-tent',
+  'lullaby-record',
+] as const satisfies ReadonlyArray<ItemId | LegacyItemId>;
+
+const LEGACY_RARE_SLICING_ITEM_IDS = [
+  'supernova-bottle',
+  'moonlight-dew',
+  'gene-modifier',
+] as const satisfies ReadonlyArray<ItemId | LegacyItemId>;
+
+export const COMMON_ITEMS: ItemId[] = LEGACY_COMMON_SLICING_ITEM_IDS
+  .map((itemId) => normalizeShedItemId(itemId) as ItemId);
+export const RARE_ITEMS: ItemId[] = LEGACY_RARE_SLICING_ITEM_IDS
+  .map((itemId) => normalizeShedItemId(itemId) as ItemId);
 export const ALL_ITEM_IDS: ItemId[] = Object.keys(ITEM_DEFS) as ItemId[];
 
 // ─── 种子品质 ───
