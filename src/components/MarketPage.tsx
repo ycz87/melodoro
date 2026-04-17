@@ -1,10 +1,11 @@
 /**
- * MarketPage — 商城页面（买入 / 卖出 / 每周特惠）
+ * MarketPage — 商城页面（买入 / 卖出）
  *
- * 买入 Tab 支持常驻道具购买与地块扩展，卖出 Tab 支持西瓜售卖，
- * 每周特惠 Tab 支持限时商品购买。
+ * 买入页整合每周特惠、常驻商品与地块扩展，统一为紧凑列表。
+ * 卖出页保持现有业务逻辑，但也改为同一套列表语言。
  */
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import type { Messages } from '../i18n/types';
 import { getCollectedUniqueVarietyCount } from '../farm/galaxy';
@@ -14,6 +15,7 @@ import type { ShopItemDef, ShopItemId, WeeklyShop } from '../types/market';
 import { SHOP_ITEMS, PLOT_PRICES } from '../types/market';
 import { ConfirmModal } from './ConfirmModal';
 import { MarketItemCard } from './Market/MarketItemCard';
+import { MarketTradeHero } from './Market/MarketTradeHero';
 import { WeeklyTab } from './Market/WeeklyTab';
 
 interface MarketPageProps {
@@ -28,7 +30,7 @@ interface MarketPageProps {
   messages: Messages;
 }
 
-type MarketTab = 'buy' | 'sell' | 'weekly';
+type MarketTab = 'buy' | 'sell';
 
 interface SellableVariety {
   key: string;
@@ -61,7 +63,7 @@ export function MarketPage(props: MarketPageProps) {
   const [pendingSellKey, setPendingSellKey] = useState<string | null>(null);
   const [pendingPurchase, setPendingPurchase] = useState<PendingPurchase | null>(null);
   const [recentBoughtItemId, setRecentBoughtItemId] = useState<ShopItemId | null>(null);
-  const marketTabIndex: Record<MarketTab, number> = { buy: 0, sell: 1, weekly: 2 };
+  const marketTabIndex: Record<MarketTab, number> = { buy: 0, sell: 1 };
 
   const sellableVarieties = useMemo<SellableVariety[]>(() => {
     return collection.flatMap((entry) => {
@@ -143,14 +145,27 @@ export function MarketPage(props: MarketPageProps) {
 
   return (
     <div className="w-full px-4 pt-4 pb-6">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold" style={{ color: theme.text }}>{messages.marketTitle}</h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold" style={{ color: theme.text }}>{messages.marketTitle}</h2>
+          <div className="mt-1 text-xs" style={{ color: theme.textMuted }}>{messages.marketBalance}</div>
+        </div>
         <div
           className="text-sm font-semibold px-3 py-2 rounded-full"
-          style={{ backgroundColor: theme.inputBg, color: '#fbbf24' }}
+          style={{ backgroundColor: theme.inputBg, color: '#fbbf24', border: `1px solid ${theme.border}` }}
         >
           💰 {balance}
         </div>
+      </div>
+
+      <div className="mb-4">
+        <MarketTradeHero
+          balance={balance}
+          weeklyItemCount={weeklyShop.items.length}
+          sellableCount={sellableVarieties.length}
+          messages={messages}
+          theme={theme}
+        />
       </div>
 
       <div className="mb-4 relative flex items-center rounded-full p-[3px]" style={{ backgroundColor: theme.inputBg }}>
@@ -159,7 +174,7 @@ export function MarketPage(props: MarketPageProps) {
           style={{
             backgroundColor: theme.accent,
             opacity: 0.16,
-            width: 'calc((100% - 6px) / 3)',
+            width: 'calc((100% - 6px) / 2)',
             left: '3px',
             transform: `translateX(${marketTabIndex[activeTab] * 100}%)`,
           }}
@@ -178,43 +193,44 @@ export function MarketPage(props: MarketPageProps) {
         >
           {messages.marketTabSell}
         </button>
-        <button
-          onClick={() => setActiveTab('weekly')}
-          className="relative z-10 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 ease-in-out cursor-pointer flex-1"
-          style={{ color: activeTab === 'weekly' ? theme.text : theme.textMuted }}
-        >
-          {messages.marketTabWeekly}
-        </button>
       </div>
 
       {activeTab === 'buy' && (
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {SHOP_ITEMS.map((item) => {
-              const affordable = balance >= item.price;
-              const itemName = messages.itemName(item.id);
-              const justBought = recentBoughtItemId === item.id;
-              return (
-                <MarketItemCard
-                  key={item.id}
-                  icon={item.emoji}
-                  name={itemName}
-                  description={messages.itemDescription(item.id)}
-                  priceText={`${item.price} 💰`}
-                  actionText={justBought ? `✅ ${messages.marketBuySuccess}` : messages.marketBuyConfirmButton}
-                  disabled={!affordable}
-                  onAction={() => setPendingPurchase({ type: 'item', item })}
-                  theme={theme}
-                />
-              );
-            })}
-          </div>
+        <div className="flex flex-col gap-6">
+          <WeeklyTab
+            balance={balance}
+            shop={weeklyShop}
+            messages={messages}
+            onBuyItem={onBuyWeeklyItem}
+          />
 
-          <div className="pt-4 border-t" style={{ borderColor: theme.border }}>
-            <h3 className="text-sm font-semibold mb-2" style={{ color: theme.text }}>
-              {messages.marketPlotSection}
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <section className="flex flex-col gap-3 pt-1">
+            <SectionHeader title={messages.marketGoodsSection} themeText={theme.text} />
+            <ListGroup theme={theme}>
+              {SHOP_ITEMS.map((item) => {
+                const affordable = balance >= item.price;
+                const itemName = messages.itemName(item.id);
+                const justBought = recentBoughtItemId === item.id;
+                return (
+                  <MarketItemCard
+                    key={item.id}
+                    icon={item.emoji}
+                    name={itemName}
+                    description={messages.itemDescription(item.id)}
+                    priceText={`${item.price} 💰`}
+                    actionText={justBought ? `✅ ${messages.marketBuySuccess}` : messages.marketBuyConfirmButton}
+                    disabled={!affordable}
+                    onAction={() => setPendingPurchase({ type: 'item', item })}
+                    theme={theme}
+                  />
+                );
+              })}
+            </ListGroup>
+          </section>
+
+          <section className="flex flex-col gap-3 border-t pt-4" style={{ borderColor: theme.border }}>
+            <SectionHeader title={messages.marketPlotSection} themeText={theme.text} />
+            <ListGroup theme={theme}>
               {buyablePlots.map((plot) => {
                 const freeUnlockRequiredVarieties = plot.freeUnlockRequiredVarieties;
                 const milestoneUnlocked = freeUnlockRequiredVarieties !== null
@@ -231,22 +247,30 @@ export function MarketPage(props: MarketPageProps) {
                       freeUnlockRequiredVarieties,
                       Math.min(collectedUniqueCount, freeUnlockRequiredVarieties),
                     );
+                const metaText = unlocked
+                  ? messages.marketPlotUnlocked
+                  : isNextUnlock
+                    ? undefined
+                    : messages.marketBuyComingSoon;
+
                 return (
                   <MarketItemCard
                     key={plot.plotIndex}
                     icon="🧱"
                     name={messages.marketPlotName(plot.plotIndex)}
                     description={description}
+                    metaText={metaText}
                     priceText={unlocked ? messages.marketPlotUnlocked : `${plot.price} 💰`}
                     actionText={unlocked ? messages.marketPlotUnlocked : messages.marketBuyConfirmButton}
                     disabled={disabled}
+                    dimmed={unlocked}
                     onAction={() => setPendingPurchase({ type: 'plot', plotIndex: plot.plotIndex, price: plot.price })}
                     theme={theme}
                   />
                 );
               })}
-            </div>
-          </div>
+            </ListGroup>
+          </section>
         </div>
       )}
 
@@ -260,40 +284,22 @@ export function MarketPage(props: MarketPageProps) {
               {messages.marketSellEmpty}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <ListGroup theme={theme}>
               {sellableVarieties.map((item) => (
-                <button
+                <MarketItemCard
                   key={item.key}
-                  onClick={() => setPendingSellKey(item.key)}
-                  className="h-full p-3 rounded-[var(--radius-card)] border cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-0.5 text-left flex flex-col"
-                  style={{ backgroundColor: theme.inputBg, borderColor: theme.border, boxShadow: 'var(--shadow-card)' }}
-                >
-                  <span className="text-3xl leading-none">{item.emoji}</span>
-                  <div className="mt-2 min-w-0">
-                    <div className="text-sm font-medium truncate" style={{ color: theme.text }}>
-                      {item.name}
-                    </div>
-                    <div className="text-xs mt-1" style={{ color: theme.textMuted }}>
-                      {messages.marketSellOwned(item.count)}
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm font-semibold" style={{ color: '#fbbf24' }}>
-                    {item.sellPrice} 💰
-                  </div>
-                </button>
+                  icon={item.emoji}
+                  name={item.name}
+                  description={messages.marketSellOwned(item.count)}
+                  priceText={`${item.sellPrice} 💰`}
+                  actionText={messages.marketSellConfirmButton}
+                  onAction={() => setPendingSellKey(item.key)}
+                  theme={theme}
+                />
               ))}
-            </div>
+            </ListGroup>
           )}
         </>
-      )}
-
-      {activeTab === 'weekly' && (
-        <WeeklyTab
-          balance={balance}
-          shop={weeklyShop}
-          messages={messages}
-          onBuyItem={onBuyWeeklyItem}
-        />
       )}
 
       {pendingVariety && (
@@ -329,6 +335,32 @@ export function MarketPage(props: MarketPageProps) {
           onCancel={() => setPendingPurchase(null)}
         />
       )}
+    </div>
+  );
+}
+
+function SectionHeader({ title, themeText }: { title: string; themeText: string }) {
+  return (
+    <h3 className="text-sm font-semibold" style={{ color: themeText }}>
+      {title}
+    </h3>
+  );
+}
+
+function ListGroup(
+  { children, theme }: { children: ReactNode; theme: ReturnType<typeof useTheme> },
+) {
+  return (
+    <div
+      className="overflow-hidden rounded-[16px] border divide-y"
+      style={{
+        backgroundColor: theme.inputBg,
+        borderColor: theme.border,
+      }}
+    >
+      <div style={{ borderColor: theme.border }} className="divide-y">
+        {children}
+      </div>
     </div>
   );
 }

@@ -528,9 +528,12 @@ export const ja: Messages = {
 
   marketTitle: '🏪 ショップ',
   marketBalance: 'メロンコイン',
+  marketHeroTitle: '品物が動き、価格が走る取引の時間',
+  marketHeroSubtitle: 'まず週間特売を見て、そのまま常設商品と区画拡張まで一覧で素早く確認できます。',
   marketTabBuy: '🛒 買う',
   marketTabSell: '💰 売る',
   marketTabWeekly: '🎁 週間特売',
+  marketGoodsSection: '🧺 常設商品',
   marketBuyComingSoon: '近日公開',
   marketBuyConfirmTitle: '購入確認',
   marketBuyConfirmMessage: (name, price, balance) => `本当に${name}を購入しますか？${price} 💰 を消費し、現在の残高は ${balance} 💰 です`,

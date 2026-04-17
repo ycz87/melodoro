@@ -528,9 +528,12 @@ export const en: Messages = {
 
   marketTitle: '🏪 Market',
   marketBalance: 'Melon Coins',
+  marketHeroTitle: 'The market is live, and stock is moving',
+  marketHeroSubtitle: "Catch this week's specials first, then scan everyday tools and plot upgrades in one compact pass.",
   marketTabBuy: '🛒 Buy',
   marketTabSell: '💰 Sell',
   marketTabWeekly: '🎁 Weekly Specials',
+  marketGoodsSection: '🧺 Everyday Goods',
   marketBuyComingSoon: 'Coming Soon',
   marketBuyConfirmTitle: 'Confirm Purchase',
   marketBuyConfirmMessage: (name, price, balance) => `Buy ${name}? Cost ${price} 💰, current balance ${balance} 💰`,

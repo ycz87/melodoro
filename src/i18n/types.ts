@@ -335,9 +335,12 @@ export interface Messages {
   // Market (v0.29.0)
   marketTitle: string;
   marketBalance: string;
+  marketHeroTitle: string;
+  marketHeroSubtitle: string;
   marketTabBuy: string;
   marketTabSell: string;
   marketTabWeekly: string;
+  marketGoodsSection: string;
   marketBuyComingSoon: string;
   marketBuyConfirmTitle: string;
   marketBuyConfirmMessage: (name: string, price: number, balance: number) => string;

@@ -528,9 +528,12 @@ export const ko: Messages = {
 
   marketTitle: '🏪 상점',
   marketBalance: '멜론 코인',
+  marketHeroTitle: '물건이 돌고 가격이 뛰는 거래 한복판',
+  marketHeroSubtitle: '주간 특가를 먼저 보고, 상시 상품과 구획 확장까지 한 번에 훑을 수 있는 압축 리스트입니다.',
   marketTabBuy: '🛒 구매',
   marketTabSell: '💰 판매',
   marketTabWeekly: '🎁 주간 특가',
+  marketGoodsSection: '🧺 상시 상품',
   marketBuyComingSoon: '곧 오픈',
   marketBuyConfirmTitle: '구매 확인',
   marketBuyConfirmMessage: (name, price, balance) => `${name}을(를) 구매하시겠습니까? ${price} 💰 소모, 현재 잔액 ${balance} 💰`,

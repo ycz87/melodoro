@@ -528,9 +528,12 @@ export const zhTW: Messages = {
 
   marketTitle: '🏪 商城',
   marketBalance: '瓜幣餘額',
+  marketHeroTitle: '貨在流、價在跳，交易正在發生',
+  marketHeroSubtitle: '先看每週特惠，再補常駐道具和地塊擴充，一眼掃完整張清單。',
   marketTabBuy: '🛒 購買',
   marketTabSell: '💰 賣出',
   marketTabWeekly: '🎁 每週特惠',
+  marketGoodsSection: '🧺 常駐商品',
   marketBuyComingSoon: '即將開放',
   marketBuyConfirmTitle: '確認購買',
   marketBuyConfirmMessage: (name, price, balance) => `確定購買 ${name}？花費 ${price} 💰，目前餘額 ${balance} 💰`,
