@@ -3,7 +3,7 @@
 简洁优雅的专注计时器，基于番茄工作法（Pomodoro Technique）。
 
 **在线体验：** [clock.cosmelon.app](https://clock.cosmelon.app/)
-**当前版本：** v0.32.0（2026-02-19）
+**当前版本：** v0.61.16
 
 ## 功能
 
