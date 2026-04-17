@@ -528,9 +528,12 @@ export const fr: Messages = {
 
   marketTitle: '🏪 Boutique',
   marketBalance: 'Pièces Melon',
+  marketHeroTitle: 'Le marché bouge, et les échanges tournent',
+  marketHeroSubtitle: "Regarde d'abord les offres hebdo, puis parcours articles permanents et extensions de parcelles dans une seule liste compacte.",
   marketTabBuy: '🛒 Acheter',
   marketTabSell: '💰 Vendre',
   marketTabWeekly: '🎁 Offres hebdo',
+  marketGoodsSection: '🧺 Articles permanents',
   marketBuyComingSoon: 'Bientôt disponible',
   marketBuyConfirmTitle: "Confirmer l'achat",
   marketBuyConfirmMessage: (name, price, balance) => `Acheter ${name} ? Coût ${price} 💰, solde actuel ${balance} 💰`,

@@ -1,16 +1,15 @@
 /**
- * WeeklyTab — Weekly special offers tab in market.
+ * WeeklyTab — Weekly special offers section in market.
  *
- * Shows:
- * - Countdown to next Monday 00:00 UTC refresh
- * - Weekly item cards
- * - Purchase button with sold-out/insufficient balance states
+ * Embedded into the Buy tab and rendered with the same compact list language
+ * as permanent goods and plot expansion rows.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import type { Messages } from '../../i18n/types';
 import type { WeeklyItem, WeeklyShop } from '../../types/market';
 import { getWeeklyCountdownParts } from '../../utils/weeklyShop';
+import { MarketItemCard } from './MarketItemCard';
 
 interface WeeklyTabProps {
   balance: number;
@@ -54,71 +53,54 @@ export function WeeklyTab(props: WeeklyTabProps) {
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div
-        className="rounded-xl border p-3"
-        style={{
-          backgroundColor: theme.inputBg,
-          borderColor: theme.border,
-        }}
-      >
-        <div className="text-sm font-semibold" style={{ color: theme.text }}>
-          {messages.marketWeeklyTitle}
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="text-sm font-semibold" style={{ color: theme.text }}>
+            {messages.marketTabWeekly}
+          </div>
+          <div className="mt-1 text-xs" style={{ color: theme.textMuted }}>
+            {messages.marketWeeklyTitle}
+          </div>
         </div>
-        <div className="text-xs mt-1" style={{ color: theme.textMuted }}>
+        <div
+          className="inline-flex max-w-full items-center rounded-full px-3 py-1 text-xs font-medium"
+          style={{
+            backgroundColor: `${theme.accent}14`,
+            color: theme.accent,
+            border: `1px solid ${theme.accent}22`,
+          }}
+        >
           {messages.marketWeeklyRefreshIn(countdown.days, countdown.hours)}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="flex flex-col gap-3">
         {shop.items.map((item) => {
           const soldOut = item.stock <= 0;
           const affordable = balance >= item.price;
           const disabled = soldOut || !affordable;
           const itemName = getWeeklyItemDisplayName(item, messages);
           const itemTypeLabel = getWeeklyItemTypeLabel(item, messages);
+          const metaText = soldOut ? messages.marketWeeklySoldOut : messages.marketWeeklyStock(item.stock);
 
           return (
-            <div
+            <MarketItemCard
               key={item.id}
-              className="h-full rounded-xl border p-3 flex flex-col"
-              style={{
-                backgroundColor: theme.inputBg,
-                borderColor: theme.border,
-                opacity: soldOut ? 0.65 : 1,
-                boxShadow: 'var(--shadow-card)',
-              }}
-            >
-              <span className="text-3xl leading-none">{item.data.emoji}</span>
-              <div className="mt-2 min-w-0">
-                <div className="text-sm font-semibold truncate" style={{ color: theme.text }}>
-                  {itemName}
-                </div>
-                <div className="text-xs mt-1 truncate" style={{ color: theme.textMuted }}>
-                  {itemTypeLabel}
-                </div>
-              </div>
-              <div className="mt-3 text-sm font-semibold" style={{ color: affordable ? '#fbbf24' : '#ef4444' }}>
-                {item.price} 💰
-              </div>
-              <span className="mt-1 text-xs" style={{ color: theme.textMuted }}>
-                {messages.marketWeeklyStock(item.stock)}
-              </span>
-              <button
-                onClick={() => onBuyItem(item.id)}
-                disabled={disabled}
-                className="mt-3 w-full px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: disabled ? theme.border : `${theme.accent}22`,
-                  color: disabled ? theme.textMuted : theme.accent,
-                }}
-              >
-                {soldOut ? messages.marketWeeklySoldOut : messages.marketWeeklyBuyButton}
-              </button>
-            </div>
+              icon={item.data.emoji}
+              name={itemName}
+              description={itemTypeLabel}
+              metaText={metaText}
+              priceText={`${item.price} 💰`}
+              actionText={soldOut ? messages.marketWeeklySoldOut : messages.marketWeeklyBuyButton}
+              disabled={disabled}
+              dimmed={soldOut}
+              onAction={() => onBuyItem(item.id)}
+              theme={theme}
+            />
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

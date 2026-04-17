@@ -528,9 +528,12 @@ export const de: Messages = {
 
   marketTitle: '🏪 Markt',
   marketBalance: 'Melonenmünzen',
+  marketHeroTitle: 'Hier bewegt sich Ware, und Preise laufen',
+  marketHeroSubtitle: 'Prüfe erst die Wochenangebote und scanne danach Dauerartikel und Beet-Erweiterungen in einer kompakten Liste.',
   marketTabBuy: '🛒 Kaufen',
   marketTabSell: '💰 Verkaufen',
   marketTabWeekly: '🎁 Wochenangebote',
+  marketGoodsSection: '🧺 Dauerangebot',
   marketBuyComingSoon: 'Demnächst verfügbar',
   marketBuyConfirmTitle: 'Kauf bestätigen',
   marketBuyConfirmMessage: (name, price, balance) => `${name} kaufen? Kosten: ${price} 💰, aktuelles Guthaben: ${balance} 💰`,
