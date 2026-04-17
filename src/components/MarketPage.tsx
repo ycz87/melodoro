@@ -5,6 +5,7 @@
  * 卖出页保持现有业务逻辑，但也改为同一套列表语言。
  */
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import type { Messages } from '../i18n/types';
 import { getCollectedUniqueVarietyCount } from '../farm/galaxy';
@@ -205,7 +206,7 @@ export function MarketPage(props: MarketPageProps) {
 
           <section className="flex flex-col gap-3 pt-1">
             <SectionHeader title={messages.marketGoodsSection} themeText={theme.text} />
-            <div className="flex flex-col gap-3">
+            <ListGroup theme={theme}>
               {SHOP_ITEMS.map((item) => {
                 const affordable = balance >= item.price;
                 const itemName = messages.itemName(item.id);
@@ -224,12 +225,12 @@ export function MarketPage(props: MarketPageProps) {
                   />
                 );
               })}
-            </div>
+            </ListGroup>
           </section>
 
           <section className="flex flex-col gap-3 border-t pt-4" style={{ borderColor: theme.border }}>
             <SectionHeader title={messages.marketPlotSection} themeText={theme.text} />
-            <div className="flex flex-col gap-3">
+            <ListGroup theme={theme}>
               {buyablePlots.map((plot) => {
                 const freeUnlockRequiredVarieties = plot.freeUnlockRequiredVarieties;
                 const milestoneUnlocked = freeUnlockRequiredVarieties !== null
@@ -268,7 +269,7 @@ export function MarketPage(props: MarketPageProps) {
                   />
                 );
               })}
-            </div>
+            </ListGroup>
           </section>
         </div>
       )}
@@ -283,7 +284,7 @@ export function MarketPage(props: MarketPageProps) {
               {messages.marketSellEmpty}
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <ListGroup theme={theme}>
               {sellableVarieties.map((item) => (
                 <MarketItemCard
                   key={item.key}
@@ -296,7 +297,7 @@ export function MarketPage(props: MarketPageProps) {
                   theme={theme}
                 />
               ))}
-            </div>
+            </ListGroup>
           )}
         </>
       )}
@@ -343,5 +344,23 @@ function SectionHeader({ title, themeText }: { title: string; themeText: string 
     <h3 className="text-sm font-semibold" style={{ color: themeText }}>
       {title}
     </h3>
+  );
+}
+
+function ListGroup(
+  { children, theme }: { children: ReactNode; theme: ReturnType<typeof useTheme> },
+) {
+  return (
+    <div
+      className="overflow-hidden rounded-[16px] border divide-y"
+      style={{
+        backgroundColor: theme.inputBg,
+        borderColor: theme.border,
+      }}
+    >
+      <div style={{ borderColor: theme.border }} className="divide-y">
+        {children}
+      </div>
+    </div>
   );
 }

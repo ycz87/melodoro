@@ -29,19 +29,19 @@ export function MarketItemCard(props: MarketItemCardProps) {
 
   return (
     <div
-      className="rounded-[var(--radius-card)] border px-3 py-3 shadow-[var(--shadow-card)] transition-all duration-200 ease-out"
+      className="px-3 py-2.5 transition-colors duration-150 sm:px-4 sm:py-3"
       style={{
-        backgroundColor: theme.inputBg,
-        borderColor: disabled ? `${theme.border}` : `${theme.accent}18`,
-        opacity: dimmed ? 0.68 : 1,
+        opacity: dimmed ? 0.66 : 1,
+        backgroundColor: 'transparent',
       }}
     >
-      <div className="grid grid-cols-[auto,minmax(0,1fr)] gap-x-3 gap-y-3 sm:grid-cols-[auto,minmax(0,1fr),auto] sm:items-center">
+      <div className="grid grid-cols-[auto,minmax(0,1fr)] gap-x-3 gap-y-1.5 sm:grid-cols-[auto,minmax(0,1fr),auto] sm:items-center">
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-lg sm:h-10 sm:w-10 sm:text-2xl"
           style={{
-            background: `linear-gradient(135deg, ${theme.accent}24 0%, ${theme.accentEnd}18 100%)`,
-            border: `1px solid ${theme.accent}22`,
+            backgroundColor: `${theme.accent}12`,
+            color: theme.text,
+            border: `1px solid ${theme.accent}18`,
           }}
         >
           {icon}
@@ -56,9 +56,8 @@ export function MarketItemCard(props: MarketItemCardProps) {
               <span
                 className="inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
                 style={{
-                  backgroundColor: `${theme.accent}14`,
+                  backgroundColor: `${theme.accent}12`,
                   color: theme.accent,
-                  border: `1px solid ${theme.accent}20`,
                 }}
               >
                 <span className="truncate">{metaText}</span>
@@ -66,7 +65,7 @@ export function MarketItemCard(props: MarketItemCardProps) {
             )}
           </div>
           <div
-            className="mt-1 text-xs leading-5"
+            className="mt-0.5 text-xs leading-5"
             style={{
               color: theme.textMuted,
               display: '-webkit-box',
@@ -79,7 +78,7 @@ export function MarketItemCard(props: MarketItemCardProps) {
           </div>
         </div>
 
-        <div className="col-start-2 flex min-w-0 items-center justify-between gap-3 sm:col-start-auto sm:min-w-[132px] sm:flex-col sm:items-end sm:justify-center">
+        <div className="col-span-2 flex items-center justify-end gap-2.5 pl-11 sm:col-span-1 sm:min-w-[132px] sm:pl-0">
           <div className="text-sm font-semibold whitespace-nowrap" style={{ color: disabled ? theme.textMuted : '#fbbf24' }}>
             {priceText}
           </div>
@@ -87,11 +86,12 @@ export function MarketItemCard(props: MarketItemCardProps) {
             type="button"
             onClick={onAction}
             disabled={disabled}
-            className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ease-out cursor-pointer disabled:cursor-not-allowed"
+            className="shrink-0 rounded-lg px-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer disabled:cursor-not-allowed"
             style={{
-              backgroundColor: disabled ? theme.border : theme.accent,
-              color: disabled ? theme.textMuted : '#ffffff',
-              minWidth: '88px',
+              backgroundColor: disabled ? theme.border : `${theme.accent}16`,
+              color: disabled ? theme.textMuted : theme.accent,
+              border: `1px solid ${disabled ? theme.border : `${theme.accent}30`}`,
+              minWidth: '84px',
             }}
           >
             {actionText}

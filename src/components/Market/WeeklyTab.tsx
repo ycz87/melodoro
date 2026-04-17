@@ -75,7 +75,13 @@ export function WeeklyTab(props: WeeklyTabProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div
+        className="overflow-hidden rounded-[16px] border divide-y"
+        style={{
+          backgroundColor: theme.inputBg,
+          borderColor: theme.border,
+        }}
+      >
         {shop.items.map((item) => {
           const soldOut = item.stock <= 0;
           const affordable = balance >= item.price;
