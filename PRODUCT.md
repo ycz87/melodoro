@@ -1,12 +1,12 @@
-# 🍉 西瓜时钟 — 产品文档
+# 🍉 Melodoro（西瓜时钟）— 产品文档
 
 ## 产品定位
-简洁优雅的专注计时器，基于番茄工作法，融入西瓜种植养成元素。
+Melodoro（中文名：西瓜时钟）是一款简洁优雅的专注计时器，基于番茄工作法，融入西瓜种植养成元素。
 
 ## 线上地址
 - **产品：** https://clock.cosmelon.app
 - **管理后台：** https://admin.cosmelon.app
-- **GitHub：** https://github.com/ycz87/cosmelon
+- **GitHub：** https://github.com/ycz87/melodoro
 
 ## 技术架构
 - **前端：** React 19 + Vite 7 + Tailwind CSS 4 + TypeScript（当前 v0.32.0）

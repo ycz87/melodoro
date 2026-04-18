@@ -1,5 +1,5 @@
 /**
- * App — Watermelon Clock main application component
+ * App — Melodoro main application component
  *
  * Orchestrates the entire app: timer state, records, settings, audio, i18n,
  * and routes between Pomodoro mode and Project mode.

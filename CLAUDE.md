@@ -1,4 +1,4 @@
-# CLAUDE.md - Cosmelon 项目规范（供 Claude Code 读取）
+# CLAUDE.md - Melodoro 项目规范（供 Claude Code 读取）
 
 ## 你的角色
 
@@ -6,7 +6,7 @@
 
 ## 项目概况
 
-- **产品：** 西瓜时钟（Watermelon Clock）— 番茄钟 + 农场养成
+- **产品：** Melodoro（中文名：西瓜时钟）— 番茄钟 + 农场养成
 - **技术栈：** React 19 + Vite 7 + Tailwind CSS 4 + TypeScript（strict）
 - **后端：** Cloudflare Workers（Hono）+ D1 数据库（独立仓库）
 - **线上地址：** https://clock.cosmelon.app

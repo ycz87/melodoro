@@ -16,8 +16,8 @@ const formatDuration = (minutes: number): string => {
 /** English translations */
 export const en: Messages = {
   // App
-  appName: 'Watermelon Clock',
-  appNameShort: 'WM Clock',
+  appName: 'Melodoro',
+  appNameShort: 'Melodoro',
 
   // Timer phases
   phaseWork: '🍉 Focus',
@@ -225,7 +225,7 @@ export const en: Messages = {
   // Guide
   guideTitle: '🍉 How to Use',
   guidePomodoro: 'Pomodoro Technique',
-  guidePomodoroDesc: 'Watermelon Clock uses the Pomodoro Technique to help you stay focused. Focus → Break → Focus → Break, simple cycle.',
+  guidePomodoroDesc: 'Melodoro uses the Pomodoro Technique to help you stay focused. Focus → Break → Focus → Break, simple cycle.',
   guideBasic: 'Getting Started',
   guideBasicItems: [
     'Tap play to start focusing',

@@ -60,9 +60,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Watermelon Clock v__VERSION__'
+          releaseName: 'Melodoro v__VERSION__'
           releaseBody: |
-            🍉 Watermelon Clock v__VERSION__
+            🍉 Melodoro v__VERSION__
 
             Download the installer for your platform:
             - **Windows**: `.msi` or `.exe` (NSIS installer)
