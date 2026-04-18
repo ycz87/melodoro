@@ -48,7 +48,7 @@ export function Login({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm bg-white rounded-lg border border-gray-200 p-8">
-        <h1 className="text-xl font-semibold text-gray-900 mb-6 text-center">Cosmelon Admin</h1>
+        <h1 className="text-xl font-semibold text-gray-900 mb-6 text-center">Melodoro Admin</h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">

@@ -14,13 +14,13 @@ export async function sendVerificationEmail(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Cosmelon <noreply@cosmelon.app>',
+      from: 'Melodoro <noreply@cosmelon.app>',
       to: [to],
       subject: `Your verification code / 您的验证码: ${code}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 420px; margin: 0 auto; padding: 32px; background: #ffffff;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://clock.cosmelon.app/logo.png" width="48" height="48" alt="Cosmelon" style="border: 0;" />
+            <img src="https://clock.cosmelon.app/logo.png" width="48" height="48" alt="Melodoro" style="border: 0;" />
           </div>
 
           <p style="color: #555; font-size: 14px; margin: 0 0 8px;">Your verification code is:</p>
@@ -35,7 +35,7 @@ export async function sendVerificationEmail(
 
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
 
-          <p style="text-align: center; color: #bbb; font-size: 11px; margin: 0;">&copy; 2026 Cosmelon &middot; cosmelon.app</p>
+          <p style="text-align: center; color: #bbb; font-size: 11px; margin: 0;">&copy; 2026 Melodoro &middot; cosmelon.app</p>
         </div>
       `,
     }),

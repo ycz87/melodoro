@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
-  "productName": "Watermelon Clock",
+  "productName": "Melodoro",
   "version": "0.1.2",
   "identifier": "com.watermelonclock.app",
   "build": {
@@ -13,7 +13,7 @@
     "withGlobalTauri": false,
     "windows": [
       {
-        "title": "Watermelon Clock",
+        "title": "Melodoro",
         "width": 420,
         "height": 780,
         "minWidth": 360,

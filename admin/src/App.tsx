@@ -37,7 +37,7 @@ export function App() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <a href="#/" className="text-base font-semibold text-gray-900">🍉 Cosmelon Admin</a>
+          <a href="#/" className="text-base font-semibold text-gray-900">🍉 Melodoro Admin</a>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">{getStoredAuth().email}</span>
             <button

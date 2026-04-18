@@ -1,11 +1,11 @@
-# 🍉 西瓜时钟 — 产品文档
+# 🍉 Melodoro（西瓜时钟）— 产品文档
 
 ## 项目信息
 
-- **产品名称：** 西瓜时钟（Watermelon Clock）
+- **产品名称：** Melodoro（中文名：西瓜时钟）
 - **线上地址：** https://clock.cosmelon.app/
 - **旧地址：** https://pomodoro-puce-seven-98.vercel.app/
-- **GitHub：** https://github.com/ycz87/pomodoro
+- **GitHub：** https://github.com/ycz87/melodoro
 - **技术栈：** React 19 + Vite 7 + Tailwind CSS 4 + TypeScript
 - **后端：** Cloudflare Workers（Hono）— API（watermelon-clock-api）+ Auth（cosmelon-auth）+ D1 数据库
 - **部署：** Cloudflare Pages（前端）+ Cloudflare Workers（API + Auth）

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Cosmelon Clock</string>
-    <string name="title_activity_main">Cosmelon Clock</string>
+    <string name="app_name">Melodoro</string>
+    <string name="title_activity_main">Melodoro</string>
     <string name="package_name">app.cosmelon.clock</string>
     <string name="custom_url_scheme">app.cosmelon.clock</string>
 </resources>

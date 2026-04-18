@@ -10,11 +10,11 @@ export const STREAK_ACHIEVEMENTS: AchievementDef[] = [
   { id: 'S3', series: 'streak', nameZh: '半月坚持', nameEn: 'Fortnight Focus', descZh: '两周的坚持，西瓜田已经郁郁葱葱', descEn: 'Two weeks of persistence, your melon field is thriving', conditionZh: '连续打卡 14 天', conditionEn: '14-day streak', emoji: '🌿', target: 14, progressKey: 'currentStreak' },
   { id: 'S4', series: 'streak', nameZh: '钢铁意志', nameEn: 'Iron Will', descZh: '三十天，你证明了什么叫坚持', descEn: 'Thirty days — you proved what persistence means', conditionZh: '连续打卡 30 天', conditionEn: '30-day streak', emoji: '💪', target: 30, progressKey: 'currentStreak' },
   { id: 'S5', series: 'streak', nameZh: '百日传说', nameEn: 'Century Legend', descZh: '一百天不间断，你就是传说本身', descEn: '100 days unbroken — you are the legend', conditionZh: '连续打卡 100 天', conditionEn: '100-day streak', emoji: '👑', target: 100, progressKey: 'currentStreak' },
-  { id: 'S6', series: 'streak', nameZh: '累计百天', nameEn: 'Hundred Days', descZh: '一百天的陪伴，西瓜时钟已经是你生活的一部分', descEn: '100 days together — Watermelon Clock is part of your life', conditionZh: '累计使用天数 ≥100 天', conditionEn: '100+ total days', emoji: '📆', target: 100, progressKey: 'totalDays' },
+  { id: 'S6', series: 'streak', nameZh: '累计百天', nameEn: 'Hundred Days', descZh: '一百天的陪伴，西瓜时钟已经是你生活的一部分', descEn: '100 days together — Melodoro is part of your life', conditionZh: '累计使用天数 ≥100 天', conditionEn: '100+ total days', emoji: '📆', target: 100, progressKey: 'totalDays' },
   { id: 'S7', series: 'streak', nameZh: '早起鸟', nameEn: 'Early Bird', descZh: '清晨的西瓜田，露珠还在叶子上 🌅', descEn: 'Morning dew on the melon field 🌅', conditionZh: '早上 6:00-8:00 完成专注', conditionEn: 'Complete a session 6-8 AM', emoji: '🌅' },
   { id: 'S8', series: 'streak', nameZh: '夜猫子', nameEn: 'Night Owl', descZh: '夜深了，你的西瓜还在安静地生长 🌙', descEn: 'Late night, your melon grows quietly 🌙', conditionZh: '晚上 22:00-00:00 完成专注', conditionEn: 'Complete a session 10 PM-12 AM', emoji: '🌙' },
   { id: 'S9', series: 'streak', nameZh: '周末战士', nameEn: 'Weekend Warrior', descZh: '别人在休息，你在成长 💪', descEn: 'Others rest, you grow 💪', conditionZh: '周六和周日都完成了专注', conditionEn: 'Focus on both Saturday and Sunday', emoji: '⚔️' },
-  { id: 'S10', series: 'streak', nameZh: '西瓜元年', nameEn: 'Year One', descZh: '一整年，你和西瓜时钟一起走过了四季 🎂', descEn: 'A full year with Watermelon Clock 🎂', conditionZh: '首次使用满 365 天', conditionEn: '365 days since first use', emoji: '🎂', target: 365 },
+  { id: 'S10', series: 'streak', nameZh: '西瓜元年', nameEn: 'Year One', descZh: '一整年，你和西瓜时钟一起走过了四季 🎂', descEn: 'A full year with Melodoro 🎂', conditionZh: '首次使用满 365 天', conditionEn: '365 days since first use', emoji: '🎂', target: 365 },
 ];
 
 // ⏱️ 专注系列 (Focus)
