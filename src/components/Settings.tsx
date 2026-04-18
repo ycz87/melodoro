@@ -60,6 +60,8 @@ function Toggle({ label, checked, onChange, disabled }: {
     <div className={`flex items-center justify-between gap-3 ${disabled ? 'opacity-40' : ''}`}>
       <div className="text-sm" style={{ color: t.textMuted }}>{label}</div>
       <button
+        type="button"
+        disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={`relative w-10 h-5.5 rounded-full transition-colors duration-200 ease-in-out ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         style={{ backgroundColor: checked ? TOGGLE_GREEN : t.inputBg }}
@@ -200,6 +202,9 @@ export function Settings({ settings, onChange, disabled, isWorkRunning, onExport
   };
 
   const ambienceSummary = getActiveSoundsSummary(settings.ambienceMixer, i18n.ambienceNames);
+  const autoStartWorkDisabled = disabled;
+  const autoStartBreakDisabled = disabled || settings.workMinutes > 25;
+
   const handleVersionClick = () => {
     const now = Date.now();
     versionClickTimestampsRef.current = [
@@ -277,9 +282,9 @@ export function Settings({ settings, onChange, disabled, isWorkRunning, onExport
                   <NumberStepper label={i18n.shortBreak} value={settings.shortBreakMinutes}
                     onChange={(v) => update({ shortBreakMinutes: v })} min={1} max={30} disabled={disabled} unit={i18n.minutes} />
                   <Toggle label={i18n.autoStartBreak} checked={settings.autoStartBreak}
-                    onChange={(v) => update({ autoStartBreak: v })} disabled={settings.workMinutes > 25} />
+                    onChange={(v) => update({ autoStartBreak: v })} disabled={autoStartBreakDisabled} />
                   <Toggle label={i18n.autoStartWork} checked={settings.autoStartWork}
-                    onChange={(v) => update({ autoStartWork: v })} />
+                    onChange={(v) => update({ autoStartWork: v })} disabled={autoStartWorkDisabled} />
                 </div>
               </div>
 
