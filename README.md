@@ -209,7 +209,7 @@
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Tauri](https://tauri.app/) 2.x — 桌面应用打包
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) — Service Worker + Web App Manifest
-- [Vercel](https://vercel.com/) — 部署
+- [Cloudflare Pages](https://pages.cloudflare.com/) — 部署
 - **后端：** Cloudflare Workers（Hono）— API + Auth 独立服务 + D1 数据库
 
 ## 本地运行
