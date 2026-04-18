@@ -1,6 +1,6 @@
-# 🍉 西瓜时钟
+# 🍉 Melodoro（西瓜时钟）
 
-简洁优雅的专注计时器，基于番茄工作法（Pomodoro Technique）。
+Melodoro（中文名：西瓜时钟）是一款简洁优雅的专注计时器，基于番茄工作法（Pomodoro Technique）。
 
 **在线体验：** [clock.cosmelon.app](https://clock.cosmelon.app/)
 **当前版本：** v0.61.16
