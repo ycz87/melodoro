@@ -2,6 +2,20 @@
 
 ---
 
+## v0.61.19 — 默认 V2 主路径 weather E2E 收口
+日期：2026-04-20
+
+### 本次改动
+- 把默认 `FarmPage -> FarmPlotBoardV2` 的 weather 真相源正式收口到 `e2e/farm-weather-badge.spec.ts`、`e2e/farm-weather-visuals.spec.ts`、`e2e/farm-weather-transition.spec.ts`
+- 删除旧 `e2e/farm-sky-layer.spec.ts`，不再让旧 sky-layer / `stormy` / legacy selector 口径混入主路径 weather 验收
+- 将 `e2e/phase6-step3-weather-life.spec.ts` 改名为 `e2e/farm-weather-life-compat.spec.ts`，明确降级为 compatibility / migration / storage coverage
+- 新增 `e2e/farm-seed-ui.spec.ts`，把旧 suite 里仍有价值的 🌱 seed icon UI 回归迁到非 weather 文件
+
+### 说明
+- 现有 Playwright `preview + desktop/mobile` 基建继续沿用，不新增大规模截图矩阵
+- 主路径 E2E 继续只守 4 个最小闭环：badge、五种天气差异、切换、交互不被遮挡
+- compatibility 层仅负责 weatherState / debug override / creatures / alienVisit 的存储与迁移修复，不再冒充默认主路径 weather proof
+
 ## v0.59.0 — 农场 Pixi 原型 Step 6 最终交付 (2026-02-23)
 
 - 新增 `visualOnly=1` URL 参数，隐藏统计/日志面板，纯农场画面用于复刻验收
@@ -142,7 +156,7 @@
 - 云层分布改为天气驱动：sunny 1 朵 / cloudy 4 朵 / rainy 5 朵 / stormy 6 朵
 - 移除旧天气信息框，天气表现并入农场自然环境
 - 全局种子 icon 从 🌰 统一替换为 🌱（14 个文件，20 处）
-- 补充 E2E 测试：覆盖天空层渲染与种子图标显示
+- 当时补充 E2E 测试覆盖天空层渲染与种子图标显示；后续默认 V2 主路径收口后，旧 `e2e/farm-sky-layer.spec.ts` 已退役，种子图标回归改由 `e2e/farm-seed-ui.spec.ts` 维护
 
 ### 说明
 - 本次发布聚焦农场视觉一致性与环境沉浸感，不涉及存档结构变更
@@ -422,8 +436,10 @@
   - 覆盖 zh/en/ja/ko/es/fr/de/ru
 
 - **E2E 测试**
-  - 新增 `e2e/phase6-step3-weather-life.spec.ts`，3 个测试用例全部通过
+  - 当时新增 `e2e/phase6-step3-weather-life.spec.ts`，3 个测试用例全部通过
   - 覆盖：天气系统初始化、小动物数据结构、外星人数据结构
+  - 当前默认 V2 主路径 weather 验收已收口到 `e2e/farm-weather-badge.spec.ts`、`e2e/farm-weather-visuals.spec.ts`、`e2e/farm-weather-transition.spec.ts`
+  - 原 Phase 6 套件现以 `e2e/farm-weather-life-compat.spec.ts` 继续承担 compatibility / migration / storage coverage
 
 ### 修复
 - 修复 useAlienVisit useEffect 依赖项使用对象属性可能导致的问题（改为依赖 alienVisit.current?.expiresAt）
