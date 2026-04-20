@@ -2,6 +2,13 @@ import type { Weather, WeatherDebugOverride, WeatherState } from '../types/farm'
 
 export const WEATHER_SWITCH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 export const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow'];
+export const WEATHER_ICON_MAP: Record<Weather, string> = {
+  sunny: '☀️',
+  cloudy: '☁️',
+  rainy: '🌧️',
+  night: '🌙',
+  rainbow: '🌈',
+};
 
 const RAINBOW_CHANCE = 0.05;
 const DEFAULT_WEATHER: Weather = 'sunny';

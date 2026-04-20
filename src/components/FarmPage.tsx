@@ -676,6 +676,7 @@ export function FarmPage({
               compactMode={compactShell}
               plots={farm.plots}
               weather={weather}
+              weatherLabel={t.farmWeatherName(weather)}
               todayFocusMinutes={todayFocusMinutes}
               coinBalance={coinBalance}
               plantableSeedCount={totalPlantableSeeds}

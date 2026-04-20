@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import type { Plot, Weather } from '../../types/farm';
+import { WEATHER_ICON_MAP } from '../../utils/weather';
 import { FarmPlotTileV2 } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
   weather: Weather;
+  weatherLabel: string;
   compactMode?: boolean;
   todayFocusMinutes: number;
   coinBalance: number;
@@ -26,12 +28,16 @@ function mapPlotStateToTileState(plot: Plot | null) {
 
 function FarmHudV2({
   compactMode,
+  weather,
+  weatherLabel,
   todayFocusMinutes,
   coinBalance,
   plantableSeedCount,
   harvestablePlotCount,
 }: {
   compactMode: boolean;
+  weather: Weather;
+  weatherLabel: string;
   todayFocusMinutes: number;
   coinBalance: number;
   plantableSeedCount: number;
@@ -47,28 +53,48 @@ function FarmHudV2({
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
       <div
-        className="mx-auto flex h-10 w-full items-center justify-center gap-1.5 px-2 sm:h-11 sm:gap-2 sm:px-4"
-        style={{
-          maxWidth: compactMode ? '100%' : '940px',
-          borderBottom: '1px solid rgba(100,145,175,0.22)',
-          background: 'linear-gradient(180deg, rgba(167,217,242,0.42) 0%, rgba(167,217,242,0.08) 100%)',
-        }}
+        className="mx-auto w-full px-2 pt-1 sm:px-4 sm:pt-2"
+        style={{ maxWidth: compactMode ? '100%' : '940px' }}
       >
-        {badgeItems.map((badge) => (
+        <div
+          className="flex h-10 w-full items-center justify-center gap-1.5 px-2 sm:h-11 sm:gap-2 sm:px-4"
+          style={{
+            borderBottom: '1px solid rgba(100,145,175,0.22)',
+            background: 'linear-gradient(180deg, rgba(167,217,242,0.42) 0%, rgba(167,217,242,0.08) 100%)',
+          }}
+        >
+          {badgeItems.map((badge) => (
+            <div
+              key={`farm-v2-hud-${badge.label}`}
+              className="flex items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold sm:px-3 sm:text-xs"
+              style={{
+                borderColor: '#b57d4a',
+                color: '#5d3a1f',
+                background: 'linear-gradient(180deg, rgba(255,244,216,0.95) 0%, rgba(247,226,188,0.9) 100%)',
+                boxShadow: '0 1px 0 rgba(255,255,255,0.34) inset',
+              }}
+            >
+              <span>{badge.icon}</span>
+              <span>{badge.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-1.5 flex justify-center">
           <div
-            key={`farm-v2-hud-${badge.label}`}
-            className="flex items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold sm:px-3 sm:text-xs"
+            data-testid="farm-v2-weather-badge"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold sm:gap-2 sm:px-3.5 sm:text-xs"
             style={{
-              borderColor: '#b57d4a',
-              color: '#5d3a1f',
-              background: 'linear-gradient(180deg, rgba(255,244,216,0.95) 0%, rgba(247,226,188,0.9) 100%)',
-              boxShadow: '0 1px 0 rgba(255,255,255,0.34) inset',
+              borderColor: 'rgba(91, 146, 128, 0.32)',
+              color: '#21503b',
+              background: 'linear-gradient(180deg, rgba(245,255,249,0.96) 0%, rgba(229,247,237,0.92) 100%)',
+              boxShadow: '0 1px 0 rgba(255,255,255,0.42) inset',
             }}
           >
-            <span>{badge.icon}</span>
-            <span>{badge.label}</span>
+            <span aria-hidden="true">{WEATHER_ICON_MAP[weather]}</span>
+            <span>{weatherLabel}</span>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -539,6 +565,7 @@ function FarmBoardSceneDecorV2({
 export function FarmPlotBoardV2({
   plots,
   weather,
+  weatherLabel,
   compactMode = false,
   todayFocusMinutes,
   coinBalance,
@@ -587,6 +614,7 @@ export function FarmPlotBoardV2({
     : useTightMobileSpacing
       ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.5vh, 16px))'
       : 'clamp(18px, 2.5vh, 28px)';
+  const hudWeatherBadgeOffset = useTightMobileSpacing ? 42 : compactMode ? 38 : 34;
 
   return (
     <div
@@ -600,6 +628,8 @@ export function FarmPlotBoardV2({
       <FarmBackdropV2 compactMode={compactMode} weather={weather} />
       <FarmHudV2
         compactMode={compactMode}
+        weather={weather}
+        weatherLabel={weatherLabel}
         todayFocusMinutes={todayFocusMinutes}
         coinBalance={coinBalance}
         plantableSeedCount={plantableSeedCount}
@@ -609,7 +639,7 @@ export function FarmPlotBoardV2({
       <div
         className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-2 sm:px-2' : 'px-0 sm:px-2'}`}
         style={{
-          paddingTop: boardPaddingTop,
+          paddingTop: `calc(${boardPaddingTop} + ${hudWeatherBadgeOffset}px)`,
           paddingBottom: boardPaddingBottom,
         }}
       >
