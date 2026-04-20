@@ -2069,7 +2069,7 @@ Charles 提供了新的西瓜时钟 logo 原图（`watermelon-logo-original.jpg`
 
 ### 改动文件
 - `public/icon.svg` — 基于原图手绘矢量 SVG（绿色瓜皮 + 白色过渡 + 红色果肉渐变 + 西瓜籽 + 时钟指针 + Kawaii 表情）
-- `logo-source.png` — 从 SVG 渲染的 1024x1024 PNG 源文件
+- `artifacts/issue-115/root-visual-archive/brand/logo-source.png` — 从 SVG 渲染的 1024x1024 PNG 源文件
 - `public/favicon-*.png`, `public/favicon.ico`, `public/icon-*.png`, `public/apple-touch-icon.png` — 全套重新生成
 - `src-tauri/icons/*` — Tauri 桌面端图标重新生成
 - `src/App.tsx` — Header 左侧：Logo 从 w-5 增大到 w-7/w-8，改用 icon.svg；新增品牌文字 `t.appName`（sm: 以上显示）
@@ -2389,7 +2389,7 @@ interface ProjectTimerView {
 ## v0.2.2 — Logo 全站替换（2026-02-08）
 
 ### 图标更新
-- 从 `logo-source.png`（1024x1024）生成全部尺寸图标
+- 从 `artifacts/issue-115/root-visual-archive/brand/logo-source.png`（1024x1024）生成全部尺寸图标
 - `scripts/generate-icons.mjs`：一键生成脚本（sharp）
 - Favicon：16x16, 32x32, 48x48 PNG + 多尺寸 .ico
 - PWA：192x192, 512x512
