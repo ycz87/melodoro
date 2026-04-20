@@ -1,4 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
+import {
+  migrateWeatherDebugOverride,
+  migrateWeatherState,
+  rotateWeatherState,
+  WEATHER_SWITCH_INTERVAL_MS,
+} from '../src/utils/weather';
 import type {
   AlienVisit,
   Creature,
@@ -13,13 +19,21 @@ interface DebugState {
   farm: Record<string, unknown>;
   shed: Record<string, unknown>;
   gene: Record<string, unknown>;
-  weatherState?: WeatherState;
+  weatherState?: unknown;
+  debugWeatherOverride?: unknown;
   creatures?: Creature[];
   alienVisit?: AlienVisit;
+  debugMode?: boolean;
 }
 
 const WEATHER_TYPES: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow'];
 const CREATURE_TYPES: CreatureType[] = ['bee', 'butterfly', 'ladybug', 'bird'];
+
+function sequenceRandom(values: number[]): () => number {
+  const remaining = [...values];
+  const fallback = remaining.at(-1) ?? 0.5;
+  return () => (remaining.length > 0 ? remaining.shift() ?? fallback : fallback);
+}
 
 function getTodayKey(now: number = Date.now()): string {
   const date = new Date(now);
@@ -55,14 +69,17 @@ function createCreature(
 }
 
 function createSeedPayload(options?: {
+  now?: number;
   plots?: Plot[];
   farmOverrides?: Record<string, unknown>;
   shedOverrides?: Record<string, unknown>;
-  weatherState?: WeatherState;
+  weatherState?: unknown;
+  debugWeatherOverride?: unknown;
   creatures?: Creature[];
   alienVisit?: AlienVisit;
+  debugMode?: boolean;
 }): DebugState {
-  const now = Date.now();
+  const now = options?.now ?? Date.now();
   const todayKey = getTodayKey(now);
 
   return {
@@ -97,13 +114,34 @@ function createSeedPayload(options?: {
       fragments: [],
     },
     weatherState: options?.weatherState,
+    debugWeatherOverride: options?.debugWeatherOverride,
     creatures: options?.creatures,
     alienVisit: options?.alienVisit,
+    debugMode: options?.debugMode ?? false,
   };
 }
 
-function seedInit(page: Page, payload: DebugState) {
-  return page.addInitScript((state: DebugState) => {
+function seedInit(
+  page: Page,
+  payload: DebugState,
+  options?: { now?: number; randomSequence?: number[] },
+) {
+  return page.addInitScript(({ state, now, randomSequence }: {
+    state: DebugState;
+    now?: number;
+    randomSequence?: number[];
+  }) => {
+    if (typeof now === 'number') {
+      const fixedNow = now;
+      Date.now = () => fixedNow;
+    }
+
+    if (Array.isArray(randomSequence)) {
+      const remaining = [...randomSequence];
+      const fallback = remaining.at(-1) ?? 0.5;
+      Math.random = () => (remaining.length > 0 ? remaining.shift() ?? fallback : fallback);
+    }
+
     localStorage.clear();
     localStorage.setItem('pomodoro-guide-seen', '1');
     localStorage.setItem('pomodoro-settings', JSON.stringify(state.settings));
@@ -117,6 +155,12 @@ function seedInit(page: Page, payload: DebugState) {
       localStorage.removeItem('weatherState');
     }
 
+    if (state.debugWeatherOverride !== undefined) {
+      localStorage.setItem('weatherDebugOverride', JSON.stringify(state.debugWeatherOverride));
+    } else {
+      localStorage.removeItem('weatherDebugOverride');
+    }
+
     if (state.creatures !== undefined) {
       localStorage.setItem('creatures', JSON.stringify(state.creatures));
     } else {
@@ -128,7 +172,17 @@ function seedInit(page: Page, payload: DebugState) {
     } else {
       localStorage.removeItem('alienVisit');
     }
-  }, payload);
+
+    if (state.debugMode) {
+      localStorage.setItem('watermelon-debug', 'true');
+    } else {
+      localStorage.removeItem('watermelon-debug');
+    }
+  }, {
+    state: payload,
+    now: options?.now,
+    randomSequence: options?.randomSequence,
+  });
 }
 
 async function readStorage<T>(page: Page, key: string, fallback: T): Promise<T> {
@@ -146,7 +200,7 @@ async function readStorage<T>(page: Page, key: string, fallback: T): Promise<T> 
 async function goToFarm(page: Page) {
   await page.goto('/');
   await page.locator('header button').filter({ hasText: '🌱' }).first().click();
-  await expect(page.locator('.farm-grid-perspective')).toBeVisible();
+  await expect(page.locator('[data-testid="farm-v2-celestial-body"], .farm-grid-perspective').first()).toBeVisible();
 }
 
 test.describe('Phase 6 Step 3 - Weather & Life', () => {
@@ -258,5 +312,137 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     expect(Number.isFinite(alienVisit.current.appearedAt)).toBeTruthy();
     expect(Number.isFinite(alienVisit.current.expiresAt)).toBeTruthy();
     expect(alienVisit.current.expiresAt).toBeGreaterThan(alienVisit.current.appearedAt);
+  });
+
+  test('4. legacy weather migration repairs snowy and future lastChangeAt', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 20, 12, 0, 0);
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: {
+        current: 'snowy',
+        lastChangeAt: now + WEATHER_SWITCH_INTERVAL_MS,
+      },
+    }), { now });
+
+    await page.goto('/');
+
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.current ?? null;
+    }).toBe('cloudy');
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.lastChangeAt ?? null;
+    }).toBe(now);
+  });
+
+  test('5. null weather and malformed timestamps repair into canonical production weather', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 20, 12, 0, 0);
+
+    expect(migrateWeatherState({ current: 'stormy', lastChangeAt: now }, now).current).toBe('rainy');
+    expect(
+      migrateWeatherState({ current: 'mystery-weather', lastChangeAt: 'invalid' }, now, sequenceRandom([0.51])),
+    ).toEqual({ current: 'cloudy', lastChangeAt: now });
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: {
+        current: null,
+        lastChangeAt: 'invalid-timestamp',
+      },
+    }), {
+      now,
+      randomSequence: [0.51],
+    });
+
+    await page.goto('/');
+
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.current ?? null;
+    }).toBe('cloudy');
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.lastChangeAt ?? null;
+    }).toBe(now);
+  });
+
+  test('6. non-rainy production weather cannot rotate directly into rainbow', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 20, 18, 0, 0);
+    const lastChangeAt = now - WEATHER_SWITCH_INTERVAL_MS - 1;
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: {
+        current: 'sunny',
+        lastChangeAt,
+      },
+    }), {
+      now,
+      randomSequence: [0.99, 0.01],
+    });
+
+    await page.goto('/');
+
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.current ?? null;
+    }).toBe('sunny');
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.lastChangeAt ?? null;
+    }).toBe(lastChangeAt + WEATHER_SWITCH_INTERVAL_MS);
+  });
+
+  test('7. multi-slot catch-up advances gate slot by slot and can reach rainbow after rainy', () => {
+    const now = Date.UTC(2026, 3, 21, 0, 0, 0);
+    const lastChangeAt = now - (WEATHER_SWITCH_INTERVAL_MS * 2) - 1;
+
+    const state = rotateWeatherState(
+      {
+        current: 'sunny',
+        lastChangeAt,
+      },
+      now,
+      sequenceRandom([0.70, 0.01]),
+    );
+
+    expect(state.current).toBe('rainbow');
+    expect(state.lastChangeAt).toBe(lastChangeAt + (WEATHER_SWITCH_INTERVAL_MS * 2));
+  });
+
+  test('8. debug override stays separate from production truth and clear only removes the override', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 21, 0, 0, 0);
+
+    expect(migrateWeatherDebugOverride('snowy')).toBe('cloudy');
+    expect(migrateWeatherDebugOverride('stormy')).toBe('rainy');
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: {
+        current: 'rainbow',
+        lastChangeAt: now,
+      },
+      debugWeatherOverride: 'night',
+      debugMode: true,
+    }), { now });
+
+    await page.goto('/');
+    await expect(page.getByText('🧪 Debug Toolbar')).toBeVisible();
+
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.current ?? null;
+    }).toBe('rainbow');
+    await expect.poll(async () => readStorage<Weather | null>(page, 'weatherDebugOverride', null)).toBe('night');
+
+    await page.getByRole('button', { name: '清除天气' }).click();
+
+    await expect.poll(async () => readStorage<Weather | null>(page, 'weatherDebugOverride', null)).toBe(null);
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return state?.current ?? null;
+    }).toBe('rainbow');
   });
 });

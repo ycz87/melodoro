@@ -55,7 +55,7 @@ interface FarmPageProps {
   prismaticSeeds: PrismaticSeed[];
   darkMatterSeeds: DarkMatterSeed[];
   pendingRevealedNormalSeed: PendingRevealedNormalSeed | null;
-  weather: Weather | null;
+  weather: Weather;
   todayFocusMinutes: number;
   todayKey: string;
   activeAlienVisit: AlienAppearance | null;
@@ -1021,7 +1021,7 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
 // ─── 地块卡片 ───
 export interface PlotCardProps {
   plot: Plot;
-  weather: Weather | null;
+  weather: Weather;
   stolenRecord?: StolenRecord;
   nowTimestamp: number;
   theme: ReturnType<typeof useTheme>;

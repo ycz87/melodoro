@@ -598,8 +598,6 @@ export const en: Messages = {
     rainy: 'Rainy',
     night: 'Night',
     rainbow: 'Rainbow',
-    snowy: 'Snowy',
-    stormy: 'Stormy',
   }[weather] ?? weather),
   farmReveal: 'Ding! It\'s—',
   farmNewVariety: 'New Variety!',

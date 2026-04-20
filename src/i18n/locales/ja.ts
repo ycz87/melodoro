@@ -598,8 +598,6 @@ export const ja: Messages = {
     rainy: '雨',
     night: '夜',
     rainbow: '虹',
-    snowy: '雪',
-    stormy: '嵐',
   }[weather] ?? weather),
   farmReveal: 'ピン！正体は——',
   farmNewVariety: '新品種！',

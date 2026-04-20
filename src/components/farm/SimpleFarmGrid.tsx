@@ -14,7 +14,7 @@ import { IsometricPlotShell } from './IsometricPlotShell';
 
 interface SimpleFarmGridProps {
   plots: Plot[];
-  weather: Weather | null;
+  weather: Weather;
   nowTimestamp: number;
   activeTooltipPlotId: number | null;
   stolenRecordByPlotId?: Map<number, StolenRecord>;

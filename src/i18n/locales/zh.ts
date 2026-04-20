@@ -600,8 +600,6 @@ export const zh: Messages = {
     rainy: '雨天',
     night: '夜晚',
     rainbow: '彩虹',
-    snowy: '雪天',
-    stormy: '暴风雨',
   }[weather] ?? weather),
   farmReveal: '叮！原来是——',
   farmNewVariety: '新品种！',

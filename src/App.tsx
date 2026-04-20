@@ -68,6 +68,7 @@ import {
   applyMixerConfig, stopAllAmbience,
 } from './audio';
 import { getTodayKey } from './utils/time';
+import { DEBUG_WEATHER_ORDER } from './utils/weather';
 import { getStreak, getDayMinutes } from './utils/stats';
 import {
   applyGrowthWithMutation as applyGrowthWithMutationEngine,
@@ -120,7 +121,6 @@ import type {
   FusionHistory,
   Plot,
   VarietyId,
-  Weather,
 } from './types/farm';
 import { SHOP_ITEMS, PLOT_PRICES, SHOP_SEED_ITEM_TO_QUALITY } from './types/market';
 import type { ShopItemId, WeeklyItem } from './types/market';
@@ -128,7 +128,6 @@ import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from './typ
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FUSION_HISTORY_KEY = 'watermelon-fusion-history';
-const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow', 'snowy', 'stormy'];
 
 interface FarmGrowthSegment {
   growthMinutes: number;
@@ -262,7 +261,13 @@ function App() {
   } = useFarmStorage();
   const { geneInventory, setGeneInventory, addFragment, removeFragment, removeFragmentsByGalaxy } = useGeneStorage();
   const { balance, addCoins, spendCoins, setBalance } = useMelonCoin();
-  const { weatherState, setWeatherState } = useWeather();
+  const {
+    effectiveWeather,
+    weatherState,
+    debugWeatherOverride,
+    setDebugWeatherOverride,
+  } = useWeather();
+  const currentProductionWeather = weatherState.current;
   const handleGrantWeeklyItem = useCallback((item: WeeklyItem) => {
     if (item.type === 'rare-gene-fragment') {
       const varietyDef = VARIETY_DEFS[item.data.varietyId];
@@ -1349,24 +1354,17 @@ function App() {
   }, [addShedItem]);
 
   const handleDebugCycleWeather = useCallback(() => {
-    setWeatherState((prev) => {
-      const currentIndex = prev.current === null ? -1 : DEBUG_WEATHER_ORDER.indexOf(prev.current);
-      const nextWeather = DEBUG_WEATHER_ORDER[(currentIndex + 1) % DEBUG_WEATHER_ORDER.length];
-      return {
-        ...prev,
-        current: nextWeather,
-        lastChangeAt: Date.now(),
-      };
+    setDebugWeatherOverride((prev) => {
+      const currentWeather = prev ?? currentProductionWeather;
+      const currentIndex = DEBUG_WEATHER_ORDER.indexOf(currentWeather);
+      const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % DEBUG_WEATHER_ORDER.length;
+      return DEBUG_WEATHER_ORDER[nextIndex];
     });
-  }, [setWeatherState]);
+  }, [currentProductionWeather, setDebugWeatherOverride]);
 
   const handleDebugClearWeather = useCallback(() => {
-    setWeatherState((prev) => ({
-      ...prev,
-      current: null,
-      lastChangeAt: Date.now(),
-    }));
-  }, [setWeatherState]);
+    setDebugWeatherOverride(null);
+  }, [setDebugWeatherOverride]);
 
   // Modal states
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
@@ -2109,7 +2107,7 @@ function App() {
             prismaticSeeds={shed.prismaticSeeds}
             darkMatterSeeds={shed.darkMatterSeeds}
             pendingRevealedNormalSeed={shed.pendingRevealedNormalSeed}
-            weather={weatherState.current}
+            weather={effectiveWeather}
             todayFocusMinutes={todayFocusMinutes}
             todayKey={todayKey}
             activeAlienVisit={alienVisit.current}
@@ -2313,9 +2311,10 @@ function App() {
             addCoins={handleDebugAddCoins}
             resetCoins={handleDebugResetCoins}
             addFarmItem={handleDebugAddFarmItem}
-            weather={weatherState.current}
+            weather={effectiveWeather}
             cycleWeather={handleDebugCycleWeather}
             clearWeather={handleDebugClearWeather}
+            isWeatherOverridden={debugWeatherOverride !== null}
             achievementUnlockedCount={Object.keys(achievements.data.unlocked).length}
             unlockAllAchievements={achievements.unlockAll}
             resetAchievements={achievements.resetAll}
