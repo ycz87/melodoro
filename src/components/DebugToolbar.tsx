@@ -5,7 +5,8 @@
  */
 import { useCallback, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
-import { VARIETY_DEFS, type Weather } from '../types/farm';
+import { WEATHER_ICON_MAP } from '../utils/weather';
+import { VARIETY_DEFS } from '../types/farm';
 
 interface DebugToolbarProps {
   // Warehouse actions (migrated from Settings testMode)
@@ -83,13 +84,6 @@ const MULTIPLIERS = [1, 100, 1000, 10000] as const;
 const COIN_AMOUNTS = [100, 1000, 10000] as const;
 const MUTATION_RAY_AMOUNTS = [1, 5, 10] as const;
 const DEFENSE_ITEM_AMOUNTS = [1, 5] as const;
-const WEATHER_ICON: Record<Weather, string> = {
-  sunny: '☀️',
-  rainy: '🌧️',
-  cloudy: '☁️',
-  night: '🌙',
-  rainbow: '🌈',
-};
 
 export function DebugToolbar({
   addItems,
@@ -120,7 +114,7 @@ export function DebugToolbar({
 
   const toolbarBg = withOpacity(theme.surface, 0.95);
   const actionBtnClass = 'text-[11px] rounded-[var(--radius-sm)] px-2 py-1 cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed';
-  const weatherLabel = `${WEATHER_ICON[weather]} ${weather}${isWeatherOverridden ? ' (override)' : ''}`;
+  const weatherLabel = `${WEATHER_ICON_MAP[weather]} ${weather}${isWeatherOverridden ? ' (override)' : ''}`;
 
   const handleInstantMature = useCallback(() => {
     const nowTimestamp = Date.now();
