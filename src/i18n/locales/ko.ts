@@ -598,8 +598,6 @@ export const ko: Messages = {
     rainy: '비',
     night: '밤',
     rainbow: '무지개',
-    snowy: '눈',
-    stormy: '폭풍',
   }[weather] ?? weather),
   farmReveal: '딩! 정체는——',
   farmNewVariety: '새 품종!',

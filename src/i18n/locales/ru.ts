@@ -68,8 +68,6 @@ export const ru: Messages = {
     rainy: 'Дождь',
     night: 'Ночь',
     rainbow: 'Радуга',
-    snowy: 'Снег',
-    stormy: 'Буря',
   }[weather] ?? weather),
   alienMelonGreeting: '👽 Арбузный пришелец: в твоём поле мощная жизненная энергия. Продолжай сажать!',
   alienMutationDoctor: '🧪 Доктор Мутация: обнаружен ген-модификатор. Мутационная волна нестабильна!',

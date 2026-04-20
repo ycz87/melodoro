@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import type { Weather } from '../../types/farm';
 
 interface SkyLayerProps {
-  weather: Weather | null;
+  weather: Weather;
   currentTime: Date;
 }
 
@@ -44,12 +44,10 @@ const CLOUD_LAYOUTS: Record<number, CelestialPosition[]> = {
   ],
 };
 
-function getCloudCount(weather: Weather | null): number {
-  if (weather === null) return 0;
+function getCloudCount(weather: Weather): number {
   if (weather === 'sunny') return 1;
   if (weather === 'cloudy') return 4;
-  if (weather === 'rainy' || weather === 'snowy') return 5;
-  if (weather === 'stormy') return 6;
+  if (weather === 'rainy') return 5;
   return 0;
 }
 
@@ -74,7 +72,7 @@ export function SkyLayer({ weather, currentTime }: SkyLayerProps) {
   );
 
   return (
-    <div className="w-full h-full relative" data-weather={weather ?? 'clear'}>
+    <div className="w-full h-full relative" data-weather={weather}>
       <span
         className={`absolute z-10 opacity-90 select-none pointer-events-none ${isNight ? 'text-5xl' : 'text-6xl'}`}
         style={{

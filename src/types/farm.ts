@@ -557,10 +557,11 @@ export const GROWTH_STAGES: StageDef[] = [
 ];
 
 // ─── Farm ambience (Phase 6) ───
-export type Weather = 'sunny' | 'cloudy' | 'rainy' | 'night' | 'rainbow' | 'snowy' | 'stormy';
+export type Weather = 'sunny' | 'cloudy' | 'rainy' | 'night' | 'rainbow';
+export type WeatherDebugOverride = Weather | null;
 
 export interface WeatherState {
-  current: Weather | null;
+  current: Weather;
   lastChangeAt: number; // ms timestamp
 }
 

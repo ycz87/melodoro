@@ -4,7 +4,7 @@ import { FarmPlotTileV2 } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
-  weather: Weather | null;
+  weather: Weather;
   compactMode?: boolean;
   todayFocusMinutes: number;
   coinBalance: number;
@@ -220,7 +220,7 @@ function Cottage({ left, top }: { left: string; top: string }) {
   );
 }
 
-function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weather: Weather | null }) {
+function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weather: Weather }) {
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;

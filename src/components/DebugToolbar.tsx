@@ -22,9 +22,10 @@ interface DebugToolbarProps {
   resetCoins: () => void;
   addFarmItem: (itemId: 'mutation-gun' | 'guardian-barrier' | 'moon-dew', count: number) => void;
   // Weather
-  weather: import('../types/farm').Weather | null;
+  weather: import('../types/farm').Weather;
   cycleWeather: () => void;
   clearWeather: () => void;
+  isWeatherOverridden: boolean;
   // Achievements
   achievementUnlockedCount: number;
   unlockAllAchievements: () => void;
@@ -85,8 +86,6 @@ const DEFENSE_ITEM_AMOUNTS = [1, 5] as const;
 const WEATHER_ICON: Record<Weather, string> = {
   sunny: '☀️',
   rainy: '🌧️',
-  snowy: '❄️',
-  stormy: '⛈️',
   cloudy: '☁️',
   night: '🌙',
   rainbow: '🌈',
@@ -106,6 +105,7 @@ export function DebugToolbar({
   weather,
   cycleWeather,
   clearWeather,
+  isWeatherOverridden,
   achievementUnlockedCount,
   unlockAllAchievements,
   resetAchievements,
@@ -120,9 +120,7 @@ export function DebugToolbar({
 
   const toolbarBg = withOpacity(theme.surface, 0.95);
   const actionBtnClass = 'text-[11px] rounded-[var(--radius-sm)] px-2 py-1 cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed';
-  const weatherLabel = weather === null
-    ? 'null'
-    : `${WEATHER_ICON[weather] ?? '⛅'} ${weather}`;
+  const weatherLabel = `${WEATHER_ICON[weather]} ${weather}${isWeatherOverridden ? ' (override)' : ''}`;
 
   const handleInstantMature = useCallback(() => {
     const nowTimestamp = Date.now();
