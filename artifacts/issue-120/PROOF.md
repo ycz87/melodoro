@@ -29,3 +29,9 @@
 ## Notes
 - Weather visuals still consume the existing `weather` prop only
 - Rain and rainbow live under the backdrop `pointer-events-none` layer, so plot click / plant / harvest behavior is unchanged
+
+## Follow-up Version Gate
+- `package.json` version: `0.61.17`
+- `package-lock.json` top-level version: `0.61.17`
+- Build verification: `npm run build` prints `pomodoro@0.61.17 build`
+- Preview verification: local preview DOM renders page-corner version text `v0.61.17`
