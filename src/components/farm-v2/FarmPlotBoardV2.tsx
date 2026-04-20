@@ -15,9 +15,287 @@ interface FarmPlotBoardV2Props {
   onPlotClick?: (plotId: number, state: 'empty' | 'growing' | 'mature') => void;
 }
 
+interface CloudSpec {
+  top: string;
+  left?: string;
+  right?: string;
+  width: string;
+  height: string;
+  opacity: number;
+  duration: string;
+  delay: string;
+  filter?: string;
+  zIndex?: number;
+}
+
+interface RainLayerSpec {
+  top: string;
+  topCompact?: string;
+  topTight?: string;
+  height: string;
+  heightCompact?: string;
+  heightTight?: string;
+  left?: string;
+  leftCompact?: string;
+  leftTight?: string;
+  width: string;
+  widthCompact?: string;
+  widthTight?: string;
+  opacity: number;
+  blur: string;
+  duration: string;
+  delay: string;
+  angle: number;
+  stripeGap: number;
+  stripeWidth: number;
+  tint: string;
+}
+
+interface RainbowSpec {
+  top: string;
+  topCompact?: string;
+  topTight?: string;
+  left: string;
+  leftCompact?: string;
+  leftTight?: string;
+  width: string;
+  widthCompact?: string;
+  widthTight?: string;
+  height: string;
+  heightCompact?: string;
+  heightTight?: string;
+  opacity: number;
+  rotation?: string;
+}
+
+interface WeatherBackdropVisuals {
+  sceneBackground: string;
+  skyGradient: string;
+  skyGradientTight: string;
+  skyOverlay?: string;
+  hillGradient: string;
+  backHillGradient: string;
+  frontHillGradient: string;
+  grassGradient: string;
+  foregroundGradient: string;
+  celestialKind: 'sun' | 'moon';
+  celestialHalo: string;
+  celestialBody: string;
+  celestialShadow: string;
+  celestialOpacity: number;
+  haloOpacity: number;
+  cloudSpecs: CloudSpec[];
+  rainLayers: RainLayerSpec[];
+  rainbow: RainbowSpec | null;
+}
+
 const GRID_SIDE = 3;
 const TOTAL_PLOTS = GRID_SIDE * GRID_SIDE;
 const MOTION_CLASS = 'farm-v2-motion';
+
+const SUNNY_CLOUDS: CloudSpec[] = [
+  { top: '3%', left: '6%', width: '22%', height: '10%', opacity: 0.74, duration: '13s', delay: '-0.8s', filter: 'saturate(1.04) brightness(1.04)' },
+  { top: '8%', left: '35%', width: '20%', height: '10%', opacity: 0.68, duration: '16s', delay: '-2.4s', filter: 'saturate(1.02) brightness(1.02)' },
+  { top: '4%', right: '6%', width: '24%', height: '11%', opacity: 0.72, duration: '14s', delay: '-1.8s', filter: 'saturate(1.02) brightness(1.03)' },
+];
+
+const CLOUDY_CLOUDS: CloudSpec[] = [
+  { top: '3%', left: '3%', width: '26%', height: '11%', opacity: 0.88, duration: '14s', delay: '-1.2s', filter: 'grayscale(0.18) brightness(0.96)', zIndex: 9 },
+  { top: '7%', left: '26%', width: '24%', height: '11%', opacity: 0.92, duration: '17s', delay: '-2.8s', filter: 'grayscale(0.2) brightness(0.95)', zIndex: 9 },
+  { top: '5%', right: '8%', width: '28%', height: '12%', opacity: 0.94, duration: '15s', delay: '-2s', filter: 'grayscale(0.22) brightness(0.94)', zIndex: 9 },
+  { top: '10%', right: '30%', width: '22%', height: '10%', opacity: 0.82, duration: '18s', delay: '-1.4s', filter: 'grayscale(0.16) brightness(0.98)' },
+];
+
+const RAINY_CLOUDS: CloudSpec[] = [
+  { top: '3%', left: '-3%', width: '32%', height: '12%', opacity: 0.94, duration: '16s', delay: '-1.8s', filter: 'grayscale(0.52) brightness(0.82)', zIndex: 9 },
+  { top: '6%', left: '20%', width: '29%', height: '12%', opacity: 0.97, duration: '19s', delay: '-3s', filter: 'grayscale(0.56) brightness(0.8)', zIndex: 9 },
+  { top: '4%', right: '3%', width: '31%', height: '13%', opacity: 0.98, duration: '18s', delay: '-2.2s', filter: 'grayscale(0.58) brightness(0.78)', zIndex: 9 },
+  { top: '10%', left: '10%', width: '24%', height: '10%', opacity: 0.88, duration: '15s', delay: '-1s', filter: 'grayscale(0.5) brightness(0.84)' },
+  { top: '11%', right: '24%', width: '22%', height: '10%', opacity: 0.86, duration: '17s', delay: '-2.4s', filter: 'grayscale(0.48) brightness(0.86)' },
+];
+
+const NIGHT_CLOUDS: CloudSpec[] = [
+  { top: '4%', left: '7%', width: '24%', height: '10%', opacity: 0.7, duration: '13s', delay: '-0.8s', filter: 'saturate(0.62) brightness(0.58)' },
+  { top: '9%', left: '35%', width: '21%', height: '10%', opacity: 0.64, duration: '16s', delay: '-2.4s', filter: 'saturate(0.58) brightness(0.56)' },
+  { top: '5%', right: '7%', width: '25%', height: '11%', opacity: 0.7, duration: '14s', delay: '-1.8s', filter: 'saturate(0.62) brightness(0.58)' },
+];
+
+const RAINBOW_CLOUDS: CloudSpec[] = [
+  { top: '4%', left: '4%', width: '22%', height: '10%', opacity: 0.76, duration: '13s', delay: '-0.8s', filter: 'grayscale(0.08) brightness(1.03)' },
+  { top: '9%', left: '28%', width: '22%', height: '10%', opacity: 0.74, duration: '16s', delay: '-2.2s', filter: 'grayscale(0.08) brightness(1.02)' },
+  { top: '5%', right: '6%', width: '24%', height: '11%', opacity: 0.78, duration: '14s', delay: '-1.5s', filter: 'grayscale(0.1) brightness(1.04)' },
+  { top: '11%', right: '32%', width: '18%', height: '9%', opacity: 0.66, duration: '17s', delay: '-2.6s', filter: 'grayscale(0.05) brightness(1.05)' },
+];
+
+function getWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisuals {
+  switch (weather) {
+    case 'cloudy':
+      return {
+        sceneBackground: 'linear-gradient(180deg, #7fb3cf 0%, #bfd4df 36%, #b5d0b1 58%, #9ebd85 80%, #8fb26d 100%)',
+        skyGradient: 'linear-gradient(180deg, #7ca9c4 0%, #bfd0da 62%, #dde8ec 100%)',
+        skyGradientTight: 'linear-gradient(180deg, #7ea9c2 0%, #b8c9d4 54%, #d4dfe5 100%)',
+        skyOverlay: 'linear-gradient(180deg, rgba(132,156,177,0.22) 0%, rgba(132,156,177,0.08) 60%, rgba(255,255,255,0) 100%)',
+        hillGradient: 'linear-gradient(180deg, #ccdcbf 0%, #b3cca7 44%, #96b784 100%)',
+        backHillGradient: 'linear-gradient(180deg, rgba(139,179,117,0.88) 0%, rgba(105,152,86,0.92) 100%)',
+        frontHillGradient: 'linear-gradient(180deg, rgba(161,196,130,0.82) 0%, rgba(115,165,95,0.86) 100%)',
+        grassGradient: 'linear-gradient(180deg, #a0ce88 0%, #8aba68 45%, #7eb75c 100%)',
+        foregroundGradient: 'linear-gradient(180deg, rgba(150,194,125,0.3) 0%, rgba(118,172,89,0.48) 100%), repeating-linear-gradient(0deg, rgba(116,164,78,0.08) 0px, rgba(116,164,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+        celestialKind: 'sun',
+        celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.12) 0%, rgba(255,224,153,0.2) 46%, rgba(255,198,126,0) 100%)',
+        celestialBody: 'radial-gradient(circle at 35% 30%, #fff4c9 0%, #efd99b 58%, #d7a871 100%)',
+        celestialShadow: '0 0 0 2px rgba(255,226,168,0.18), 0 0 18px rgba(255,220,169,0.18)',
+        celestialOpacity: 0.66,
+        haloOpacity: 0.48,
+        cloudSpecs: CLOUDY_CLOUDS,
+        rainLayers: [],
+        rainbow: null,
+      };
+    case 'rainy':
+      return {
+        sceneBackground: 'linear-gradient(180deg, #68879d 0%, #93a9b8 34%, #afc1b1 56%, #92b076 79%, #809f60 100%)',
+        skyGradient: 'linear-gradient(180deg, #6c8ca4 0%, #90a8b8 52%, #b9c7cf 100%)',
+        skyGradientTight: 'linear-gradient(180deg, #6e8ca2 0%, #8da4b4 50%, #b0bec7 100%)',
+        skyOverlay: 'linear-gradient(180deg, rgba(70,95,115,0.34) 0%, rgba(70,95,115,0.18) 48%, rgba(70,95,115,0.04) 100%)',
+        hillGradient: 'linear-gradient(180deg, #c2d0ba 0%, #aac09f 44%, #8eaa80 100%)',
+        backHillGradient: 'linear-gradient(180deg, rgba(130,165,111,0.86) 0%, rgba(95,136,77,0.9) 100%)',
+        frontHillGradient: 'linear-gradient(180deg, rgba(148,179,122,0.8) 0%, rgba(104,148,82,0.84) 100%)',
+        grassGradient: 'linear-gradient(180deg, #96c07d 0%, #7fad5f 45%, #739f55 100%)',
+        foregroundGradient: 'linear-gradient(180deg, rgba(126,154,109,0.36) 0%, rgba(102,133,82,0.56) 100%), repeating-linear-gradient(0deg, rgba(104,144,72,0.08) 0px, rgba(104,144,72,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+        celestialKind: 'sun',
+        celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(255,239,184,0.08) 0%, rgba(247,223,166,0.16) 40%, rgba(191,171,133,0) 100%)',
+        celestialBody: 'radial-gradient(circle at 35% 30%, #ecd9b1 0%, #c7ab77 60%, #98714d 100%)',
+        celestialShadow: '0 0 0 2px rgba(234,218,190,0.1), 0 0 16px rgba(207,194,169,0.14)',
+        celestialOpacity: 0.28,
+        haloOpacity: 0.18,
+        cloudSpecs: RAINY_CLOUDS,
+        rainLayers: [
+          {
+            top: '12%',
+            topCompact: '12%',
+            topTight: '12%',
+            height: '30%',
+            heightCompact: '18%',
+            heightTight: '22%',
+            left: '-4%',
+            leftCompact: '-6%',
+            leftTight: '-8%',
+            width: '112%',
+            widthCompact: '116%',
+            widthTight: '118%',
+            opacity: 0.42,
+            blur: '0.4px',
+            duration: '1.25s',
+            delay: '-0.2s',
+            angle: 101,
+            stripeGap: 18,
+            stripeWidth: 2,
+            tint: 'rgba(220, 238, 255, 0.7)',
+          },
+          {
+            top: '15%',
+            topCompact: '15%',
+            topTight: '14%',
+            height: '26%',
+            heightCompact: '16%',
+            heightTight: '20%',
+            left: '-2%',
+            leftCompact: '-5%',
+            leftTight: '-6%',
+            width: '108%',
+            widthCompact: '112%',
+            widthTight: '114%',
+            opacity: 0.28,
+            blur: '0.8px',
+            duration: '1.7s',
+            delay: '-1.1s',
+            angle: 99,
+            stripeGap: 24,
+            stripeWidth: 2,
+            tint: 'rgba(186, 210, 234, 0.66)',
+          },
+        ],
+        rainbow: null,
+      };
+    case 'night':
+      return {
+        sceneBackground: 'linear-gradient(180deg, #16314f 0%, #355374 38%, #56714e 58%, #638853 80%, #5d7f4c 100%)',
+        skyGradient: 'linear-gradient(180deg, #112845 0%, #23486a 56%, #486987 100%)',
+        skyGradientTight: 'linear-gradient(180deg, #132845 0%, #264669 50%, #456685 100%)',
+        skyOverlay: 'linear-gradient(180deg, rgba(16,24,45,0.28) 0%, rgba(16,24,45,0.08) 65%, rgba(16,24,45,0) 100%)',
+        hillGradient: 'linear-gradient(180deg, #6f8c7b 0%, #668773 42%, #557058 100%)',
+        backHillGradient: 'linear-gradient(180deg, rgba(87,126,92,0.88) 0%, rgba(63,94,68,0.92) 100%)',
+        frontHillGradient: 'linear-gradient(180deg, rgba(101,147,103,0.8) 0%, rgba(70,110,73,0.86) 100%)',
+        grassGradient: 'linear-gradient(180deg, #6f9c67 0%, #5f8c57 45%, #507949 100%)',
+        foregroundGradient: 'linear-gradient(180deg, rgba(77,111,82,0.22) 0%, rgba(52,76,54,0.42) 100%), repeating-linear-gradient(0deg, rgba(83,122,67,0.08) 0px, rgba(83,122,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+        celestialKind: 'moon',
+        celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(238,245,255,0.2) 0%, rgba(215,229,255,0.38) 44%, rgba(186,204,236,0) 100%)',
+        celestialBody: 'radial-gradient(circle at 35% 30%, #fcfdff 0%, #e6efff 58%, #b8cae3 100%)',
+        celestialShadow: '0 0 0 2px rgba(233,242,255,0.34), 0 0 24px rgba(211,224,249,0.42)',
+        celestialOpacity: 1,
+        haloOpacity: 1,
+        cloudSpecs: NIGHT_CLOUDS,
+        rainLayers: [],
+        rainbow: null,
+      };
+    case 'rainbow':
+      return {
+        sceneBackground: 'linear-gradient(180deg, #89d6fb 0%, #d7f2ff 38%, #c7ecb7 58%, #a9dd85 80%, #92cf6a 100%)',
+        skyGradient: 'linear-gradient(180deg, #86d6ff 0%, #d6f1ff 62%, #eefdf3 100%)',
+        skyGradientTight: 'linear-gradient(180deg, #89d6fc 0%, #cfedff 54%, #e6f8ef 100%)',
+        skyOverlay: 'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(252,227,181,0.08) 58%, rgba(255,255,255,0) 100%)',
+        hillGradient: 'linear-gradient(180deg, #d8edc9 0%, #c1e3b1 44%, #9ed187 100%)',
+        backHillGradient: 'linear-gradient(180deg, rgba(152,203,120,0.9) 0%, rgba(118,178,87,0.94) 100%)',
+        frontHillGradient: 'linear-gradient(180deg, rgba(171,217,137,0.84) 0%, rgba(127,187,96,0.88) 100%)',
+        grassGradient: 'linear-gradient(180deg, #afdf96 0%, #98d473 45%, #8ccf67 100%)',
+        foregroundGradient: 'linear-gradient(180deg, rgba(171,223,151,0.34) 0%, rgba(136,197,96,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+        celestialKind: 'sun',
+        celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(255,244,195,0.18) 0%, rgba(255,213,126,0.28) 46%, rgba(255,179,80,0) 100%)',
+        celestialBody: 'radial-gradient(circle at 35% 30%, #fff2b8 0%, #ffd97c 60%, #f0aa45 100%)',
+        celestialShadow: '0 0 0 2px rgba(255,223,144,0.28), 0 0 22px rgba(255,206,110,0.32)',
+        celestialOpacity: 0.92,
+        haloOpacity: 0.72,
+        cloudSpecs: RAINBOW_CLOUDS,
+        rainLayers: [],
+        rainbow: {
+          top: '8%',
+          topCompact: '9%',
+          topTight: '10%',
+          left: '8%',
+          leftCompact: '6%',
+          leftTight: '2%',
+          width: '44%',
+          widthCompact: '44%',
+          widthTight: '50%',
+          height: '26%',
+          heightCompact: '22%',
+          heightTight: '20%',
+          opacity: 0.96,
+          rotation: '-5deg',
+        },
+      };
+    default:
+      return {
+        sceneBackground: 'linear-gradient(180deg, #88d5fb 0%, #c9efff 38%, #b9e7ab 58%, #9fd97b 80%, #8ccc65 100%)',
+        skyGradient: 'linear-gradient(180deg, #7fd3ff 0%, #bdeeff 66%, #e6fbff 100%)',
+        skyGradientTight: 'linear-gradient(180deg, #82d4fb 0%, #b7ebff 58%, #d8f3ea 100%)',
+        skyOverlay: 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 55%, rgba(255,255,255,0) 100%)',
+        hillGradient: 'linear-gradient(180deg, #d8efcb 0%, #c0e0af 44%, #9ecc88 100%)',
+        backHillGradient: 'linear-gradient(180deg, rgba(151,198,115,0.9) 0%, rgba(116,171,86,0.94) 100%)',
+        frontHillGradient: 'linear-gradient(180deg, rgba(171,212,132,0.86) 0%, rgba(126,182,94,0.88) 100%)',
+        grassGradient: 'linear-gradient(180deg, #a8de90 0%, #95d06f 45%, #89c761 100%)',
+        foregroundGradient: 'linear-gradient(180deg, rgba(161,215,124,0.34) 0%, rgba(130,194,86,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+        celestialKind: 'sun',
+        celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
+        celestialBody: 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
+        celestialShadow: '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
+        celestialOpacity: 1,
+        haloOpacity: 1,
+        cloudSpecs: SUNNY_CLOUDS,
+        rainLayers: [],
+        rainbow: null,
+      };
+  }
+}
 
 function mapPlotStateToTileState(plot: Plot | null) {
   if (!plot) return 'locked' as const;
@@ -109,33 +387,162 @@ function CloudCluster({
   opacity,
   duration,
   delay,
-}: {
-  top: string;
-  left?: string;
-  right?: string;
-  width: string;
-  height: string;
-  opacity: number;
-  duration: string;
-  delay: string;
-}) {
+  filter,
+  zIndex,
+}: CloudSpec) {
   return (
     <div
-      className={`absolute z-[8] ${MOTION_CLASS}`}
+      data-testid="farm-v2-cloud-cluster"
+      className={`absolute ${MOTION_CLASS}`}
       style={{
         top,
         left,
         right,
+        zIndex: zIndex ?? 8,
         width,
         height,
         opacity,
+        filter,
         animation: `farmV2CloudDrift ${duration} ease-in-out ${delay} infinite`,
       }}
     >
-      <div className="absolute inset-x-[8%] bottom-[6%] top-[32%] rounded-full bg-white/70" />
-      <div className="absolute left-[2%] top-[30%] h-[48%] w-[38%] rounded-full bg-white/78" />
-      <div className="absolute right-[4%] top-[16%] h-[56%] w-[46%] rounded-full bg-white/82" />
-      <div className="absolute left-[32%] top-[2%] h-[54%] w-[40%] rounded-full bg-white/84" />
+      <div className="absolute inset-x-[8%] bottom-[6%] top-[32%] rounded-full" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.62) 100%)' }} />
+      <div className="absolute left-[2%] top-[30%] h-[48%] w-[38%] rounded-full" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,255,255,0.68) 100%)' }} />
+      <div className="absolute right-[4%] top-[16%] h-[56%] w-[46%] rounded-full" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.7) 100%)' }} />
+      <div className="absolute left-[32%] top-[2%] h-[54%] w-[40%] rounded-full" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.74) 100%)' }} />
+    </div>
+  );
+}
+
+function RainLayer({
+  spec,
+  compactMode,
+  useTightBackdrop,
+}: {
+  spec: RainLayerSpec;
+  compactMode: boolean;
+  useTightBackdrop: boolean;
+}) {
+  const top = compactMode
+    ? spec.topCompact ?? spec.top
+    : useTightBackdrop
+      ? spec.topTight ?? spec.top
+      : spec.top;
+  const height = compactMode
+    ? spec.heightCompact ?? spec.height
+    : useTightBackdrop
+      ? spec.heightTight ?? spec.height
+      : spec.height;
+  const left = compactMode
+    ? spec.leftCompact ?? spec.left ?? '0%'
+    : useTightBackdrop
+      ? spec.leftTight ?? spec.left ?? '0%'
+      : spec.left ?? '0%';
+  const width = compactMode
+    ? spec.widthCompact ?? spec.width
+    : useTightBackdrop
+      ? spec.widthTight ?? spec.width
+      : spec.width;
+
+  return (
+    <div
+      data-testid="farm-v2-rain-layer"
+      className="absolute z-[7] overflow-hidden"
+      style={{
+        top,
+        left,
+        width,
+        height,
+        opacity: spec.opacity,
+      }}
+    >
+      <div
+        className={`absolute inset-0 ${MOTION_CLASS}`}
+        style={{
+          background: `repeating-linear-gradient(${spec.angle}deg, ${spec.tint} 0px, ${spec.tint} ${spec.stripeWidth}px, rgba(255,255,255,0) ${spec.stripeWidth}px, rgba(255,255,255,0) ${spec.stripeGap}px)`,
+          filter: `blur(${spec.blur})`,
+          animation: `skyRainFallLong ${spec.duration} linear ${spec.delay} infinite`,
+          transform: 'translateZ(0)',
+        }}
+      />
+      <div
+        className={`absolute inset-0 ${MOTION_CLASS}`}
+        style={{
+          background: `repeating-linear-gradient(${spec.angle - 3}deg, rgba(255,255,255,0.3) 0px, rgba(255,255,255,0.3) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) ${spec.stripeGap + 8}px)`,
+          filter: `blur(calc(${spec.blur} + 0.6px))`,
+          animation: `skyRainFallLong ${spec.duration} linear calc(${spec.delay} - 0.35s) infinite`,
+          transform: 'translateZ(0)',
+        }}
+      />
+    </div>
+  );
+}
+
+function RainbowArc({
+  spec,
+  compactMode,
+  useTightBackdrop,
+}: {
+  spec: RainbowSpec;
+  compactMode: boolean;
+  useTightBackdrop: boolean;
+}) {
+  const top = compactMode
+    ? spec.topCompact ?? spec.top
+    : useTightBackdrop
+      ? spec.topTight ?? spec.top
+      : spec.top;
+  const left = compactMode
+    ? spec.leftCompact ?? spec.left
+    : useTightBackdrop
+      ? spec.leftTight ?? spec.left
+      : spec.left;
+  const width = compactMode
+    ? spec.widthCompact ?? spec.width
+    : useTightBackdrop
+      ? spec.widthTight ?? spec.width
+      : spec.width;
+  const height = compactMode
+    ? spec.heightCompact ?? spec.height
+    : useTightBackdrop
+      ? spec.heightTight ?? spec.height
+      : spec.height;
+  const stripeColors = ['#ff7b7b', '#ffaf5a', '#ffe066', '#7fdc76', '#69c6ff', '#b68cff'];
+
+  return (
+    <div
+      data-testid="farm-v2-rainbow"
+      className="absolute z-[6] overflow-hidden"
+      style={{
+        top,
+        left,
+        width,
+        height,
+        opacity: spec.opacity,
+        transform: `rotate(${spec.rotation ?? '0deg'})`,
+        filter: 'drop-shadow(0 10px 16px rgba(118, 182, 255, 0.16))',
+      }}
+    >
+      <div className="absolute inset-0 rounded-t-[999px]" style={{ background: 'radial-gradient(circle at 50% 100%, rgba(255,255,255,0) 52%, rgba(255,255,255,0.18) 68%, rgba(255,255,255,0) 82%)' }} />
+      {stripeColors.map((color, index) => (
+        <div
+          key={`farm-v2-rainbow-band-${color}`}
+          className="absolute rounded-t-[999px] border-x border-t border-b-0"
+          style={{
+            inset: `${index * 7}px`,
+            borderColor: color,
+            borderWidth: compactMode || useTightBackdrop ? '4px' : '5px',
+            opacity: 0.92 - index * 0.06,
+          }}
+        />
+      ))}
+      <div
+        className="absolute left-[14%] right-[14%] bottom-0 rounded-t-[999px]"
+        style={{
+          top: compactMode || useTightBackdrop ? '36%' : '34%',
+          background: 'linear-gradient(180deg, rgba(215,243,255,0.14) 0%, rgba(215,243,255,0) 100%)',
+        }}
+      />
     </div>
   );
 }
@@ -250,18 +657,23 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;
-  const isNight = weather === 'night';
+  const visuals = getWeatherBackdropVisuals(weather);
+  const isNight = visuals.celestialKind === 'moon';
+  const skyHeight = compactMode
+    ? useCompactMobilePolish
+      ? '23.8%'
+      : '28%'
+    : useTightBackdrop
+      ? 'clamp(184px, 23vh, 198px)'
+      : '27%';
   // Keep the mobile horizon stable while the extra viewport height becomes usable foreground.
   const tightBackdropMetrics = useTightBackdrop
     ? {
-      skyHeight: 'clamp(184px, 23vh, 198px)',
       hillTop: 'clamp(184px, 23vh, 198px)',
       hillHeight: 'clamp(84px, 10.4vh, 90px)',
       backHillTop: 'clamp(198px, 24.4vh, 208px)',
       frontHillTop: 'clamp(212px, 26vh, 222px)',
       grassTop: 'clamp(282px, 34.8vh, 296px)',
-      sunHaloTop: '4.5%',
-      sunTop: '6.8%',
       pathTop: 'clamp(214px, 26.5vh, 224px)',
       leftTreeTop: 'clamp(214px, 26.4vh, 224px)',
       cottageTop: 'clamp(218px, 27vh, 228px)',
@@ -273,24 +685,24 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {/* Sky layer */}
       <div
+        data-testid="farm-v2-sky-layer"
         className="absolute inset-x-0 top-0 z-[1]"
         style={{
-          height: compactMode
-            ? useCompactMobilePolish
-              ? '23.8%'
-              : '28%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.skyHeight ?? '27%')
-              : '27%',
-          background: useTightBackdrop
-            ? 'linear-gradient(180deg, #8ed3f5 0%, #b8e8fa 58%, #d1ebc7 100%)'
-            : 'linear-gradient(180deg, #8ed3f5 0%, #b8e8fa 66%, #d9f4fb 100%)',
+          height: skyHeight,
+          background: useTightBackdrop ? visuals.skyGradientTight : visuals.skyGradient,
         }}
       />
+      {visuals.skyOverlay && (
+        <div
+          className="absolute inset-x-0 top-0 z-[2]"
+          style={{
+            height: skyHeight,
+            background: visuals.skyOverlay,
+          }}
+        />
+      )}
 
-      {/* Midground: continuous hill belt */}
       <div
         className="absolute inset-x-0 z-[2]"
         style={{
@@ -306,7 +718,7 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
             : useTightBackdrop
               ? (tightBackdropMetrics?.hillHeight ?? '16%')
               : '16%',
-          background: 'linear-gradient(180deg, #d1ebc7 0%, #bbdea9 44%, #9fcc88 100%)',
+          background: visuals.hillGradient,
         }}
       />
 
@@ -328,7 +740,7 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
               ? 'clamp(92px, 11.6vh, 102px)'
               : '17.2%',
           borderRadius: '50% 50% 0 0 / 78% 78% 0 0',
-          background: 'linear-gradient(180deg, rgba(151,198,115,0.9) 0%, rgba(116,171,86,0.94) 100%)',
+          background: visuals.backHillGradient,
         }}
       />
       <div
@@ -349,11 +761,10 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
               ? 'clamp(72px, 9.2vh, 82px)'
               : '13.2%',
           borderRadius: '54% 46% 0 0 / 100% 100% 0 0',
-          background: 'linear-gradient(180deg, rgba(171,212,132,0.86) 0%, rgba(126,182,94,0.88) 100%)',
+          background: visuals.frontHillGradient,
         }}
       />
 
-      {/* Grass field layer */}
       <div
         className="absolute inset-x-0 bottom-0 z-[1]"
         style={{
@@ -364,20 +775,28 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
             : useTightBackdrop
               ? (tightBackdropMetrics?.grassTop ?? '43%')
               : '43%',
-          background: 'linear-gradient(180deg, #a8de90 0%, #95d06f 45%, #89c761 100%)',
+          background: visuals.grassGradient,
         }}
       />
 
+      {visuals.rainbow && (
+        <RainbowArc
+          spec={visuals.rainbow}
+          compactMode={compactMode}
+          useTightBackdrop={useTightBackdrop || useCompactMobilePolish}
+        />
+      )}
+
       <div
+        data-testid="farm-v2-celestial-halo"
         className={`absolute z-[6] rounded-full ${MOTION_CLASS}`}
         style={{
           top: compactMode ? '5%' : '4.5%',
           right: compactMode ? (isNight ? '14%' : '12%') : (isNight ? '18.5%' : '14%'),
-          width: compactMode ? (isNight ? '82px' : '84px') : (isNight ? '98px' : '98px'),
-          height: compactMode ? (isNight ? '82px' : '84px') : (isNight ? '98px' : '98px'),
-          background: isNight
-            ? 'radial-gradient(circle at 50% 50%, rgba(238,245,255,0.2) 0%, rgba(215,229,255,0.38) 44%, rgba(186,204,236,0) 100%)'
-            : 'radial-gradient(circle at 50% 50%, rgba(255,243,178,0.2) 0%, rgba(255,209,106,0.34) 48%, rgba(255,179,80,0) 100%)',
+          width: compactMode ? (isNight ? '82px' : '84px') : '98px',
+          height: compactMode ? (isNight ? '82px' : '84px') : '98px',
+          opacity: visuals.haloOpacity,
+          background: visuals.celestialHalo,
           animation: 'farmV2SunHalo 5.6s ease-in-out -0.8s infinite',
         }}
       />
@@ -390,12 +809,9 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
           right: compactMode ? (isNight ? '16.6%' : '14.4%') : (isNight ? '21%' : '16%'),
           width: compactMode ? (isNight ? '42px' : '46px') : (isNight ? '54px' : '56px'),
           height: compactMode ? (isNight ? '42px' : '46px') : (isNight ? '54px' : '56px'),
-          background: isNight
-            ? 'radial-gradient(circle at 35% 30%, #fcfdff 0%, #e6efff 58%, #b8cae3 100%)'
-            : 'radial-gradient(circle at 35% 30%, #fff2b0 0%, #ffd56f 60%, #f0a640 100%)',
-          boxShadow: isNight
-            ? '0 0 0 2px rgba(233,242,255,0.34), 0 0 24px rgba(211,224,249,0.42)'
-            : '0 0 0 2px rgba(255,215,124,0.34), 0 0 22px rgba(255,202,94,0.46)',
+          opacity: visuals.celestialOpacity,
+          background: visuals.celestialBody,
+          boxShadow: visuals.celestialShadow,
           animation: 'farmV2SunFloat 7.8s ease-in-out -1.2s infinite',
         }}
       >
@@ -425,9 +841,17 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
         )}
       </div>
 
-      <CloudCluster top="3%" left="6%" width="22%" height="10%" opacity={0.9} duration="13s" delay="-0.8s" />
-      <CloudCluster top="8%" left="34%" width="20%" height="10%" opacity={0.84} duration="16s" delay="-2.4s" />
-      <CloudCluster top="4%" right="6%" width="24%" height="11%" opacity={0.88} duration="14s" delay="-1.8s" />
+      {visuals.cloudSpecs.map((cloud, index) => (
+        <CloudCluster key={`farm-v2-cloud-${weather}-${index}`} {...cloud} />
+      ))}
+      {visuals.rainLayers.map((spec, index) => (
+        <RainLayer
+          key={`farm-v2-rain-${index}`}
+          spec={spec}
+          compactMode={compactMode}
+          useTightBackdrop={useTightBackdrop || useCompactMobilePolish}
+        />
+      ))}
 
       <div
         className="absolute z-[6]"
@@ -483,7 +907,6 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
         testId="farm-v2-tree-right"
       />
 
-      {/* Clear fence: posts + 2 rails */}
       <div
         className="absolute left-[7%] right-[7%] z-[8]"
         style={{
@@ -530,8 +953,7 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
             : useTightBackdrop
               ? 'calc(100% - clamp(338px, 41.5vh, 352px))'
               : '46%',
-          background:
-            'linear-gradient(180deg, rgba(161,215,124,0.34) 0%, rgba(130,194,86,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+          background: visuals.foregroundGradient,
         }}
       />
     </div>
@@ -615,14 +1037,16 @@ export function FarmPlotBoardV2({
       ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.5vh, 16px))'
       : 'clamp(18px, 2.5vh, 28px)';
   const hudWeatherBadgeOffset = useTightMobileSpacing ? 42 : compactMode ? 38 : 34;
+  const backdropVisuals = getWeatherBackdropVisuals(weather);
 
   return (
     <div
+      data-testid="farm-v2-scene"
       className="relative w-full overflow-hidden"
       style={{
         minHeight: sceneMinHeight,
         isolation: 'isolate',
-        background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
+        background: backdropVisuals.sceneBackground,
       }}
     >
       <FarmBackdropV2 compactMode={compactMode} weather={weather} />
