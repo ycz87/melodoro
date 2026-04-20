@@ -46,3 +46,9 @@
 - `farm-v2-weather-transition-overlay` keeps backdrop-only visuals, so plot tiles and HUD stay untouched during fade
 - Backdrop test ids now support a transition-specific prefix to avoid duplicate selector collisions during proof runs
 - Weather badge / visuals suites now use the current farm-entry locator and a larger per-suite timeout budget for screenshot-based proof runs
+
+## Version Gate
+- `package.json` version: `0.61.18`
+- `package-lock.json` top-level version: `0.61.18`
+- `package-lock.json` root package (`packages[""]`) version: `0.61.18`
+- Build verification: `npm run build` prints `pomodoro@0.61.18 build`
