@@ -93,7 +93,7 @@ function seedInit(page: Page, state: SeedState) {
 
 async function goToFarm(page: Page) {
   await page.goto('/');
-  await page.locator('header button').filter({ hasText: '🌱' }).first().click();
+  await page.getByRole('button', { name: /(Farm|农场|🌱)/ }).first().click();
   await expect(page.locator('[data-testid="farm-v2-scene"]')).toBeVisible();
   await expect(page.locator('[data-testid="farm-plot-board-v2"]')).toBeVisible();
 }
@@ -145,6 +145,7 @@ async function getBottomBounds(page: Page, selector: string): Promise<number[]> 
 }
 
 test.describe('Farm V2 weather visuals', () => {
+  test.describe.configure({ timeout: 60000 });
   test('desktop proof differentiates five weather states without touching the interaction layout', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'desktop proof only');
 

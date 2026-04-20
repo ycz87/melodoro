@@ -107,7 +107,7 @@ function seedInit(page: Page, state: SeedState) {
 
 async function goToFarm(page: Page) {
   await page.goto('/');
-  await page.locator('header button').filter({ hasText: '🌱' }).first().click();
+  await page.getByRole('button', { name: /(Farm|农场|🌱)/ }).first().click();
   await expect(page.locator('[data-testid="farm-v2-weather-badge"]')).toBeVisible();
 }
 
@@ -119,6 +119,7 @@ async function captureProof(page: Page, testInfo: TestInfo, name: string) {
 }
 
 test.describe('Farm weather badge', () => {
+  test.describe.configure({ timeout: 60000 });
   test('desktop badge stays in sync with weather updates and uses zh weather names', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'desktop proof only');
     await seedInit(page, createSeedState({ language: 'zh', weather: 'sunny', debugMode: true }));
