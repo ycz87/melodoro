@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Plot, Weather } from '../../types/farm';
 import { WEATHER_ICON_MAP } from '../../utils/weather';
 import { FarmPlotTileV2 } from './FarmPlotTileV2';
@@ -92,6 +92,17 @@ interface WeatherBackdropVisuals {
 const GRID_SIDE = 3;
 const TOTAL_PLOTS = GRID_SIDE * GRID_SIDE;
 const MOTION_CLASS = 'farm-v2-motion';
+const WEATHER_TRANSITION_MS = 320;
+
+interface WeatherTransitionOverlayState {
+  previousWeather: Weather;
+  nextWeather: Weather;
+  token: number;
+}
+
+function getBackdropTestId(prefix: string, suffix: string) {
+  return `${prefix}-${suffix}`;
+}
 
 const SUNNY_CLOUDS: CloudSpec[] = [
   { top: '3%', left: '6%', width: '22%', height: '10%', opacity: 0.74, duration: '13s', delay: '-0.8s', filter: 'saturate(1.04) brightness(1.04)' },
@@ -389,10 +400,11 @@ function CloudCluster({
   delay,
   filter,
   zIndex,
-}: CloudSpec) {
+  testId,
+}: CloudSpec & { testId?: string }) {
   return (
     <div
-      data-testid="farm-v2-cloud-cluster"
+      data-testid={testId}
       className={`absolute ${MOTION_CLASS}`}
       style={{
         top,
@@ -418,10 +430,12 @@ function RainLayer({
   spec,
   compactMode,
   useTightBackdrop,
+  testId,
 }: {
   spec: RainLayerSpec;
   compactMode: boolean;
   useTightBackdrop: boolean;
+  testId?: string;
 }) {
   const top = compactMode
     ? spec.topCompact ?? spec.top
@@ -446,7 +460,7 @@ function RainLayer({
 
   return (
     <div
-      data-testid="farm-v2-rain-layer"
+      data-testid={testId}
       className="absolute z-[7] overflow-hidden"
       style={{
         top,
@@ -482,10 +496,12 @@ function RainbowArc({
   spec,
   compactMode,
   useTightBackdrop,
+  testId,
 }: {
   spec: RainbowSpec;
   compactMode: boolean;
   useTightBackdrop: boolean;
+  testId?: string;
 }) {
   const top = compactMode
     ? spec.topCompact ?? spec.top
@@ -511,7 +527,7 @@ function RainbowArc({
 
   return (
     <div
-      data-testid="farm-v2-rainbow"
+      data-testid={testId}
       className="absolute z-[6] overflow-hidden"
       style={{
         top,
@@ -653,7 +669,15 @@ function Cottage({ left, top }: { left: string; top: string }) {
   );
 }
 
-function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weather: Weather }) {
+function FarmBackdropV2({
+  compactMode,
+  weather,
+  testIdPrefix = 'farm-v2',
+}: {
+  compactMode: boolean;
+  weather: Weather;
+  testIdPrefix?: string;
+}) {
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;
@@ -686,7 +710,7 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       <div
-        data-testid="farm-v2-sky-layer"
+        data-testid={getBackdropTestId(testIdPrefix, 'sky-layer')}
         className="absolute inset-x-0 top-0 z-[1]"
         style={{
           height: skyHeight,
@@ -784,11 +808,12 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
           spec={visuals.rainbow}
           compactMode={compactMode}
           useTightBackdrop={useTightBackdrop || useCompactMobilePolish}
+          testId={getBackdropTestId(testIdPrefix, 'rainbow')}
         />
       )}
 
       <div
-        data-testid="farm-v2-celestial-halo"
+        data-testid={getBackdropTestId(testIdPrefix, 'celestial-halo')}
         className={`absolute z-[6] rounded-full ${MOTION_CLASS}`}
         style={{
           top: compactMode ? '5%' : '4.5%',
@@ -802,7 +827,7 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
       />
       <div
         className={`absolute ${isNight ? 'z-[9]' : 'z-[7]'} rounded-full ${MOTION_CLASS}`}
-        data-testid="farm-v2-celestial-body"
+        data-testid={getBackdropTestId(testIdPrefix, 'celestial-body')}
         aria-label={isNight ? 'moon' : 'sun'}
         style={{
           top: compactMode ? (isNight ? '7.4%' : '7.2%') : (isNight ? '7%' : '6.8%'),
@@ -842,7 +867,11 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
       </div>
 
       {visuals.cloudSpecs.map((cloud, index) => (
-        <CloudCluster key={`farm-v2-cloud-${weather}-${index}`} {...cloud} />
+        <CloudCluster
+          key={`farm-v2-cloud-${weather}-${index}`}
+          {...cloud}
+          testId={getBackdropTestId(testIdPrefix, 'cloud-cluster')}
+        />
       ))}
       {visuals.rainLayers.map((spec, index) => (
         <RainLayer
@@ -850,6 +879,7 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
           spec={spec}
           compactMode={compactMode}
           useTightBackdrop={useTightBackdrop || useCompactMobilePolish}
+          testId={getBackdropTestId(testIdPrefix, 'rain-layer')}
         />
       ))}
 
@@ -960,6 +990,50 @@ function FarmBackdropV2({ compactMode, weather }: { compactMode: boolean; weathe
   );
 }
 
+function FarmWeatherTransitionOverlay({
+  compactMode,
+  previousWeather,
+  nextWeather,
+  token,
+}: {
+  compactMode: boolean;
+  previousWeather: Weather;
+  nextWeather: Weather;
+  token: number;
+}) {
+  const previousVisuals = getWeatherBackdropVisuals(previousWeather);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      setIsVisible(false);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
+  return (
+    <div
+      data-testid="farm-v2-weather-transition-overlay"
+      data-from-weather={previousWeather}
+      data-to-weather={nextWeather}
+      data-transition-token={String(token)}
+      data-transition-ms={String(WEATHER_TRANSITION_MS)}
+      className="pointer-events-none absolute inset-0 z-[12] overflow-hidden"
+      style={{
+        background: previousVisuals.sceneBackground,
+        opacity: isVisible ? 1 : 0,
+        transition: `opacity ${WEATHER_TRANSITION_MS}ms ease-out`,
+        willChange: 'opacity',
+      }}
+    >
+      <FarmBackdropV2 compactMode={compactMode} weather={previousWeather} testIdPrefix="farm-v2-transition" />
+    </div>
+  );
+}
+
 function FarmBoardSceneDecorV2({
   compactMode,
   useTightMobileSpacing,
@@ -995,6 +1069,14 @@ export function FarmPlotBoardV2({
   harvestablePlotCount,
   onPlotClick,
 }: FarmPlotBoardV2Props) {
+  const previousWeatherRef = useRef(weather);
+  const hasMountedRef = useRef(false);
+  const transitionTokenRef = useRef(0);
+  const activeTransitionTokenRef = useRef(0);
+  const [transitionOverlay, setTransitionOverlay] = useState<WeatherTransitionOverlayState | null>(null);
+  const [lastTransitionMeta, setLastTransitionMeta] = useState<WeatherTransitionOverlayState | null>(null);
+  const [mountedTransitionToken, setMountedTransitionToken] = useState(0);
+  const [clearedTransitionToken, setClearedTransitionToken] = useState(0);
   const displaySlots = useMemo(
     () => Array.from({ length: TOTAL_PLOTS }, (_, index) => ({
       plot: plots[index] ?? null,
@@ -1039,9 +1121,61 @@ export function FarmPlotBoardV2({
   const hudWeatherBadgeOffset = useTightMobileSpacing ? 42 : compactMode ? 38 : 34;
   const backdropVisuals = getWeatherBackdropVisuals(weather);
 
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      previousWeatherRef.current = weather;
+      return;
+    }
+
+    if (previousWeatherRef.current === weather) {
+      return;
+    }
+
+    transitionTokenRef.current += 1;
+    const nextTransition = {
+      previousWeather: previousWeatherRef.current,
+      nextWeather: weather,
+      token: transitionTokenRef.current,
+    };
+    setTransitionOverlay(nextTransition);
+    setLastTransitionMeta(nextTransition);
+    setMountedTransitionToken(nextTransition.token);
+    activeTransitionTokenRef.current = nextTransition.token;
+    previousWeatherRef.current = weather;
+  }, [weather]);
+
+  useEffect(() => {
+    if (!transitionOverlay) {
+      return;
+    }
+
+    const transitionToken = transitionOverlay.token;
+    const timeoutId = window.setTimeout(() => {
+      if (activeTransitionTokenRef.current !== transitionToken) {
+        return;
+      }
+
+      activeTransitionTokenRef.current = 0;
+      setTransitionOverlay(null);
+      setClearedTransitionToken(transitionToken);
+    }, WEATHER_TRANSITION_MS + 40);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [transitionOverlay]);
+
   return (
     <div
       data-testid="farm-v2-scene"
+      data-current-weather={weather}
+      data-transition-active={transitionOverlay ? 'true' : 'false'}
+      data-last-transition-from={lastTransitionMeta?.previousWeather ?? ''}
+      data-last-transition-to={lastTransitionMeta?.nextWeather ?? ''}
+      data-last-transition-token={lastTransitionMeta ? String(lastTransitionMeta.token) : '0'}
+      data-last-transition-mounted-token={String(mountedTransitionToken)}
+      data-last-transition-cleared-token={String(clearedTransitionToken)}
       className="relative w-full overflow-hidden"
       style={{
         minHeight: sceneMinHeight,
@@ -1050,6 +1184,15 @@ export function FarmPlotBoardV2({
       }}
     >
       <FarmBackdropV2 compactMode={compactMode} weather={weather} />
+      {transitionOverlay && (
+        <FarmWeatherTransitionOverlay
+          key={transitionOverlay.token}
+          compactMode={compactMode}
+          previousWeather={transitionOverlay.previousWeather}
+          nextWeather={transitionOverlay.nextWeather}
+          token={transitionOverlay.token}
+        />
+      )}
       <FarmHudV2
         compactMode={compactMode}
         weather={weather}
