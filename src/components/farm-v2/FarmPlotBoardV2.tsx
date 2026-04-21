@@ -317,6 +317,7 @@ function mapPlotStateToTileState(plot: Plot | null) {
 
 function FarmHudV2({
   compactMode,
+  useTightMobileSpacing,
   weather,
   weatherLabel,
   todayFocusMinutes,
@@ -325,6 +326,7 @@ function FarmHudV2({
   harvestablePlotCount,
 }: {
   compactMode: boolean;
+  useTightMobileSpacing: boolean;
   weather: Weather;
   weatherLabel: string;
   todayFocusMinutes: number;
@@ -342,11 +344,11 @@ function FarmHudV2({
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
       <div
-        className="mx-auto w-full px-2 pt-1 sm:px-4 sm:pt-2"
+        className={`mx-auto w-full px-2 ${useTightMobileSpacing ? 'pt-1.5 sm:pt-2' : 'pt-1 sm:pt-2'} sm:px-4`}
         style={{ maxWidth: compactMode ? '100%' : '940px' }}
       >
         <div
-          className="flex h-10 w-full items-center justify-center gap-1.5 px-2 sm:h-11 sm:gap-2 sm:px-4"
+          className={`flex w-full items-center justify-center px-2 ${useTightMobileSpacing ? 'h-9 gap-1 sm:h-10 sm:gap-1.5 sm:px-3' : 'h-10 gap-1.5 sm:h-11 sm:gap-2 sm:px-4'}`}
           style={{
             borderBottom: '1px solid rgba(100,145,175,0.22)',
             background: 'linear-gradient(180deg, rgba(167,217,242,0.42) 0%, rgba(167,217,242,0.08) 100%)',
@@ -355,7 +357,7 @@ function FarmHudV2({
           {badgeItems.map((badge) => (
             <div
               key={`farm-v2-hud-${badge.label}`}
-              className="flex items-center gap-1 rounded-full border px-2 py-[3px] text-[11px] font-semibold sm:px-3 sm:text-xs"
+              className={`flex items-center rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-0.5 px-1.5 py-[2px] text-[10px] sm:gap-1 sm:px-2.5 sm:text-[11px]' : 'gap-1 px-2 py-[3px] text-[11px] sm:px-3 sm:text-xs'}`}
               style={{
                 borderColor: '#b57d4a',
                 color: '#5d3a1f',
@@ -369,10 +371,10 @@ function FarmHudV2({
           ))}
         </div>
 
-        <div className="mt-1.5 flex justify-center">
+        <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-2' : 'mt-1.5'}`}>
           <div
             data-testid="farm-v2-weather-badge"
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold sm:gap-2 sm:px-3.5 sm:text-xs"
+            className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-3 py-1 text-[11px] sm:gap-1.5 sm:px-3.5 sm:text-[11px]' : 'gap-1.5 px-3 py-1 text-[11px] sm:gap-2 sm:px-3.5 sm:text-xs'}`}
             style={{
               borderColor: 'rgba(91, 146, 128, 0.32)',
               color: '#21503b',
@@ -688,22 +690,22 @@ function FarmBackdropV2({
       ? '23.8%'
       : '28%'
     : useTightBackdrop
-      ? 'clamp(184px, 23vh, 198px)'
+      ? 'clamp(170px, 21.2vh, 184px)'
       : '27%';
   // Keep the mobile horizon stable while the extra viewport height becomes usable foreground.
   const tightBackdropMetrics = useTightBackdrop
     ? {
-      hillTop: 'clamp(184px, 23vh, 198px)',
-      hillHeight: 'clamp(84px, 10.4vh, 90px)',
-      backHillTop: 'clamp(198px, 24.4vh, 208px)',
-      frontHillTop: 'clamp(212px, 26vh, 222px)',
-      grassTop: 'clamp(282px, 34.8vh, 296px)',
-      pathTop: 'clamp(214px, 26.5vh, 224px)',
-      leftTreeTop: 'clamp(214px, 26.4vh, 224px)',
-      cottageTop: 'clamp(218px, 27vh, 228px)',
-      rightTreeTop: 'clamp(214px, 26.5vh, 224px)',
-      fenceTop: 'clamp(258px, 31.8vh, 272px)',
-      foregroundTop: 'clamp(338px, 41.5vh, 352px)',
+      hillTop: 'clamp(170px, 21.2vh, 184px)',
+      hillHeight: 'clamp(90px, 11vh, 98px)',
+      backHillTop: 'clamp(184px, 22.4vh, 194px)',
+      frontHillTop: 'clamp(198px, 24.1vh, 208px)',
+      grassTop: 'clamp(268px, 32.9vh, 282px)',
+      pathTop: 'clamp(194px, 23.7vh, 204px)',
+      leftTreeTop: 'clamp(194px, 23.6vh, 204px)',
+      cottageTop: 'clamp(198px, 24.2vh, 208px)',
+      rightTreeTop: 'clamp(194px, 23.7vh, 204px)',
+      fenceTop: 'clamp(232px, 28.6vh, 244px)',
+      foregroundTop: 'clamp(320px, 39vh, 334px)',
     }
     : null;
 
@@ -938,6 +940,7 @@ function FarmBackdropV2({
       />
 
       <div
+        data-testid="farm-v2-fence"
         className="absolute left-[7%] right-[7%] z-[8]"
         style={{
           top: compactMode
@@ -1102,23 +1105,23 @@ export function FarmPlotBoardV2({
       ? '100dvh'
       : 'min(100dvh, 630px)'
     : useTightMobileSpacing
-      ? 'clamp(620px, calc(100dvh - 112px - env(safe-area-inset-bottom, 0px)), 732px)'
+      ? 'clamp(618px, calc(100dvh - 118px - env(safe-area-inset-bottom, 0px)), 724px)'
       : 'min(76dvh, 660px)';
   const boardPaddingTop = compactMode
     ? useCompactMobilePolish
       ? 'clamp(162px, 29vh, 204px)'
       : 'clamp(168px, 31vh, 214px)'
     : useTightMobileSpacing
-      ? 'clamp(282px, 35.5vh, 304px)'
+      ? 'clamp(274px, 34vh, 296px)'
       : 'clamp(96px, 14.5vh, 132px)';
   const boardPaddingBottom = compactMode
     ? useCompactMobilePolish
       ? 'clamp(4px, 0.8vh, 8px)'
       : 'clamp(6px, 1.1vh, 10px)'
     : useTightMobileSpacing
-      ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.5vh, 16px))'
+      ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.6vh, 16px))'
       : 'clamp(18px, 2.5vh, 28px)';
-  const hudWeatherBadgeOffset = useTightMobileSpacing ? 42 : compactMode ? 38 : 34;
+  const hudWeatherBadgeOffset = useTightMobileSpacing ? 38 : compactMode ? 38 : 34;
   const backdropVisuals = getWeatherBackdropVisuals(weather);
 
   useEffect(() => {
@@ -1195,6 +1198,7 @@ export function FarmPlotBoardV2({
       )}
       <FarmHudV2
         compactMode={compactMode}
+        useTightMobileSpacing={useTightMobileSpacing}
         weather={weather}
         weatherLabel={weatherLabel}
         todayFocusMinutes={todayFocusMinutes}
