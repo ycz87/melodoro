@@ -41,6 +41,7 @@
 - `artifacts/issue-122/PROOF.md`
 
 ## Verification
+- `npm run lint`
 - `npm run build`
 - `npx playwright test e2e/farm-weather-badge.spec.ts e2e/farm-weather-visuals.spec.ts e2e/farm-weather-transition.spec.ts --project=desktop --timeout=60000`
 - `npx playwright test e2e/farm-weather-badge.spec.ts e2e/farm-weather-visuals.spec.ts e2e/farm-weather-transition.spec.ts --project=mobile --timeout=60000`
@@ -53,6 +54,7 @@
 - Compatibility and seed-icon checks stay on `desktop` only to avoid unnecessary duplicate cost
 
 ## Observed Results
+- `npm run lint` passed after removing the unused `TestInfo` import from `e2e/farm-seed-ui.spec.ts`
 - `npm run build` passed and printed `pomodoro@0.61.19 build`
 - `desktop`: 13 passed, 3 skipped for canonical/compat/seed suites (`farm-weather-badge`, `farm-weather-visuals`, `farm-weather-transition`, `farm-weather-life-compat`, `farm-seed-ui`)
 - `mobile`: 3 passed, 4 skipped for the canonical weather suites
