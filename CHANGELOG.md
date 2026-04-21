@@ -4,6 +4,13 @@
 
 ---
 
+## [0.61.19] - 2026-04-20
+
+### Changed
+- 🌦️ Weather E2E 真相源收口到默认 `FarmPlotBoardV2` 主路径：`e2e/farm-weather-badge.spec.ts`、`e2e/farm-weather-visuals.spec.ts`、`e2e/farm-weather-transition.spec.ts`
+- 🧹 退役 `e2e/farm-sky-layer.spec.ts`，避免旧 sky-layer / `stormy` 口径继续充当主路径 weather 验收
+- 🧪 `e2e/farm-weather-life-compat.spec.ts` 继续承接 weather/life 的 compatibility、migration、storage 回归，`e2e/farm-seed-ui.spec.ts` 独立保留 🌱 seed icon UI 回归
+
 ## [0.61.3] - 2026-02-25
 
 ### Fixed
@@ -152,7 +159,7 @@
 - 云层根据天气自然分布（sunny 1 朵 / cloudy 4 朵 / rainy 5 朵 / stormy 6 朵）
 - 移除旧天气信息框，天气信息融入自然环境
 - 种子图标从 🌰 替换为 🌱（14 个文件，20 处）
-- 新增 E2E 测试（天空层 + 种子图标）
+- 当时补充 E2E 测试覆盖天空层与种子图标；后续默认 V2 主路径收口后，旧 `e2e/farm-sky-layer.spec.ts` 已退役，种子图标回归改由 `e2e/farm-seed-ui.spec.ts` 维护
 
 ## [0.45.0] - 2026-02-20
 ### Changed
@@ -299,7 +306,7 @@
   - 瓜瓜星人：≥3棵瓜时每天10%概率出现
   - 变异博士：使用基因改造液时15%概率触发
   - 对话气泡显示 3 秒后自动消失
-- 🧪 E2E 测试 3 个用例覆盖天气/小动物/外星人数据结构验证
+- 🧪 当时的 E2E 3 个用例覆盖天气/小动物/外星人数据结构验证；当前默认 V2 主路径 weather 验收已收口到 `e2e/farm-weather-badge.spec.ts`、`e2e/farm-weather-visuals.spec.ts`、`e2e/farm-weather-transition.spec.ts`，原 Phase 6 套件现以 `e2e/farm-weather-life-compat.spec.ts` 继续承担 compatibility / migration / storage coverage
 
 ### Fixed
 - 修复 useAlienVisit useEffect 依赖项使用对象属性可能导致的问题（改为 expiresAt）

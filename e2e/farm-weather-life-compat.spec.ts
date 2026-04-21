@@ -199,12 +199,13 @@ async function readStorage<T>(page: Page, key: string, fallback: T): Promise<T> 
 
 async function goToFarm(page: Page) {
   await page.goto('/');
-  await page.locator('header button').filter({ hasText: '🌱' }).first().click();
-  await expect(page.locator('[data-testid="farm-v2-celestial-body"], .farm-grid-perspective').first()).toBeVisible();
+  await page.getByRole('button', { name: /(Farm|农场|🌱)/ }).first().click();
+  await expect(page.locator('[data-testid="farm-v2-scene"]')).toBeVisible();
+  await expect(page.locator('[data-testid="farm-plot-board-v2"]')).toBeVisible();
 }
 
-test.describe('Phase 6 Step 3 - Weather & Life', () => {
-  test('1. 天气系统初始化（验证 weatherState 存在和结构）', async ({ page }) => {
+test.describe('Farm weather/life compatibility coverage', () => {
+  test('compat: weatherState initializes into the canonical storage shape', async ({ page }) => {
     await seedInit(page, createSeedPayload());
     await goToFarm(page);
 
@@ -221,11 +222,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
       }
     });
 
-    const weatherState = await readStorage<WeatherState | null>(
-      page,
-      'weatherState',
-      null,
-    );
+    const weatherState = await readStorage<WeatherState | null>(page, 'weatherState', null);
 
     expect(weatherState).not.toBeNull();
     if (!weatherState) return;
@@ -234,7 +231,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     expect(weatherState.lastChangeAt).toBeGreaterThan(0);
   });
 
-  test('2. 小动物数据结构（验证 creatures 数组格式）', async ({ page }) => {
+  test('compat: creatures storage keeps the expected schema', async ({ page }) => {
     const now = Date.now();
     const seededCreature = createCreature('creature-structure', 'bee', now + 10 * 60 * 1000);
 
@@ -274,7 +271,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     expect(creature.expiresAt).toBeGreaterThan(Date.now());
   });
 
-  test('3. 外星人数据结构（验证 alienVisit 对象格式）', async ({ page }) => {
+  test('compat: alienVisit storage keeps the expected schema', async ({ page }) => {
     await seedInit(page, createSeedPayload({
       alienVisit: {
         lastMelonAlienCheckDate: '',
@@ -314,7 +311,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     expect(alienVisit.current.expiresAt).toBeGreaterThan(alienVisit.current.appearedAt);
   });
 
-  test('4. legacy weather migration repairs snowy and future lastChangeAt', async ({ page }) => {
+  test('compat: legacy snowy state and future lastChangeAt repair into canonical weather', async ({ page }) => {
     const now = Date.UTC(2026, 3, 20, 12, 0, 0);
 
     await seedInit(page, createSeedPayload({
@@ -337,7 +334,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     }).toBe(now);
   });
 
-  test('5. null weather and malformed timestamps repair into canonical production weather', async ({ page }) => {
+  test('compat: malformed weather state repairs into canonical production weather', async ({ page }) => {
     const now = Date.UTC(2026, 3, 20, 12, 0, 0);
 
     expect(migrateWeatherState({ current: 'stormy', lastChangeAt: now }, now).current).toBe('rainy');
@@ -368,7 +365,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     }).toBe(now);
   });
 
-  test('6. non-rainy production weather cannot rotate directly into rainbow', async ({ page }) => {
+  test('compat: non-rainy production weather cannot rotate directly into rainbow', async ({ page }) => {
     const now = Date.UTC(2026, 3, 20, 18, 0, 0);
     const lastChangeAt = now - WEATHER_SWITCH_INTERVAL_MS - 1;
 
@@ -395,7 +392,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     }).toBe(lastChangeAt + WEATHER_SWITCH_INTERVAL_MS);
   });
 
-  test('7. multi-slot catch-up advances gate slot by slot and can reach rainbow after rainy', () => {
+  test('compat: multi-slot catch-up can still reach rainbow after the rainy gate', () => {
     const now = Date.UTC(2026, 3, 21, 0, 0, 0);
     const lastChangeAt = now - (WEATHER_SWITCH_INTERVAL_MS * 2) - 1;
 
@@ -412,7 +409,7 @@ test.describe('Phase 6 Step 3 - Weather & Life', () => {
     expect(state.lastChangeAt).toBe(lastChangeAt + (WEATHER_SWITCH_INTERVAL_MS * 2));
   });
 
-  test('8. debug override stays separate from production truth and clear only removes the override', async ({ page }) => {
+  test('compat: debug override stays separate from production truth', async ({ page }) => {
     const now = Date.UTC(2026, 3, 21, 0, 0, 0);
 
     expect(migrateWeatherDebugOverride('snowy')).toBe('cloudy');
