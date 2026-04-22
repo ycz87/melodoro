@@ -103,6 +103,10 @@ function createSeedState() {
       current: 'sunny',
       lastChangeAt: now,
     },
+    alienVisit: {
+      lastMelonAlienCheckDate: getTodayKey(now),
+      current: null,
+    },
   };
 }
 
@@ -116,6 +120,7 @@ async function seedInit(page) {
     localStorage.setItem('watermelon-shed', JSON.stringify(payload.shed));
     localStorage.setItem('watermelon-genes', JSON.stringify(payload.gene));
     localStorage.setItem('weatherState', JSON.stringify(payload.weatherState));
+    localStorage.setItem('alienVisit', JSON.stringify(payload.alienVisit));
     localStorage.removeItem('weatherDebugOverride');
     localStorage.removeItem('watermelon-debug');
   }, state);

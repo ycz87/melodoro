@@ -459,7 +459,7 @@ export function FarmPage({
 
   return (
     <div
-      className={`flex-1 flex flex-col w-full ${compactShell ? 'px-0 pt-0 pb-0 gap-0' : useTightMobileFarmShell ? 'px-2.5 sm:px-4 pt-1 pb-2 gap-1.5' : gentleV2Layout ? 'px-3 sm:px-4 pt-2 pb-3 gap-2' : 'px-4 pt-4 pb-6 gap-4'}`}
+      className={`flex-1 flex flex-col w-full ${compactShell ? 'px-0 pt-0 pb-0 gap-0' : useTightMobileFarmShell ? 'px-2 sm:px-4 pt-0.5 pb-1.5 gap-1' : gentleV2Layout ? 'px-3 sm:px-4 pt-2 pb-3 gap-2' : 'px-4 pt-4 pb-6 gap-4'}`}
       style={gentleV2Layout
         ? {
           background: 'linear-gradient(180deg, #9ad7f4 0%, #a6def2 28%, #a8d993 56%, #94cf73 100%)',
@@ -472,7 +472,7 @@ export function FarmPage({
           <SubTabHeader subTab={subTab} setSubTab={setSubTab} theme={theme} t={t} gentle={useFarmPlotBoardV2} />
 
           {/* 道具快捷栏 */}
-          <div className={`flex items-center overflow-x-auto no-scrollbar ${useTightMobileFarmShell ? 'gap-1.5 pb-0.5' : 'gap-2 pb-1'}`}>
+          <div className={`flex items-center overflow-x-auto no-scrollbar ${useTightMobileFarmShell ? 'gap-1 pb-0' : 'gap-2 pb-1'}`}>
             {(lullabyCount > 0 || lullabyActive) && (
               <button
                 type="button"
@@ -657,7 +657,7 @@ export function FarmPage({
 
       {/* 农场场景 */}
       <div
-        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-2.5 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : useTightMobileFarmShell ? 'pt-0.5' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
+        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-2 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : useTightMobileFarmShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
         style={compactShell
           ? {
             background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
