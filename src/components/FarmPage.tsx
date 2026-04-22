@@ -7,6 +7,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n';
+import { withOpacity } from '../utils/color';
 import type {
   AlienAppearance,
   AlienType,
@@ -43,6 +44,21 @@ import { CollectionPage } from './CollectionPage';
 import { GeneLabPage } from './GeneLabPage';
 import { SimpleFarmGrid } from './farm/SimpleFarmGrid';
 import { FarmPlotBoardV2 } from './farm-v2/FarmPlotBoardV2';
+
+function getFarmShellBackground(weather: Weather) {
+  switch (weather) {
+    case 'cloudy':
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(150,194,125,0.26) 58%, rgba(118,172,89,0.48) 100%), repeating-linear-gradient(0deg, rgba(116,164,78,0.08) 0px, rgba(116,164,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #7fb3cf 0%, #bfd4df 36%, #b5d0b1 58%, #8eb770 80%, #7eb75c 100%)';
+    case 'rainy':
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 56%, rgba(126,154,109,0.32) 56%, rgba(102,133,82,0.56) 100%), repeating-linear-gradient(0deg, rgba(104,144,72,0.08) 0px, rgba(104,144,72,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #68879d 0%, #93a9b8 34%, #afc1b1 56%, #83a65f 79%, #739f55 100%)';
+    case 'night':
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(77,111,82,0.18) 58%, rgba(52,76,54,0.42) 100%), repeating-linear-gradient(0deg, rgba(83,122,67,0.08) 0px, rgba(83,122,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #16314f 0%, #355374 38%, #56714e 58%, #5a8350 80%, #507949 100%)';
+    case 'rainbow':
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(171,223,151,0.3) 58%, rgba(136,197,96,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #89d6fb 0%, #d7f2ff 38%, #c7ecb7 58%, #98d66d 80%, #8ccf67 100%)';
+    default:
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(161,215,124,0.28) 58%, rgba(130,194,86,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #88d5fb 0%, #c9efff 38%, #b9e7ab 58%, #94d16f 80%, #89c761 100%)';
+  }
+}
 
 interface FarmPageProps {
   farm: FarmStorage;
@@ -207,6 +223,7 @@ export function FarmPage({
   }, []);
   const gentleV2Layout = useFarmPlotBoardV2 && !compactShell;
   const useTightMobileFarmShell = gentleV2Layout && typeof window !== 'undefined' && window.innerWidth < 640;
+  const gentleV2Background = gentleV2Layout ? getFarmShellBackground(weather) : undefined;
 
   // 追踪已揭晓的地块（避免重复触发动画）
   const revealedRef = useRef<Set<number>>(new Set());
@@ -462,7 +479,7 @@ export function FarmPage({
       className={`flex-1 flex flex-col w-full ${compactShell ? 'px-0 pt-0 pb-0 gap-0' : useTightMobileFarmShell ? 'px-2 sm:px-4 pt-0.5 pb-1.5 gap-1' : gentleV2Layout ? 'px-3 sm:px-4 pt-2 pb-3 gap-2' : 'px-4 pt-4 pb-6 gap-4'}`}
       style={gentleV2Layout
         ? {
-          background: 'linear-gradient(180deg, #9ad7f4 0%, #a6def2 28%, #a8d993 56%, #94cf73 100%)',
+          background: gentleV2Background,
         }
         : undefined}
     >
@@ -657,7 +674,7 @@ export function FarmPage({
 
       {/* 农场场景 */}
       <div
-        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-2 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : useTightMobileFarmShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
+        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-1 -mx-2 sm:mx-0' : 'flex-1'} ${compactShell ? 'pt-0' : useTightMobileFarmShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
         style={compactShell
           ? {
             background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
@@ -955,17 +972,17 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
 
   const wrapperStyle = gentle
     ? {
-      backgroundColor: 'rgba(244,231,198,0.28)',
-      border: '1px solid rgba(178,138,96,0.34)',
-      boxShadow: '0 1px 0 rgba(255,255,255,0.28) inset',
-      backdropFilter: 'blur(5px)',
-      WebkitBackdropFilter: 'blur(5px)',
+      backgroundColor: withOpacity(theme.surface, 0.82),
+      border: `1px solid ${theme.border}`,
+      boxShadow: `0 1px 0 ${withOpacity(theme.text, 0.05)} inset`,
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
     }
     : { backgroundColor: theme.inputBg };
 
   const indicatorStyle = gentle
     ? {
-      background: 'linear-gradient(180deg, rgba(232,157,112,0.34) 0%, rgba(211,121,78,0.26) 100%)',
+      background: `linear-gradient(180deg, ${withOpacity(theme.accent, 0.34)} 0%, ${withOpacity(theme.accentEnd, 0.22)} 100%)`,
       opacity: 1,
     }
     : {
@@ -973,8 +990,8 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
       opacity: 0.16,
     };
 
-  const activeTextColor = gentle ? '#5c371f' : theme.text;
-  const inactiveTextColor = gentle ? 'rgba(90,60,37,0.75)' : theme.textMuted;
+  const activeTextColor = theme.text;
+  const inactiveTextColor = theme.textMuted;
   const useTightMobileTabs = gentle && typeof window !== 'undefined' && window.innerWidth < 640;
   const tabButtonClass = `relative z-10 rounded-full font-semibold transition-all duration-200 ease-in-out cursor-pointer flex-1 ${useTightMobileTabs ? 'px-3 py-1.5 text-[11px]' : 'px-4 py-2 text-xs'}`;
 

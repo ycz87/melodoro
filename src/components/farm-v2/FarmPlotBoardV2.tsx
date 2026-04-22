@@ -1133,11 +1133,11 @@ export function FarmPlotBoardV2({
   const useTightMobileSpacing = isNarrowScreen && !compactMode;
   const viewportHeightPx = useViewportHeightPx(useTightMobileSpacing || useCompactMobilePolish);
   const tightSceneHeightPx = useMemo(
-    () => (useTightMobileSpacing ? clampNumber(Math.round((viewportHeightPx ?? 800) * 0.76), 600, 644) : null),
+    () => (useTightMobileSpacing ? clampNumber(Math.round((viewportHeightPx ?? 800) - 86), 628, 688) : null),
     [useTightMobileSpacing, viewportHeightPx],
   );
   const tightBoardPaddingTopPx = useMemo(
-    () => (tightSceneHeightPx ? clampNumber(Math.round(tightSceneHeightPx * 0.35), 214, 232) : null),
+    () => (tightSceneHeightPx ? clampNumber(Math.round(tightSceneHeightPx * 0.34), 214, 228) : null),
     [tightSceneHeightPx],
   );
 
@@ -1233,6 +1233,7 @@ export function FarmPlotBoardV2({
       className="relative w-full overflow-hidden"
       style={{
         minHeight: sceneMinHeight,
+        height: compactMode ? undefined : useTightMobileSpacing ? '100%' : undefined,
         isolation: 'isolate',
         background: backdropVisuals.sceneBackground,
       }}
