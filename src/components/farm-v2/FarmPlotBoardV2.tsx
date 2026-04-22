@@ -104,6 +104,44 @@ function getBackdropTestId(prefix: string, suffix: string) {
   return `${prefix}-${suffix}`;
 }
 
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getViewportHeightPx() {
+  if (typeof window === 'undefined') return null;
+  const visualViewportHeight = window.visualViewport?.height;
+  if (typeof visualViewportHeight === 'number' && Number.isFinite(visualViewportHeight) && visualViewportHeight > 0) {
+    return visualViewportHeight;
+  }
+  return window.innerHeight;
+}
+
+function useViewportHeightPx(enabled: boolean) {
+  const [heightPx, setHeightPx] = useState<number | null>(() => (enabled ? getViewportHeightPx() : null));
+
+  useEffect(() => {
+    if (!enabled) {
+      return undefined;
+    }
+
+    const updateHeight = () => setHeightPx(getViewportHeightPx());
+    updateHeight();
+
+    window.addEventListener('resize', updateHeight);
+    window.visualViewport?.addEventListener('resize', updateHeight);
+    window.visualViewport?.addEventListener('scroll', updateHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      window.visualViewport?.removeEventListener('resize', updateHeight);
+      window.visualViewport?.removeEventListener('scroll', updateHeight);
+    };
+  }, [enabled]);
+
+  return heightPx;
+}
+
 const SUNNY_CLOUDS: CloudSpec[] = [
   { top: '3%', left: '6%', width: '22%', height: '10%', opacity: 0.74, duration: '13s', delay: '-0.8s', filter: 'saturate(1.04) brightness(1.04)' },
   { top: '8%', left: '35%', width: '20%', height: '10%', opacity: 0.68, duration: '16s', delay: '-2.4s', filter: 'saturate(1.02) brightness(1.02)' },
@@ -344,11 +382,11 @@ function FarmHudV2({
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
       <div
-        className={`mx-auto w-full px-2 ${useTightMobileSpacing ? 'pt-1.5 sm:pt-2' : 'pt-1 sm:pt-2'} sm:px-4`}
+        className={`mx-auto w-full px-2 ${useTightMobileSpacing ? 'pt-1 sm:pt-2' : 'pt-1 sm:pt-2'} sm:px-4`}
         style={{ maxWidth: compactMode ? '100%' : '940px' }}
       >
         <div
-          className={`flex w-full items-center justify-center px-2 ${useTightMobileSpacing ? 'h-9 gap-1 sm:h-10 sm:gap-1.5 sm:px-3' : 'h-10 gap-1.5 sm:h-11 sm:gap-2 sm:px-4'}`}
+          className={`flex w-full items-center justify-center px-2 ${useTightMobileSpacing ? 'h-8 gap-1 sm:h-10 sm:gap-1.5 sm:px-3' : 'h-10 gap-1.5 sm:h-11 sm:gap-2 sm:px-4'}`}
           style={{
             borderBottom: '1px solid rgba(100,145,175,0.22)',
             background: 'linear-gradient(180deg, rgba(167,217,242,0.42) 0%, rgba(167,217,242,0.08) 100%)',
@@ -357,7 +395,7 @@ function FarmHudV2({
           {badgeItems.map((badge) => (
             <div
               key={`farm-v2-hud-${badge.label}`}
-              className={`flex items-center rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-0.5 px-1.5 py-[2px] text-[10px] sm:gap-1 sm:px-2.5 sm:text-[11px]' : 'gap-1 px-2 py-[3px] text-[11px] sm:px-3 sm:text-xs'}`}
+              className={`flex items-center rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-0.5 px-1.5 py-[1px] text-[10px] sm:gap-1 sm:px-2.5 sm:text-[11px]' : 'gap-1 px-2 py-[3px] text-[11px] sm:px-3 sm:text-xs'}`}
               style={{
                 borderColor: '#b57d4a',
                 color: '#5d3a1f',
@@ -371,10 +409,10 @@ function FarmHudV2({
           ))}
         </div>
 
-        <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-2' : 'mt-1.5'}`}>
+        <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-1' : 'mt-1.5'}`}>
           <div
             data-testid="farm-v2-weather-badge"
-            className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-3 py-1 text-[11px] sm:gap-1.5 sm:px-3.5 sm:text-[11px]' : 'gap-1.5 px-3 py-1 text-[11px] sm:gap-2 sm:px-3.5 sm:text-xs'}`}
+            className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-2.5 py-[3px] text-[10px] sm:gap-1.5 sm:px-3.5 sm:text-[11px]' : 'gap-1.5 px-3 py-1 text-[11px] sm:gap-2 sm:px-3.5 sm:text-xs'}`}
             style={{
               borderColor: 'rgba(91, 146, 128, 0.32)',
               color: '#21503b',
@@ -685,29 +723,31 @@ function FarmBackdropV2({
   const useTightBackdrop = isNarrowScreen && !compactMode;
   const visuals = getWeatherBackdropVisuals(weather);
   const isNight = visuals.celestialKind === 'moon';
+  const tightBackdropMetrics = useTightBackdrop
+    ? {
+      skyHeight: '18.8%',
+      hillTop: '18.8%',
+      hillHeight: '12.8%',
+      backHillTop: '20.5%',
+      backHillHeight: '13.9%',
+      frontHillTop: '22.9%',
+      frontHillHeight: '10.6%',
+      grassTop: '31.9%',
+      pathTop: '28.1%',
+      leftTreeTop: '28%',
+      cottageTop: '28.6%',
+      rightTreeTop: '28.1%',
+      fenceTop: '34.2%',
+      foregroundTop: '40.8%',
+    }
+    : null;
   const skyHeight = compactMode
     ? useCompactMobilePolish
       ? '23.8%'
       : '28%'
     : useTightBackdrop
-      ? 'clamp(170px, 21.2vh, 184px)'
+      ? (tightBackdropMetrics?.skyHeight ?? '18.8%')
       : '27%';
-  // Keep the mobile horizon stable while the extra viewport height becomes usable foreground.
-  const tightBackdropMetrics = useTightBackdrop
-    ? {
-      hillTop: 'clamp(170px, 21.2vh, 184px)',
-      hillHeight: 'clamp(90px, 11vh, 98px)',
-      backHillTop: 'clamp(184px, 22.4vh, 194px)',
-      frontHillTop: 'clamp(198px, 24.1vh, 208px)',
-      grassTop: 'clamp(268px, 32.9vh, 282px)',
-      pathTop: 'clamp(194px, 23.7vh, 204px)',
-      leftTreeTop: 'clamp(194px, 23.6vh, 204px)',
-      cottageTop: 'clamp(198px, 24.2vh, 208px)',
-      rightTreeTop: 'clamp(194px, 23.7vh, 204px)',
-      fenceTop: 'clamp(232px, 28.6vh, 244px)',
-      foregroundTop: 'clamp(320px, 39vh, 334px)',
-    }
-    : null;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -763,7 +803,7 @@ function FarmBackdropV2({
           height: compactMode
             ? '17.6%'
             : useTightBackdrop
-              ? 'clamp(92px, 11.6vh, 102px)'
+              ? (tightBackdropMetrics?.backHillHeight ?? '13.9%')
               : '17.2%',
           borderRadius: '50% 50% 0 0 / 78% 78% 0 0',
           background: visuals.backHillGradient,
@@ -784,7 +824,7 @@ function FarmBackdropV2({
           height: compactMode
             ? '13.6%'
             : useTightBackdrop
-              ? 'clamp(72px, 9.2vh, 82px)'
+              ? (tightBackdropMetrics?.frontHillHeight ?? '10.6%')
               : '13.2%',
           borderRadius: '54% 46% 0 0 / 100% 100% 0 0',
           background: visuals.frontHillGradient,
@@ -984,7 +1024,7 @@ function FarmBackdropV2({
           height: compactMode
             ? '44%'
             : useTightBackdrop
-              ? 'calc(100% - clamp(338px, 41.5vh, 352px))'
+              ? `calc(100% - ${tightBackdropMetrics?.foregroundTop ?? '40.8%'})`
               : '46%',
           background: visuals.foregroundGradient,
         }}
@@ -1091,37 +1131,48 @@ export function FarmPlotBoardV2({
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = compactMode && isNarrowScreen;
   const useTightMobileSpacing = isNarrowScreen && !compactMode;
+  const viewportHeightPx = useViewportHeightPx(useTightMobileSpacing || useCompactMobilePolish);
+  const tightSceneHeightPx = useMemo(
+    () => (useTightMobileSpacing ? clampNumber(Math.round((viewportHeightPx ?? 800) * 0.76), 600, 644) : null),
+    [useTightMobileSpacing, viewportHeightPx],
+  );
+  const tightBoardPaddingTopPx = useMemo(
+    () => (tightSceneHeightPx ? clampNumber(Math.round(tightSceneHeightPx * 0.35), 214, 232) : null),
+    [tightSceneHeightPx],
+  );
 
   const boardWidth = compactMode
     ? 'min(96vw, 500px)'
     : useTightMobileSpacing
-      ? 'min(calc(100% - 26px), 470px)'
+      ? 'min(calc(100% - 24px), 470px)'
       : 'min(82vw, calc(100dvh - 290px), 620px)';
-  const boardGap = compactMode || useTightMobileSpacing
+  const boardGap = compactMode
     ? 'clamp(6px, 1vw, 9px)'
-    : 'clamp(8px, 0.8vw, 11px)';
+    : useTightMobileSpacing
+      ? 'clamp(5px, 0.9vw, 8px)'
+      : 'clamp(8px, 0.8vw, 11px)';
   const sceneMinHeight = compactMode
     ? useCompactMobilePolish
       ? '100dvh'
       : 'min(100dvh, 630px)'
     : useTightMobileSpacing
-      ? 'clamp(618px, calc(100dvh - 118px - env(safe-area-inset-bottom, 0px)), 724px)'
+      ? `${tightSceneHeightPx ?? 620}px`
       : 'min(76dvh, 660px)';
   const boardPaddingTop = compactMode
     ? useCompactMobilePolish
       ? 'clamp(162px, 29vh, 204px)'
       : 'clamp(168px, 31vh, 214px)'
     : useTightMobileSpacing
-      ? 'clamp(274px, 34vh, 296px)'
+      ? `${tightBoardPaddingTopPx ?? 222}px`
       : 'clamp(96px, 14.5vh, 132px)';
   const boardPaddingBottom = compactMode
     ? useCompactMobilePolish
       ? 'clamp(4px, 0.8vh, 8px)'
       : 'clamp(6px, 1.1vh, 10px)'
     : useTightMobileSpacing
-      ? 'calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.6vh, 16px))'
+      ? 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
       : 'clamp(18px, 2.5vh, 28px)';
-  const hudWeatherBadgeOffset = useTightMobileSpacing ? 38 : compactMode ? 38 : 34;
+  const hudWeatherBadgeOffset = useTightMobileSpacing ? 28 : compactMode ? 38 : 34;
   const backdropVisuals = getWeatherBackdropVisuals(weather);
 
   useEffect(() => {
@@ -1237,7 +1288,7 @@ export function FarmPlotBoardV2({
                   key={`farm-v2-slot-${plot?.id ?? index}`}
                   data-slot-state={tileState}
                   style={{
-                    transform: `translateY(${Math.floor(index / GRID_SIDE) * (compactMode ? 2.4 : 3.2)}px)`,
+                    transform: `translateY(${Math.floor(index / GRID_SIDE) * (compactMode ? 2.4 : useTightMobileSpacing ? 2.2 : 3.2)}px)`,
                   }}
                 >
                   <FarmPlotTileV2
