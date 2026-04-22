@@ -100,7 +100,7 @@ function createSeedState() {
       fragments: [],
     },
     weatherState: {
-      current: 'sunny',
+      current: 'night',
       lastChangeAt: now,
     },
     alienVisit: {

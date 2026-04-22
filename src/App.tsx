@@ -1854,7 +1854,7 @@ function App() {
     : !isWork ? theme.bgBreak
     : timer.status === 'idle' ? theme.bg
     : theme.bgWork;
-  const bgColor = farmImmersiveHeader ? '#91d9f2' : baseBgColor;
+  const bgColor = baseBgColor;
 
   const mainTabs = [
     { id: 'focus', emoji: '🍉', label: t.tabFocus },
@@ -1877,10 +1877,8 @@ function App() {
           style={{
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
-            backgroundColor: farmImmersiveHeader
-              ? 'rgba(167,220,244,0.36)'
-              : withOpacity(theme.surface, 0.8),
-            borderColor: farmImmersiveHeader ? 'rgba(120,170,198,0.36)' : theme.border,
+            backgroundColor: withOpacity(theme.surface, farmImmersiveHeader ? 0.92 : 0.8),
+            borderColor: theme.border,
           }}
         >
           {/* Left: logo + brand name + streak */}
@@ -1888,12 +1886,12 @@ function App() {
             <img src="/icon-192.png" alt={t.appName} className="w-7 h-7 sm:w-8 sm:h-8 shrink-0" style={{ filter: 'drop-shadow(0 0 6px rgba(34, 197, 94, 0.4))' }} />
             <span
               className={`${farmImmersiveHeader ? 'hidden md:inline' : 'hidden sm:inline'} text-sm font-semibold truncate`}
-              style={{ color: farmImmersiveHeader ? '#4f3d2a' : theme.text }}
+              style={{ color: theme.text }}
             >
               {t.appName}
             </span>
             {streak.current > 0 && (
-              <span className="text-xs font-medium shrink-0" style={{ color: farmImmersiveHeader ? '#7e5a3a' : theme.accent }}>
+              <span className="text-xs font-medium shrink-0" style={{ color: theme.accent }}>
                 🔥{streak.current}
               </span>
             )}
@@ -1903,8 +1901,8 @@ function App() {
           <div
             className="relative flex items-center rounded-full p-[3px]"
             style={{
-              backgroundColor: farmImmersiveHeader ? 'rgba(248,231,197,0.34)' : theme.inputBg,
-              border: farmImmersiveHeader ? '1px solid rgba(184,145,102,0.34)' : 'none',
+              backgroundColor: theme.inputBg,
+              border: farmImmersiveHeader ? `1px solid ${theme.border}` : 'none',
             }}
           >
             {/* Sliding indicator */}
@@ -1912,7 +1910,7 @@ function App() {
               className="absolute top-[3px] bottom-[3px] rounded-full transition-all duration-200 ease-out"
               style={{
                 background: farmImmersiveHeader
-                  ? 'linear-gradient(180deg, rgba(236,157,111,0.34) 0%, rgba(206,119,74,0.24) 100%)'
+                  ? `linear-gradient(180deg, ${withOpacity(theme.accent, 0.34)} 0%, ${withOpacity(theme.accentEnd, 0.22)} 100%)`
                   : theme.accent,
                 opacity: farmImmersiveHeader ? 1 : 0.15,
                 width: `calc((100% - 6px) / ${mainTabs.length})`,
@@ -1927,9 +1925,7 @@ function App() {
                   key={tab.id}
                   onClick={() => !isAnyTimerActive && setActiveTab(tab.id)}
                   className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 flex-1 text-center ${isAnyTimerActive && !isActive ? 'opacity-40' : 'cursor-pointer'}`}
-                  style={{ color: isActive
-                    ? (farmImmersiveHeader ? '#63391f' : theme.accent)
-                    : (farmImmersiveHeader ? 'rgba(88,60,38,0.72)' : theme.textMuted) }}
+                  style={{ color: isActive ? theme.accent : theme.textMuted }}
                 >
                   {tab.emoji} {tab.label}
                 </button>
@@ -1942,7 +1938,7 @@ function App() {
             <button
               onClick={() => setShowAchievements(true)}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer text-sm relative"
-              style={{ color: farmImmersiveHeader ? 'rgba(90,62,40,0.8)' : theme.textMuted }}
+              style={{ color: theme.textMuted }}
               aria-label={t.achievementsButton}
             >
               🏆
@@ -1958,7 +1954,7 @@ function App() {
             <button
               onClick={() => setShowHistory(true)}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer text-sm"
-              style={{ color: farmImmersiveHeader ? 'rgba(90,62,40,0.8)' : theme.textMuted }}
+              style={{ color: theme.textMuted }}
               aria-label={t.historyTab}
             >
               📅
