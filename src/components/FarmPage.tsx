@@ -206,6 +206,7 @@ export function FarmPage({
     return forcedBoard !== 'legacy';
   }, []);
   const gentleV2Layout = useFarmPlotBoardV2 && !compactShell;
+  const useTightMobileFarmShell = gentleV2Layout && typeof window !== 'undefined' && window.innerWidth < 640;
 
   // 追踪已揭晓的地块（避免重复触发动画）
   const revealedRef = useRef<Set<number>>(new Set());
@@ -458,7 +459,7 @@ export function FarmPage({
 
   return (
     <div
-      className={`flex-1 flex flex-col w-full ${compactShell ? 'px-0 pt-0 pb-0 gap-0' : gentleV2Layout ? 'px-3 sm:px-4 pt-2 pb-3 gap-2' : 'px-4 pt-4 pb-6 gap-4'}`}
+      className={`flex-1 flex flex-col w-full ${compactShell ? 'px-0 pt-0 pb-0 gap-0' : useTightMobileFarmShell ? 'px-2.5 sm:px-4 pt-1 pb-2 gap-1.5' : gentleV2Layout ? 'px-3 sm:px-4 pt-2 pb-3 gap-2' : 'px-4 pt-4 pb-6 gap-4'}`}
       style={gentleV2Layout
         ? {
           background: 'linear-gradient(180deg, #9ad7f4 0%, #a6def2 28%, #a8d993 56%, #94cf73 100%)',
@@ -471,7 +472,7 @@ export function FarmPage({
           <SubTabHeader subTab={subTab} setSubTab={setSubTab} theme={theme} t={t} gentle={useFarmPlotBoardV2} />
 
           {/* 道具快捷栏 */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className={`flex items-center overflow-x-auto no-scrollbar ${useTightMobileFarmShell ? 'gap-1.5 pb-0.5' : 'gap-2 pb-1'}`}>
             {(lullabyCount > 0 || lullabyActive) && (
               <button
                 type="button"
@@ -656,7 +657,7 @@ export function FarmPage({
 
       {/* 农场场景 */}
       <div
-        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-3 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
+        className={`farm-page relative isolate min-h-0 ${useFarmPlotBoardV2 && !compactShell ? 'flex-none -mx-2.5 sm:mx-0 sm:flex-1' : 'flex-1'} ${compactShell ? 'pt-0' : useTightMobileFarmShell ? 'pt-0.5' : gentleV2Layout ? 'pt-1' : 'pt-4'}`}
         style={compactShell
           ? {
             background: 'linear-gradient(180deg, #90d6f6 0%, #bdeafd 38%, #b4e8a6 58%, #9ad577 80%, #8cc764 100%)',
@@ -974,6 +975,8 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
 
   const activeTextColor = gentle ? '#5c371f' : theme.text;
   const inactiveTextColor = gentle ? 'rgba(90,60,37,0.75)' : theme.textMuted;
+  const useTightMobileTabs = gentle && typeof window !== 'undefined' && window.innerWidth < 640;
+  const tabButtonClass = `relative z-10 rounded-full font-semibold transition-all duration-200 ease-in-out cursor-pointer flex-1 ${useTightMobileTabs ? 'px-3 py-1.5 text-[11px]' : 'px-4 py-2 text-xs'}`;
 
   return (
     <div className="w-full">
@@ -989,7 +992,7 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
         />
         <button
           onClick={() => setSubTab('plots')}
-          className="relative z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ease-in-out cursor-pointer flex-1"
+          className={tabButtonClass}
           style={{
             color: subTab === 'plots' ? activeTextColor : inactiveTextColor,
           }}
@@ -998,7 +1001,7 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
         </button>
         <button
           onClick={() => setSubTab('collection')}
-          className="relative z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ease-in-out cursor-pointer flex-1"
+          className={tabButtonClass}
           style={{
             color: subTab === 'collection' ? activeTextColor : inactiveTextColor,
           }}
@@ -1007,7 +1010,7 @@ function SubTabHeader({ subTab, setSubTab, theme, t, gentle = false }: {
         </button>
         <button
           onClick={() => setSubTab('lab')}
-          className="relative z-10 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ease-in-out cursor-pointer flex-1"
+          className={tabButtonClass}
           style={{
             color: subTab === 'lab' ? activeTextColor : inactiveTextColor,
           }}
