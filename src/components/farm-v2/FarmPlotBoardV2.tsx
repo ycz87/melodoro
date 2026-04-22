@@ -734,10 +734,10 @@ function FarmBackdropV2({
       frontHillHeight: '10.6%',
       grassTop: '31.9%',
       pathTop: '28.1%',
-      leftTreeTop: '28%',
-      cottageTop: '28.6%',
-      rightTreeTop: '28.1%',
-      fenceTop: '34.2%',
+      leftTreeTop: '28.5%',
+      cottageTop: '29.2%',
+      rightTreeTop: '28.6%',
+      fenceTop: '35.1%',
       foregroundTop: '40.8%',
     }
     : null;
