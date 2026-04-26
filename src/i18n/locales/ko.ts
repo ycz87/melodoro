@@ -599,6 +599,17 @@ export const ko: Messages = {
     night: '밤',
     rainbow: '무지개',
   }[weather] ?? weather),
+  farmWeatherForecast: (current, next) => {
+    if (current === 'rainy' && next === 'sunny') return '비 온 뒤: 맑음';
+    if (current === 'rainy' && next === 'rainbow') return '비 온 뒤: 무지개';
+    return `다음: ${({
+      sunny: '맑음',
+      cloudy: '흐림',
+      rainy: '비',
+      night: '밤',
+      rainbow: '무지개',
+    }[next] ?? next)}`;
+  },
   farmReveal: '딩! 정체는——',
   farmNewVariety: '새 품종!',
   farmNewFlash: 'NEW',

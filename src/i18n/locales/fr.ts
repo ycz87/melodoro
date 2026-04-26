@@ -599,6 +599,17 @@ export const fr: Messages = {
     night: 'Nuit',
     rainbow: 'Arc-en-ciel',
   }[weather] ?? weather),
+  farmWeatherForecast: (current, next) => {
+    if (current === 'rainy' && next === 'sunny') return 'Après la pluie : soleil';
+    if (current === 'rainy' && next === 'rainbow') return 'Arc-en-ciel après la pluie';
+    return `Ensuite : ${({
+      sunny: 'Ensoleillé',
+      cloudy: 'Nuageux',
+      rainy: 'Pluie',
+      night: 'Nuit',
+      rainbow: 'Arc-en-ciel',
+    }[next] ?? next)}`;
+  },
   farmReveal: 'Ding ! C\'est—',
   farmNewVariety: 'Nouvelle variété !',
   farmNewFlash: 'NEW',

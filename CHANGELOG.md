@@ -4,6 +4,16 @@
 
 ---
 
+## [0.61.23] - 2026-04-26
+
+### Added
+- 🌦️ 农场天气 2.0：`weatherState` 持久化 `next` forecast、下一次切换时间、最近切换信息与雨后残留生命周期。
+- 🪴 `FarmPlotBoardV2` 新增 forecast HUD 与轻量 weather continuity / wetness / rainy aftermath 视觉反馈，保持不遮挡地块交互。
+
+### Fixed
+- 🧪 Debug weather override 仅影响当前视觉天气；forecast、catch-up 与雨后残留继续读取 production plan。
+- 🔁 离线跨多个 6h slot 的天气 catch-up 改为按持久化 `next` 顺序推进并稳定写回。
+
 ## [0.61.19] - 2026-04-20
 
 ### Changed

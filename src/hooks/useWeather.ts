@@ -15,7 +15,7 @@ const WEATHER_DEBUG_OVERRIDE_STORAGE_KEY = 'weatherDebugOverride';
 export function useWeather() {
   const [weatherState, setWeatherState] = useLocalStorage<WeatherState>(
     WEATHER_STORAGE_KEY,
-    createInitialWeatherState(),
+    () => createInitialWeatherState(),
     migrateWeatherState,
   );
   const [debugWeatherOverride, setDebugWeatherOverride] = useLocalStorage<WeatherDebugOverride>(

@@ -72,7 +72,12 @@ function createSeedState(options?: {
     },
     weatherState: {
       current: options?.weather ?? 'sunny',
+      next: options?.weather === 'rainy' ? 'sunny' : 'cloudy',
       lastChangeAt: options?.lastChangeAt ?? now,
+      nextChangeAt: (options?.lastChangeAt ?? now) + WEATHER_SWITCH_INTERVAL_MS,
+      previousWeather: null,
+      changedAt: null,
+      rainyAftermathUntil: null,
     },
     debugWeatherOverride: options?.debugWeatherOverride,
     debugMode: options?.debugMode ?? false,
@@ -188,6 +193,7 @@ test.describe('Farm V2 weather transitions', () => {
 
     await page.getByRole('button', { name: '清除天气' }).click();
     const clearTransitionToken = await expectOverlay(page, 'rainy', 'sunny');
+    await captureProof(page, testInfo, 'desktop-transition-rainy-sunny.png');
     await waitForOverlayToClear(page, clearTransitionToken);
     await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('weatherDebugOverride') ?? 'null'))).toBe(null);
   });
@@ -214,8 +220,13 @@ test.describe('Farm V2 weather transitions', () => {
   test('mobile rainy and rainbow decor stay above the board after transitions settle', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile proof only');
 
-    await seedInit(page, createSeedState({ weather: 'cloudy', debugMode: true }));
+    await seedInit(page, createSeedState({ weather: 'sunny', debugMode: true }));
     await goToFarm(page);
+
+    await page.getByRole('button', { name: '切换天气' }).click();
+    const cloudyTransitionToken = await expectOverlay(page, 'sunny', 'cloudy');
+    await captureProof(page, testInfo, 'mobile-transition-cloudy.png');
+    await waitForOverlayToClear(page, cloudyTransitionToken);
 
     await page.getByRole('button', { name: '切换天气' }).click();
     const rainyTransitionToken = await expectOverlay(page, 'cloudy', 'rainy');
@@ -227,6 +238,19 @@ test.describe('Farm V2 weather transitions', () => {
     const rainyBottoms = await getBottomBounds(page, '[data-testid="farm-v2-rain-layer"]');
     expect(rainyBottoms.length).toBeGreaterThan(0);
     expect(Math.max(...rainyBottoms)).toBeLessThan(rainyBoardBox?.y ?? Number.POSITIVE_INFINITY);
+
+    await page.getByRole('button', { name: '清除天气' }).click();
+    const clearTransitionToken = await expectOverlay(page, 'rainy', 'sunny');
+    await captureProof(page, testInfo, 'mobile-transition-rainy-sunny.png');
+    await waitForOverlayToClear(page, clearTransitionToken);
+
+    await page.getByRole('button', { name: '切换天气' }).click();
+    const cloudyAgainTransitionToken = await expectOverlay(page, 'sunny', 'cloudy');
+    await waitForOverlayToClear(page, cloudyAgainTransitionToken);
+
+    await page.getByRole('button', { name: '切换天气' }).click();
+    const rainyAgainTransitionToken = await expectOverlay(page, 'cloudy', 'rainy');
+    await waitForOverlayToClear(page, rainyAgainTransitionToken);
 
     await page.getByRole('button', { name: '切换天气' }).click();
     const nightTransitionToken = await expectOverlay(page, 'rainy', 'night');

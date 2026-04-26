@@ -69,6 +69,17 @@ export const ru: Messages = {
     night: 'Ночь',
     rainbow: 'Радуга',
   }[weather] ?? weather),
+  farmWeatherForecast: (current, next) => {
+    if (current === 'rainy' && next === 'sunny') return 'После дождя: ясно';
+    if (current === 'rainy' && next === 'rainbow') return 'Радуга после дождя';
+    return `Далее: ${({
+      sunny: 'Солнечно',
+      cloudy: 'Облачно',
+      rainy: 'Дождь',
+      night: 'Ночь',
+      rainbow: 'Радуга',
+    }[next] ?? next)}`;
+  },
   alienMelonGreeting: '👽 Арбузный пришелец: в твоём поле мощная жизненная энергия. Продолжай сажать!',
   alienMutationDoctor: '🧪 Доктор Мутация: обнаружен ген-модификатор. Мутационная волна нестабильна!',
   collectionUnlockHint: (id) => ({

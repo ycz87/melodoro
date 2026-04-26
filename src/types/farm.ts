@@ -560,9 +560,22 @@ export const GROWTH_STAGES: StageDef[] = [
 export type Weather = 'sunny' | 'cloudy' | 'rainy' | 'night' | 'rainbow';
 export type WeatherDebugOverride = Weather | null;
 
+export type WeatherClimateProfileId = 'global';
+
+export interface WeatherClimateProfile {
+  id: WeatherClimateProfileId;
+  switchIntervalMs: number;
+  rainyAftermathDurationMs: number;
+}
+
 export interface WeatherState {
   current: Weather;
-  lastChangeAt: number; // ms timestamp
+  next: Weather;
+  lastChangeAt: number; // ms timestamp for the current segment start
+  nextChangeAt: number; // ms timestamp for the next planned switch
+  previousWeather: Weather | null;
+  changedAt: number | null; // ms timestamp for the most recent effective switch
+  rainyAftermathUntil: number | null; // ms timestamp while post-rain wetness remains active
 }
 
 export type CreatureType = 'bee' | 'butterfly' | 'ladybug' | 'bird';

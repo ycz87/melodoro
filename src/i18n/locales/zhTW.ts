@@ -601,6 +601,17 @@ export const zhTW: Messages = {
     night: '夜晚',
     rainbow: '彩虹',
   }[weather] ?? weather),
+  farmWeatherForecast: (current, next) => {
+    if (current === 'rainy' && next === 'sunny') return '雨後放晴';
+    if (current === 'rainy' && next === 'rainbow') return '雨後彩虹';
+    return `接下來：${({
+      sunny: '晴天',
+      cloudy: '多雲',
+      rainy: '雨天',
+      night: '夜晚',
+      rainbow: '彩虹',
+    }[next] ?? next)}`;
+  },
   farmReveal: '叮！原來是——',
   farmNewVariety: '新品種！',
   farmNewFlash: 'NEW',

@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import {
   migrateWeatherDebugOverride,
   migrateWeatherState,
+  RAINY_AFTERMATH_DURATION_MS,
   rotateWeatherState,
   WEATHER_SWITCH_INTERVAL_MS,
 } from '../src/utils/weather';
@@ -51,6 +52,25 @@ function createEmptyPlot(id: number): Plot {
     accumulatedMinutes: 0,
     lastActivityTimestamp: 0,
     hasTracker: false,
+  };
+}
+
+function createWeatherState(options: {
+  current: Weather;
+  next?: Weather;
+  lastChangeAt: number;
+  previousWeather?: Weather | null;
+  changedAt?: number | null;
+  rainyAftermathUntil?: number | null;
+}): WeatherState {
+  return {
+    current: options.current,
+    next: options.next ?? options.current,
+    lastChangeAt: options.lastChangeAt,
+    nextChangeAt: options.lastChangeAt + WEATHER_SWITCH_INTERVAL_MS,
+    previousWeather: options.previousWeather ?? null,
+    changedAt: options.changedAt ?? null,
+    rainyAftermathUntil: options.rainyAftermathUntil ?? null,
   };
 }
 
@@ -228,7 +248,9 @@ test.describe('Farm weather/life compatibility coverage', () => {
     if (!weatherState) return;
 
     expect(WEATHER_TYPES).toContain(weatherState.current);
+    expect(WEATHER_TYPES).toContain(weatherState.next);
     expect(weatherState.lastChangeAt).toBeGreaterThan(0);
+    expect(weatherState.nextChangeAt).toBe(weatherState.lastChangeAt + WEATHER_SWITCH_INTERVAL_MS);
   });
 
   test('compat: creatures storage keeps the expected schema', async ({ page }) => {
@@ -340,7 +362,15 @@ test.describe('Farm weather/life compatibility coverage', () => {
     expect(migrateWeatherState({ current: 'stormy', lastChangeAt: now }, now).current).toBe('rainy');
     expect(
       migrateWeatherState({ current: 'mystery-weather', lastChangeAt: 'invalid' }, now, sequenceRandom([0.51])),
-    ).toEqual({ current: 'cloudy', lastChangeAt: now });
+    ).toMatchObject({
+      current: 'cloudy',
+      next: 'cloudy',
+      lastChangeAt: now,
+      nextChangeAt: now + WEATHER_SWITCH_INTERVAL_MS,
+      previousWeather: null,
+      changedAt: null,
+      rainyAftermathUntil: null,
+    });
 
     await seedInit(page, createSeedPayload({
       now,
@@ -371,10 +401,11 @@ test.describe('Farm weather/life compatibility coverage', () => {
 
     await seedInit(page, createSeedPayload({
       now,
-      weatherState: {
+      weatherState: createWeatherState({
         current: 'sunny',
+        next: 'sunny',
         lastChangeAt,
-      },
+      }),
     }), {
       now,
       randomSequence: [0.99, 0.01],
@@ -397,12 +428,13 @@ test.describe('Farm weather/life compatibility coverage', () => {
     const lastChangeAt = now - (WEATHER_SWITCH_INTERVAL_MS * 2) - 1;
 
     const state = rotateWeatherState(
-      {
+      createWeatherState({
         current: 'sunny',
+        next: 'rainy',
         lastChangeAt,
-      },
+      }),
       now,
-      sequenceRandom([0.70, 0.01]),
+      sequenceRandom([0.01]),
     );
 
     expect(state.current).toBe('rainbow');
@@ -417,10 +449,11 @@ test.describe('Farm weather/life compatibility coverage', () => {
 
     await seedInit(page, createSeedPayload({
       now,
-      weatherState: {
+      weatherState: createWeatherState({
         current: 'rainbow',
+        next: 'cloudy',
         lastChangeAt: now,
-      },
+      }),
       debugWeatherOverride: 'night',
       debugMode: true,
     }), { now });
@@ -441,5 +474,99 @@ test.describe('Farm weather/life compatibility coverage', () => {
       const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
       return state?.current ?? null;
     }).toBe('rainbow');
+  });
+
+  test('forecast UI reads the persisted production plan and survives reload under debug override', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 21, 6, 0, 0);
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: createWeatherState({
+        current: 'rainy',
+        next: 'rainbow',
+        lastChangeAt: now,
+      }),
+      debugWeatherOverride: 'night',
+      debugMode: true,
+    }), { now });
+
+    await goToFarm(page);
+
+    const scene = page.locator('[data-testid="farm-v2-scene"]');
+    const forecast = page.locator('[data-testid="farm-v2-weather-forecast"]');
+
+    await expect(scene).toHaveAttribute('data-current-weather', 'night');
+    await expect(scene).toHaveAttribute('data-production-current-weather', 'rainy');
+    await expect(scene).toHaveAttribute('data-production-next-weather', 'rainbow');
+    await expect(scene).toHaveAttribute('data-wetness-mode', 'night-clean');
+    await expect(forecast).toHaveAttribute('data-current-weather', 'rainy');
+    await expect(forecast).toHaveAttribute('data-next-weather', 'rainbow');
+    await expect(forecast).toContainText('雨后彩虹');
+
+    const forecastText = await forecast.textContent();
+
+    await page.reload();
+    await goToFarm(page);
+
+    await expect(page.locator('[data-testid="farm-v2-weather-forecast"]')).toHaveAttribute('data-next-weather', 'rainbow');
+    expect(await page.locator('[data-testid="farm-v2-weather-forecast"]').textContent()).toBe(forecastText);
+  });
+
+  test('rainy aftermath wetness persists through reload while active and expires in production state', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 21, 7, 0, 0);
+    const changedAt = now - 30 * 60 * 1000;
+    const rainyAftermathUntil = changedAt + RAINY_AFTERMATH_DURATION_MS;
+
+    expect(rotateWeatherState(createWeatherState({
+      current: 'sunny',
+      next: 'cloudy',
+      lastChangeAt: now,
+      previousWeather: 'rainy',
+      changedAt,
+      rainyAftermathUntil: now - 1,
+    }), now).rainyAftermathUntil).toBeNull();
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: createWeatherState({
+        current: 'sunny',
+        next: 'cloudy',
+        lastChangeAt: now,
+        previousWeather: 'rainy',
+        changedAt,
+        rainyAftermathUntil,
+      }),
+    }), { now });
+
+    await goToFarm(page);
+    await expect(page.locator('[data-testid="farm-v2-scene"]')).toHaveAttribute('data-wetness-mode', 'aftermath');
+    await expect(page.locator('[data-testid="farm-v2-wetness-layer"]')).toBeVisible();
+
+    await page.reload();
+    await goToFarm(page);
+
+    await expect(page.locator('[data-testid="farm-v2-scene"]')).toHaveAttribute('data-wetness-mode', 'aftermath');
+    await expect(page.locator('[data-testid="farm-v2-wetness-layer"]')).toBeVisible();
+  });
+
+  test('weather continuity layers remain pointer-transparent for plot clicks', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 21, 8, 0, 0);
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: createWeatherState({
+        current: 'rainy',
+        next: 'sunny',
+        lastChangeAt: now,
+      }),
+      shedOverrides: {
+        seeds: { normal: 1, epic: 0, legendary: 0 },
+      },
+    }), { now });
+
+    await goToFarm(page);
+    await expect(page.locator('[data-testid="farm-v2-wetness-layer"]')).toBeVisible();
+    await page.locator('[data-testid="farm-plot-board-v2"] [role="button"]').first().click();
+    await expect(page.getByRole('heading', { name: /选择种子|Choose a Seed/ })).toBeVisible();
   });
 });

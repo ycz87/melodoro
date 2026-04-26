@@ -2,6 +2,22 @@
 
 ---
 
+## v0.61.23 — 农场天气 2.0 真实感链路与环境反馈
+日期：2026-04-26
+
+### 本次改动
+- 扩展 production `WeatherState`：持久化 `current` / `next` / `nextChangeAt` / 最近切换来源与时间 / `rainyAftermathUntil`。
+- `createInitialWeatherState` / `migrateWeatherState` / `rotateWeatherState` 统一维护 forecast plan；跨多个 6h slot catch-up 时按“旧 next -> current，再生成末端 next”顺序推进。
+- 新增 `global` weather profile resolver，只保留全局默认气候配置，不从星球、图鉴、种子、基因或收获记录推断 active planet。
+- `FarmPage -> FarmPlotBoardV2` 分离视觉天气和 production plan：debug override 只改 `effectiveWeather`，forecast 与雨后生命周期继续读 `weatherState`。
+- `FarmPlotBoardV2` 增加 forecast HUD、晴转阴/阴转雨连续性 haze、雨中 wetness 与 60 分钟雨后 aftermath glow；夜间视觉强制 clean，不显示白天湿润高光。
+- 扩展 weather E2E：forecast 稳定性、debug override 隔离、雨后残留 reload 生命周期、desktop/mobile 天气层点击穿透。
+
+### 验证
+- `npm run lint`
+- `npm run build`
+- `npx playwright test e2e/farm-weather-life-compat.spec.ts e2e/farm-weather-badge.spec.ts e2e/farm-weather-transition.spec.ts e2e/farm-weather-visuals.spec.ts --project=desktop --project=mobile --output=artifacts/issue-139/playwright`
+
 ## v0.61.19 — 默认 V2 主路径 weather E2E 收口
 日期：2026-04-20
 
