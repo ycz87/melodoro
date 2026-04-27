@@ -1,0 +1,141 @@
+{
+  "measurements": [
+    {
+      "viewport": "desktop",
+      "case": "day-sunny",
+      "boardTop": 278.97265625,
+      "boardBottom": 713.12939453125,
+      "sceneBottom": 724.40625,
+      "viewportHeight": 720,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "desktop",
+      "case": "day-rainy",
+      "boardTop": 278.97265625,
+      "boardBottom": 713.12939453125,
+      "sceneBottom": 724.40625,
+      "viewportHeight": 720,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "desktop",
+      "case": "night-sunny",
+      "boardTop": 278.97265625,
+      "boardBottom": 713.12939453125,
+      "sceneBottom": 724.40625,
+      "viewportHeight": 720,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "desktop",
+      "case": "night-rainy",
+      "boardTop": 278.97265625,
+      "boardBottom": 713.12939453125,
+      "sceneBottom": 724.40625,
+      "viewportHeight": 720,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "desktop",
+      "case": "day-rainbow-aftermath",
+      "boardTop": 278.97265625,
+      "boardBottom": 713.12939453125,
+      "sceneBottom": 724.40625,
+      "viewportHeight": 720,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "desktop",
+      "case": "night-moonbow-aftermath",
+      "boardTop": 278.97265625,
+      "boardBottom": 713.12939453125,
+      "sceneBottom": 724.40625,
+      "viewportHeight": 720,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "mobile",
+      "case": "day-sunny",
+      "boardTop": 364.3902893066406,
+      "boardBottom": 716.4918212890625,
+      "sceneBottom": 774.5,
+      "viewportHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "mobile",
+      "case": "day-rainy",
+      "boardTop": 364.3902893066406,
+      "boardBottom": 716.4918212890625,
+      "sceneBottom": 774.5,
+      "viewportHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "mobile",
+      "case": "night-sunny",
+      "boardTop": 364.3902893066406,
+      "boardBottom": 716.4918212890625,
+      "sceneBottom": 774.5,
+      "viewportHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "mobile",
+      "case": "night-rainy",
+      "boardTop": 364.3902893066406,
+      "boardBottom": 716.4918212890625,
+      "sceneBottom": 774.5,
+      "viewportHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "mobile",
+      "case": "day-rainbow-aftermath",
+      "boardTop": 364.3902893066406,
+      "boardBottom": 716.4918212890625,
+      "sceneBottom": 774.5,
+      "viewportHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "forecastCount": 0
+    },
+    {
+      "viewport": "mobile",
+      "case": "night-moonbow-aftermath",
+      "boardTop": 364.3902893066406,
+      "boardBottom": 716.4918212890625,
+      "sceneBottom": 774.5,
+      "viewportHeight": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "forecastCount": 0
+    }
+  ],
+  "zh": {
+    "forecastCount": 0,
+    "scrollWidth": 390,
+    "clientWidth": 390
+  }
+}
