@@ -717,7 +717,6 @@ export function FarmPage({
               timeOfDay={timeOfDay}
               weatherState={productionWeatherState}
               weatherLabel={`${t.farmWeatherName(weather)} · ${t.farmTimeOfDayName(timeOfDay)}`}
-              forecastLabel={t.farmWeatherForecast(productionWeatherState.current, productionWeatherState.next)}
               debugWeatherOverride={debugWeatherOverride}
               debugTimeOfDayOverride={debugTimeOfDayOverride}
               todayFocusMinutes={todayFocusMinutes}

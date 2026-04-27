@@ -33,6 +33,10 @@ interface SceneSnapshot {
   rainbowOpacity: number;
   haloOpacity: number;
   celestialLabel: string | null;
+  weatherBadgeText: string | null;
+  forecastCount: number;
+  backHillTextureBackground: string;
+  frontHillTextureBackground: string;
 }
 
 const SCENE_CASES: SceneCase[] = [
@@ -147,6 +151,9 @@ async function collectSceneSnapshot(page: Page): Promise<SceneSnapshot> {
     const halo = document.querySelector('[data-testid="farm-v2-celestial-halo"]');
     const celestial = document.querySelector('[data-testid="farm-v2-celestial-body"]');
     const rainbow = document.querySelector('[data-testid="farm-v2-rainbow"]');
+    const weatherBadge = document.querySelector('[data-testid="farm-v2-weather-badge"]');
+    const backHillTexture = document.querySelector('[data-testid="farm-v2-back-hill-texture"]');
+    const frontHillTexture = document.querySelector('[data-testid="farm-v2-front-hill-texture"]');
 
     return {
       sceneBackground: scene ? getComputedStyle(scene).backgroundImage : '',
@@ -164,6 +171,10 @@ async function collectSceneSnapshot(page: Page): Promise<SceneSnapshot> {
       rainbowOpacity: rainbow instanceof HTMLElement ? Number.parseFloat(rainbow.style.opacity || '0') : 0,
       haloOpacity: halo instanceof HTMLElement ? Number.parseFloat(halo.style.opacity || '0') : 0,
       celestialLabel: celestial?.getAttribute('aria-label') ?? null,
+      weatherBadgeText: weatherBadge?.textContent ?? null,
+      forecastCount: document.querySelectorAll('[data-testid="farm-v2-weather-forecast"]').length,
+      backHillTextureBackground: backHillTexture ? getComputedStyle(backHillTexture).backgroundImage : '',
+      frontHillTextureBackground: frontHillTexture ? getComputedStyle(frontHillTexture).backgroundImage : '',
     };
   });
 }
@@ -194,7 +205,13 @@ test.describe('Farm V2 weather visuals', () => {
     for (const sceneCase of SCENE_CASES) {
       const proofPage = await page.context().newPage();
       await openFarmPage(proofPage, sceneCase);
-      snapshots.set(sceneCase.key, await collectSceneSnapshot(proofPage));
+      const snapshot = await collectSceneSnapshot(proofPage);
+      expect(snapshot.weatherBadgeText).toContain(sceneCase.timeOfDay === 'day' ? 'Day' : 'Night');
+      expect(snapshot.forecastCount).toBe(0);
+      expect(snapshot.backHillTextureBackground).not.toContain('repeating-linear-gradient');
+      expect(snapshot.frontHillTextureBackground).not.toContain('repeating-linear-gradient');
+      await expect(proofPage.locator('body')).not.toContainText(/Next up|Rain clears soon|Rainbow after rain/);
+      snapshots.set(sceneCase.key, snapshot);
       await captureProof(proofPage, testInfo, `desktop-${sceneCase.key}.png`);
       await proofPage.close();
     }
@@ -241,6 +258,12 @@ test.describe('Farm V2 weather visuals', () => {
     for (const sceneCase of SCENE_CASES) {
       const proofPage = await page.context().newPage();
       await openFarmPage(proofPage, sceneCase);
+      const snapshot = await collectSceneSnapshot(proofPage);
+      expect(snapshot.weatherBadgeText).toContain(sceneCase.timeOfDay === 'day' ? 'Day' : 'Night');
+      expect(snapshot.forecastCount).toBe(0);
+      expect(snapshot.backHillTextureBackground).not.toContain('repeating-linear-gradient');
+      expect(snapshot.frontHillTextureBackground).not.toContain('repeating-linear-gradient');
+      await expect(proofPage.locator('body')).not.toContainText(/Next up|Rain clears soon|Rainbow after rain/);
       await captureProof(proofPage, testInfo, `mobile-${sceneCase.key}.png`);
 
       if (sceneCase.key === 'night-rainy') {

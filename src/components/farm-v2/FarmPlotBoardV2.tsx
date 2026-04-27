@@ -11,7 +11,6 @@ interface FarmPlotBoardV2Props {
   debugWeatherOverride: WeatherDebugOverride;
   debugTimeOfDayOverride: TimeOfDayDebugOverride;
   weatherLabel: string;
-  forecastLabel: string;
   compactMode?: boolean;
   todayFocusMinutes: number;
   coinBalance: number;
@@ -155,6 +154,15 @@ function getBackdropTestId(prefix: string, suffix: string) {
 
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function composeHillTexture(glow: string, shoulder: string, contour: string, footShade: string) {
+  return [
+    `radial-gradient(ellipse at 24% 28%, ${glow} 0%, rgba(255,255,255,0) 38%)`,
+    `radial-gradient(ellipse at 78% 72%, ${footShade} 0%, rgba(255,255,255,0) 58%)`,
+    `linear-gradient(180deg, rgba(255,255,255,0) 0%, ${shoulder} 42%, rgba(255,255,255,0) 64%)`,
+    `linear-gradient(90deg, rgba(255,255,255,0) 0%, ${contour} 34%, rgba(255,255,255,0) 76%)`,
+  ].join(', ');
 }
 
 function getViewportHeightPx() {
@@ -481,10 +489,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
         distantRidgeGradient: 'linear-gradient(180deg, rgba(73,94,102,0.78) 0%, rgba(61,87,79,0.86) 56%, rgba(45,69,53,0.94) 100%)',
         distantRidgeHighlight: 'linear-gradient(116deg, rgba(177,202,219,0.12) 0%, rgba(177,202,219,0.05) 26%, rgba(177,202,219,0) 54%)',
         distantRidgeShadow: 'radial-gradient(ellipse at 72% 68%, rgba(12,22,28,0.28) 0%, rgba(12,22,28,0.12) 42%, rgba(12,22,28,0) 72%)',
-        backHillTexture: 'radial-gradient(ellipse at 24% 30%, rgba(149,179,150,0.1) 0%, rgba(149,179,150,0) 34%), repeating-linear-gradient(118deg, rgba(182,207,190,0.06) 0px, rgba(182,207,190,0.06) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 20px)',
+        backHillTexture: composeHillTexture('rgba(149,179,150,0.13)', 'rgba(190,211,198,0.06)', 'rgba(90,128,105,0.08)', 'rgba(18,32,30,0.14)'),
         backHillHighlight: 'linear-gradient(112deg, rgba(197,216,213,0.12) 0%, rgba(197,216,213,0.04) 30%, rgba(197,216,213,0) 58%)',
         backHillShadow: 'radial-gradient(ellipse at 78% 74%, rgba(9,20,20,0.26) 0%, rgba(9,20,20,0.12) 45%, rgba(9,20,20,0) 74%)',
-        frontHillTexture: 'radial-gradient(ellipse at 32% 20%, rgba(160,190,152,0.12) 0%, rgba(160,190,152,0) 34%), repeating-linear-gradient(106deg, rgba(204,224,196,0.06) 0px, rgba(204,224,196,0.06) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+        frontHillTexture: composeHillTexture('rgba(160,190,152,0.16)', 'rgba(203,222,196,0.07)', 'rgba(96,140,102,0.09)', 'rgba(18,38,25,0.14)'),
         frontHillHighlight: 'linear-gradient(105deg, rgba(195,218,198,0.14) 0%, rgba(195,218,198,0.05) 32%, rgba(195,218,198,0) 62%)',
         frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(10,25,18,0.25) 0%, rgba(10,25,18,0.12) 46%, rgba(10,25,18,0) 75%)',
         horizonMist: 'linear-gradient(90deg, rgba(168,194,205,0) 0%, rgba(168,194,205,0.34) 24%, rgba(122,154,170,0.28) 58%, rgba(168,194,205,0) 100%)',
@@ -500,10 +508,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
         distantRidgeGradient: 'linear-gradient(180deg, rgba(84,113,126,0.8) 0%, rgba(70,105,94,0.88) 56%, rgba(55,88,62,0.95) 100%)',
         distantRidgeHighlight: 'linear-gradient(112deg, rgba(180,218,255,0.17) 0%, rgba(180,218,255,0.07) 34%, rgba(180,218,255,0) 62%)',
         distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(12,25,34,0.22) 0%, rgba(12,25,34,0.1) 46%, rgba(12,25,34,0) 76%)',
-        backHillTexture: 'radial-gradient(ellipse at 22% 26%, rgba(170,212,178,0.12) 0%, rgba(170,212,178,0) 36%), repeating-linear-gradient(118deg, rgba(186,219,208,0.07) 0px, rgba(186,219,208,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+        backHillTexture: composeHillTexture('rgba(170,212,178,0.15)', 'rgba(187,223,224,0.07)', 'rgba(95,149,130,0.08)', 'rgba(18,42,38,0.12)'),
         backHillHighlight: 'linear-gradient(112deg, rgba(187,223,224,0.14) 0%, rgba(187,223,224,0.06) 32%, rgba(187,223,224,0) 62%)',
         backHillShadow: 'radial-gradient(ellipse at 76% 74%, rgba(13,32,30,0.22) 0%, rgba(13,32,30,0.1) 44%, rgba(13,32,30,0) 74%)',
-        frontHillTexture: 'radial-gradient(ellipse at 35% 18%, rgba(172,221,158,0.14) 0%, rgba(172,221,158,0) 36%), repeating-linear-gradient(106deg, rgba(206,232,202,0.07) 0px, rgba(206,232,202,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+        frontHillTexture: composeHillTexture('rgba(172,221,158,0.18)', 'rgba(207,235,206,0.08)', 'rgba(103,166,105,0.09)', 'rgba(20,48,29,0.12)'),
         frontHillHighlight: 'linear-gradient(105deg, rgba(207,235,206,0.16) 0%, rgba(207,235,206,0.06) 34%, rgba(207,235,206,0) 64%)',
         frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(15,37,22,0.2) 0%, rgba(15,37,22,0.1) 48%, rgba(15,37,22,0) 76%)',
         horizonMist: 'linear-gradient(90deg, rgba(184,218,238,0) 0%, rgba(184,218,238,0.32) 24%, rgba(182,202,236,0.24) 56%, rgba(184,218,238,0) 100%)',
@@ -518,10 +526,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
       distantRidgeGradient: 'linear-gradient(180deg, rgba(76,105,119,0.82) 0%, rgba(66,103,91,0.88) 56%, rgba(51,85,58,0.95) 100%)',
       distantRidgeHighlight: 'linear-gradient(112deg, rgba(190,217,243,0.14) 0%, rgba(190,217,243,0.06) 32%, rgba(190,217,243,0) 62%)',
       distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(10,24,32,0.22) 0%, rgba(10,24,32,0.1) 46%, rgba(10,24,32,0) 76%)',
-      backHillTexture: 'radial-gradient(ellipse at 22% 26%, rgba(161,198,166,0.12) 0%, rgba(161,198,166,0) 36%), repeating-linear-gradient(118deg, rgba(186,214,200,0.07) 0px, rgba(186,214,200,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillTexture: composeHillTexture('rgba(161,198,166,0.15)', 'rgba(190,220,217,0.07)', 'rgba(91,143,122,0.08)', 'rgba(17,39,36,0.12)'),
       backHillHighlight: 'linear-gradient(112deg, rgba(190,220,217,0.14) 0%, rgba(190,220,217,0.06) 32%, rgba(190,220,217,0) 62%)',
       backHillShadow: 'radial-gradient(ellipse at 76% 74%, rgba(13,30,28,0.22) 0%, rgba(13,30,28,0.1) 44%, rgba(13,30,28,0) 74%)',
-      frontHillTexture: 'radial-gradient(ellipse at 35% 18%, rgba(168,211,157,0.14) 0%, rgba(168,211,157,0) 36%), repeating-linear-gradient(106deg, rgba(206,231,199,0.07) 0px, rgba(206,231,199,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillTexture: composeHillTexture('rgba(168,211,157,0.18)', 'rgba(204,232,205,0.08)', 'rgba(98,159,99,0.09)', 'rgba(20,45,29,0.12)'),
       frontHillHighlight: 'linear-gradient(105deg, rgba(204,232,205,0.16) 0%, rgba(204,232,205,0.06) 34%, rgba(204,232,205,0) 64%)',
       frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(15,35,22,0.2) 0%, rgba(15,35,22,0.1) 48%, rgba(15,35,22,0) 76%)',
       horizonMist: 'linear-gradient(90deg, rgba(188,214,232,0) 0%, rgba(188,214,232,0.28) 24%, rgba(166,197,220,0.2) 58%, rgba(188,214,232,0) 100%)',
@@ -537,10 +545,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
       distantRidgeGradient: 'linear-gradient(180deg, rgba(186,205,195,0.86) 0%, rgba(144,177,137,0.9) 56%, rgba(113,154,100,0.96) 100%)',
       distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0) 58%)',
       distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(67,103,78,0.22) 0%, rgba(67,103,78,0.1) 46%, rgba(67,103,78,0) 76%)',
-      backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(221,235,210,0.14) 0%, rgba(221,235,210,0) 36%), repeating-linear-gradient(118deg, rgba(235,244,226,0.08) 0px, rgba(235,244,226,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillTexture: composeHillTexture('rgba(221,235,210,0.18)', 'rgba(240,249,226,0.08)', 'rgba(128,166,111,0.1)', 'rgba(69,112,74,0.12)'),
       backHillHighlight: 'linear-gradient(112deg, rgba(240,249,226,0.18) 0%, rgba(240,249,226,0.06) 34%, rgba(240,249,226,0) 62%)',
       backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(66,111,69,0.22) 0%, rgba(66,111,69,0.1) 46%, rgba(66,111,69,0) 76%)',
-      frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(232,246,212,0.16) 0%, rgba(232,246,212,0) 36%), repeating-linear-gradient(106deg, rgba(238,247,220,0.08) 0px, rgba(238,247,220,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillTexture: composeHillTexture('rgba(232,246,212,0.2)', 'rgba(235,248,218,0.09)', 'rgba(135,181,102,0.11)', 'rgba(72,118,70,0.12)'),
       frontHillHighlight: 'linear-gradient(105deg, rgba(235,248,218,0.2) 0%, rgba(235,248,218,0.06) 34%, rgba(235,248,218,0) 64%)',
       frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(68,115,67,0.22) 0%, rgba(68,115,67,0.1) 48%, rgba(68,115,67,0) 76%)',
       horizonMist: 'linear-gradient(90deg, rgba(221,235,239,0) 0%, rgba(221,235,239,0.46) 25%, rgba(188,209,216,0.34) 58%, rgba(221,235,239,0) 100%)',
@@ -556,10 +564,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
       distantRidgeGradient: 'linear-gradient(180deg, rgba(204,222,208,0.88) 0%, rgba(164,196,151,0.92) 56%, rgba(130,173,111,0.96) 100%)',
       distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 30%, rgba(255,255,255,0) 58%)',
       distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(71,113,75,0.18) 0%, rgba(71,113,75,0.08) 46%, rgba(71,113,75,0) 76%)',
-      backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(235,246,222,0.14) 0%, rgba(235,246,222,0) 36%), repeating-linear-gradient(118deg, rgba(246,251,233,0.08) 0px, rgba(246,251,233,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillTexture: composeHillTexture('rgba(235,246,222,0.18)', 'rgba(247,252,231,0.08)', 'rgba(133,178,106,0.09)', 'rgba(73,119,76,0.1)'),
       backHillHighlight: 'linear-gradient(112deg, rgba(247,252,231,0.18) 0%, rgba(247,252,231,0.06) 34%, rgba(247,252,231,0) 62%)',
       backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(69,119,72,0.18) 0%, rgba(69,119,72,0.08) 46%, rgba(69,119,72,0) 76%)',
-      frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(244,251,224,0.16) 0%, rgba(244,251,224,0) 36%), repeating-linear-gradient(106deg, rgba(248,253,230,0.08) 0px, rgba(248,253,230,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillTexture: composeHillTexture('rgba(244,251,224,0.2)', 'rgba(247,253,229,0.09)', 'rgba(142,193,105,0.1)', 'rgba(76,126,74,0.1)'),
       frontHillHighlight: 'linear-gradient(105deg, rgba(247,253,229,0.2) 0%, rgba(247,253,229,0.06) 34%, rgba(247,253,229,0) 64%)',
       frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(70,123,73,0.18) 0%, rgba(70,123,73,0.08) 48%, rgba(70,123,73,0) 76%)',
       horizonMist: 'linear-gradient(90deg, rgba(232,240,239,0) 0%, rgba(232,240,239,0.4) 26%, rgba(205,221,220,0.28) 60%, rgba(232,240,239,0) 100%)',
@@ -575,10 +583,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
       distantRidgeGradient: 'linear-gradient(180deg, rgba(219,245,212,0.9) 0%, rgba(176,224,151,0.94) 56%, rgba(137,202,105,0.98) 100%)',
       distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.1) 32%, rgba(255,255,255,0) 62%)',
       distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(72,132,68,0.16) 0%, rgba(72,132,68,0.08) 46%, rgba(72,132,68,0) 76%)',
-      backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(255,255,224,0.22) 0%, rgba(255,255,224,0) 36%), repeating-linear-gradient(118deg, rgba(255,255,238,0.1) 0px, rgba(255,255,238,0.1) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillTexture: composeHillTexture('rgba(255,255,224,0.24)', 'rgba(255,255,226,0.1)', 'rgba(165,210,102,0.1)', 'rgba(75,139,68,0.09)'),
       backHillHighlight: 'linear-gradient(112deg, rgba(255,255,226,0.25) 0%, rgba(255,255,226,0.08) 34%, rgba(255,255,226,0) 62%)',
       backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(71,135,68,0.16) 0%, rgba(71,135,68,0.08) 46%, rgba(71,135,68,0) 76%)',
-      frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(255,255,222,0.22) 0%, rgba(255,255,222,0) 36%), repeating-linear-gradient(106deg, rgba(255,255,236,0.1) 0px, rgba(255,255,236,0.1) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillTexture: composeHillTexture('rgba(255,255,222,0.25)', 'rgba(255,255,225,0.11)', 'rgba(177,222,101,0.11)', 'rgba(78,145,68,0.09)'),
       frontHillHighlight: 'linear-gradient(105deg, rgba(255,255,225,0.28) 0%, rgba(255,255,225,0.08) 34%, rgba(255,255,225,0) 64%)',
       frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(72,139,68,0.16) 0%, rgba(72,139,68,0.08) 48%, rgba(72,139,68,0) 76%)',
       horizonMist: 'linear-gradient(90deg, rgba(241,255,246,0) 0%, rgba(241,255,246,0.42) 23%, rgba(217,240,255,0.34) 58%, rgba(241,255,246,0) 100%)',
@@ -593,10 +601,10 @@ function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): Terr
     distantRidgeGradient: 'linear-gradient(180deg, rgba(216,241,211,0.9) 0%, rgba(174,219,150,0.94) 56%, rgba(135,197,104,0.98) 100%)',
     distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.09) 30%, rgba(255,255,255,0) 60%)',
     distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(69,128,65,0.16) 0%, rgba(69,128,65,0.08) 46%, rgba(69,128,65,0) 76%)',
-    backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(255,255,222,0.18) 0%, rgba(255,255,222,0) 36%), repeating-linear-gradient(118deg, rgba(255,255,236,0.09) 0px, rgba(255,255,236,0.09) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+    backHillTexture: composeHillTexture('rgba(255,255,222,0.21)', 'rgba(255,255,226,0.09)', 'rgba(158,204,99,0.1)', 'rgba(72,132,66,0.09)'),
     backHillHighlight: 'linear-gradient(112deg, rgba(255,255,226,0.22) 0%, rgba(255,255,226,0.08) 34%, rgba(255,255,226,0) 62%)',
     backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(69,128,65,0.16) 0%, rgba(69,128,65,0.08) 46%, rgba(69,128,65,0) 76%)',
-    frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(255,255,222,0.2) 0%, rgba(255,255,222,0) 36%), repeating-linear-gradient(106deg, rgba(255,255,236,0.09) 0px, rgba(255,255,236,0.09) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+    frontHillTexture: composeHillTexture('rgba(255,255,222,0.23)', 'rgba(255,255,225,0.1)', 'rgba(170,217,98,0.11)', 'rgba(75,138,67,0.09)'),
     frontHillHighlight: 'linear-gradient(105deg, rgba(255,255,225,0.24) 0%, rgba(255,255,225,0.08) 34%, rgba(255,255,225,0) 64%)',
     frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(70,132,66,0.16) 0%, rgba(70,132,66,0.08) 48%, rgba(70,132,66,0) 76%)',
     horizonMist: 'linear-gradient(90deg, rgba(238,253,255,0) 0%, rgba(238,253,255,0.36) 23%, rgba(214,242,235,0.24) 58%, rgba(238,253,255,0) 100%)',
@@ -710,7 +718,6 @@ function FarmHudV2({
   debugWeatherOverride,
   debugTimeOfDayOverride,
   weatherLabel,
-  forecastLabel,
   todayFocusMinutes,
   coinBalance,
   plantableSeedCount,
@@ -724,7 +731,6 @@ function FarmHudV2({
   debugWeatherOverride: WeatherDebugOverride;
   debugTimeOfDayOverride: TimeOfDayDebugOverride;
   weatherLabel: string;
-  forecastLabel: string;
   todayFocusMinutes: number;
   coinBalance: number;
   plantableSeedCount: number;
@@ -744,16 +750,40 @@ function FarmHudV2({
         style={{ maxWidth: compactMode ? '100%' : '940px' }}
       >
         <div
-          className={`flex w-full items-center justify-center px-2 ${useTightMobileSpacing ? 'h-8 gap-1 sm:h-10 sm:gap-1.5 sm:px-3' : 'h-10 gap-1.5 sm:h-11 sm:gap-2 sm:px-4'}`}
+          className={`flex w-full items-center justify-center overflow-hidden px-1 ${useTightMobileSpacing ? 'h-8 gap-0.5 sm:h-10 sm:gap-1.5 sm:px-3' : 'h-10 gap-1 sm:h-11 sm:gap-2 sm:px-4'}`}
           style={{
             borderBottom: '1px solid rgba(100,145,175,0.22)',
             background: 'linear-gradient(180deg, rgba(167,217,242,0.42) 0%, rgba(167,217,242,0.08) 100%)',
           }}
         >
+          <div
+            data-testid="farm-v2-weather-badge"
+            data-current-weather={weatherState.current}
+            data-next-weather={weatherState.next}
+            data-next-change-at={String(weatherState.nextChangeAt)}
+            data-production-current-weather={weatherState.current}
+            data-production-next-weather={weatherState.next}
+            data-production-next-change-at={String(weatherState.nextChangeAt)}
+            data-effective-weather={weather}
+            data-time-of-day={timeOfDay}
+            data-debug-weather-override={debugWeatherOverride ?? ''}
+            data-debug-time-of-day-override={debugTimeOfDayOverride ?? ''}
+            className={`flex shrink-0 items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-0.5 px-1.5 py-[1px] text-[9px] sm:gap-1 sm:px-2.5 sm:text-[11px]' : 'gap-1 px-2 py-[3px] text-[11px] sm:px-3 sm:text-xs'}`}
+            style={{
+              borderColor: 'rgba(91, 146, 128, 0.32)',
+              color: '#21503b',
+              background: 'linear-gradient(180deg, rgba(245,255,249,0.96) 0%, rgba(229,247,237,0.92) 100%)',
+              boxShadow: '0 1px 0 rgba(255,255,255,0.42) inset',
+            }}
+          >
+            <span aria-hidden="true">{WEATHER_ICON_MAP[weather]}</span>
+            <span>{weatherLabel}</span>
+          </div>
+
           {badgeItems.map((badge) => (
             <div
               key={`farm-v2-hud-${badge.label}`}
-              className={`flex items-center rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-0.5 px-1.5 py-[1px] text-[10px] sm:gap-1 sm:px-2.5 sm:text-[11px]' : 'gap-1 px-2 py-[3px] text-[11px] sm:px-3 sm:text-xs'}`}
+              className={`flex shrink-0 items-center rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-0.5 px-1.5 py-[1px] text-[9px] sm:gap-1 sm:px-2.5 sm:text-[11px]' : 'gap-1 px-2 py-[3px] text-[11px] sm:px-3 sm:text-xs'}`}
               style={{
                 borderColor: '#b57d4a',
                 color: '#5d3a1f',
@@ -765,47 +795,6 @@ function FarmHudV2({
               <span>{badge.label}</span>
             </div>
           ))}
-        </div>
-
-        <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-1' : 'mt-1.5'}`}>
-          <div
-            data-testid="farm-v2-weather-badge"
-            data-production-current-weather={weatherState.current}
-            data-production-next-weather={weatherState.next}
-            data-effective-weather={weather}
-            data-time-of-day={timeOfDay}
-            data-debug-weather-override={debugWeatherOverride ?? ''}
-            data-debug-time-of-day-override={debugTimeOfDayOverride ?? ''}
-            className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-2.5 py-[3px] text-[10px] sm:gap-1.5 sm:px-3.5 sm:text-[11px]' : 'gap-1.5 px-3 py-1 text-[11px] sm:gap-2 sm:px-3.5 sm:text-xs'}`}
-            style={{
-              borderColor: 'rgba(91, 146, 128, 0.32)',
-              color: '#21503b',
-              background: 'linear-gradient(180deg, rgba(245,255,249,0.96) 0%, rgba(229,247,237,0.92) 100%)',
-              boxShadow: '0 1px 0 rgba(255,255,255,0.42) inset',
-            }}
-          >
-            <span aria-hidden="true">{WEATHER_ICON_MAP[weather]}</span>
-            <span>{weatherLabel}</span>
-          </div>
-        </div>
-
-        <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-0.5' : 'mt-1'}`}>
-          <div
-            data-testid="farm-v2-weather-forecast"
-            data-current-weather={weatherState.current}
-            data-next-weather={weatherState.next}
-            data-next-change-at={String(weatherState.nextChangeAt)}
-            className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-2 py-[2px] text-[9px] sm:text-[10px]' : 'gap-1 px-2.5 py-[3px] text-[10px] sm:text-[11px]'}`}
-            style={{
-              borderColor: 'rgba(88, 125, 155, 0.26)',
-              color: '#2f5168',
-              background: 'linear-gradient(180deg, rgba(241,250,255,0.9) 0%, rgba(224,240,250,0.82) 100%)',
-              boxShadow: '0 1px 0 rgba(255,255,255,0.38) inset',
-            }}
-          >
-            <span aria-hidden="true">{WEATHER_ICON_MAP[weatherState.next]}</span>
-            <span>{forecastLabel}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -1344,16 +1333,16 @@ function FarmBackdropV2({
           background: visuals.backHillGradient,
         }}
       >
-        <div className="absolute inset-0" style={{ background: terrain.backHillTexture }} />
+        <div data-testid={getBackdropTestId(testIdPrefix, 'back-hill-texture')} className="absolute inset-0" style={{ background: terrain.backHillTexture }} />
         <div className="absolute inset-0" style={{ background: terrain.backHillHighlight }} />
         <div className="absolute inset-0" style={{ background: terrain.backHillShadow }} />
         <div
-          className="absolute left-[16%] top-[14%] h-[2px] w-[38%] rounded-full"
-          style={{ background: 'rgba(255,255,255,0.2)', transform: 'rotate(-7deg)', opacity: isNight ? 0.24 : 0.5 }}
+          className="absolute left-[14%] top-[8%] h-[20%] w-[42%] rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 42%, rgba(255,255,255,0) 72%)', opacity: isNight ? 0.24 : 0.44 }}
         />
         <div
-          className="absolute right-[18%] top-[32%] h-[2px] w-[30%] rounded-full"
-          style={{ background: 'rgba(55,105,60,0.16)', transform: 'rotate(5deg)', opacity: isNight ? 0.3 : 0.44 }}
+          className="absolute right-[16%] top-[30%] h-[24%] w-[34%] rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(55,105,60,0.18) 0%, rgba(55,105,60,0.06) 46%, rgba(55,105,60,0) 74%)', opacity: isNight ? 0.26 : 0.38 }}
         />
       </div>
       <div
@@ -1367,16 +1356,16 @@ function FarmBackdropV2({
           background: visuals.frontHillGradient,
         }}
       >
-        <div className="absolute inset-0" style={{ background: terrain.frontHillTexture }} />
+        <div data-testid={getBackdropTestId(testIdPrefix, 'front-hill-texture')} className="absolute inset-0" style={{ background: terrain.frontHillTexture }} />
         <div className="absolute inset-0" style={{ background: terrain.frontHillHighlight }} />
         <div className="absolute inset-0" style={{ background: terrain.frontHillShadow }} />
         <div
-          className="absolute left-[10%] top-[18%] h-[2px] w-[42%] rounded-full"
-          style={{ background: 'rgba(255,255,255,0.22)', transform: 'rotate(-5deg)', opacity: isNight ? 0.26 : 0.54 }}
+          className="absolute left-[9%] top-[13%] h-[22%] w-[46%] rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.07) 44%, rgba(255,255,255,0) 74%)', opacity: isNight ? 0.26 : 0.46 }}
         />
         <div
-          className="absolute right-[12%] top-[40%] h-[2px] w-[32%] rounded-full"
-          style={{ background: 'rgba(58,116,62,0.16)', transform: 'rotate(6deg)', opacity: isNight ? 0.32 : 0.42 }}
+          className="absolute right-[10%] top-[36%] h-[25%] w-[36%] rounded-full"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(58,116,62,0.17) 0%, rgba(58,116,62,0.06) 48%, rgba(58,116,62,0) 76%)', opacity: isNight ? 0.28 : 0.36 }}
         />
       </div>
 
@@ -1801,7 +1790,6 @@ export function FarmPlotBoardV2({
   timeOfDay,
   weatherState,
   weatherLabel,
-  forecastLabel,
   debugWeatherOverride,
   debugTimeOfDayOverride,
   compactMode = false,
@@ -1872,7 +1860,7 @@ export function FarmPlotBoardV2({
     : useTightMobileSpacing
       ? 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
       : 'clamp(18px, 2.5vh, 28px)';
-  const hudWeatherBadgeOffset = useTightMobileSpacing ? 48 : compactMode ? 58 : 54;
+  const hudWeatherBadgeOffset = useTightMobileSpacing ? 24 : compactMode ? 30 : 24;
   const backdropVisuals = getWeatherBackdropVisuals(weather, timeOfDay);
   const [weatherNow, setWeatherNow] = useState(() => Date.now());
   const wetnessState = useMemo(
@@ -1994,7 +1982,6 @@ export function FarmPlotBoardV2({
         debugWeatherOverride={debugWeatherOverride}
         debugTimeOfDayOverride={debugTimeOfDayOverride}
         weatherLabel={weatherLabel}
-        forecastLabel={forecastLabel}
         todayFocusMinutes={todayFocusMinutes}
         coinBalance={coinBalance}
         plantableSeedCount={plantableSeedCount}
