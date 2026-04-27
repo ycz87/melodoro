@@ -596,9 +596,12 @@ export const en: Messages = {
     sunny: 'Sunny',
     cloudy: 'Cloudy',
     rainy: 'Rainy',
-    night: 'Night',
     rainbow: 'Rainbow',
   }[weather] ?? weather),
+  farmTimeOfDayName: (timeOfDay) => ({
+    day: 'Day',
+    night: 'Night',
+  }[timeOfDay] ?? timeOfDay),
   farmWeatherForecast: (current, next) => {
     if (current === 'rainy' && next === 'sunny') return 'Rain clears soon';
     if (current === 'rainy' && next === 'rainbow') return 'Rainbow after rain';
@@ -606,7 +609,6 @@ export const en: Messages = {
       sunny: 'Sunny',
       cloudy: 'Cloudy',
       rainy: 'Rainy',
-      night: 'Night',
       rainbow: 'Rainbow',
     }[next] ?? next)}`;
   },

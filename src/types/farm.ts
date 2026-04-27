@@ -557,8 +557,10 @@ export const GROWTH_STAGES: StageDef[] = [
 ];
 
 // ─── Farm ambience (Phase 6) ───
-export type Weather = 'sunny' | 'cloudy' | 'rainy' | 'night' | 'rainbow';
+export type Weather = 'sunny' | 'cloudy' | 'rainy' | 'rainbow';
+export type TimeOfDay = 'day' | 'night';
 export type WeatherDebugOverride = Weather | null;
+export type TimeOfDayDebugOverride = TimeOfDay | null;
 
 export type WeatherClimateProfileId = 'global';
 

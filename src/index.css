@@ -187,6 +187,16 @@ body {
   100% { transform: scale(2.1); opacity: 0; }
 }
 
+@keyframes farmV2RainRipple {
+  0%, 100% { transform: scale(0.98); opacity: 0.42; }
+  50% { transform: scale(1.04); opacity: 0.78; }
+}
+
+@keyframes farmV2MistDrift {
+  0%, 100% { transform: translate3d(-10px, 0, 0); opacity: 0.72; }
+  50% { transform: translate3d(12px, -2px, 0); opacity: 0.94; }
+}
+
 @keyframes skySnowFallLong {
   0% { transform: translate3d(0px, -8px, 0px) rotate(0deg); opacity: 0; }
   24% { opacity: 0.95; }

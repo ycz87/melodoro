@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
-import type { Plot, Weather, WeatherState } from '../src/types/farm';
+import type { Plot, TimeOfDay, Weather, WeatherState } from '../src/types/farm';
 import { WEATHER_SWITCH_INTERVAL_MS } from '../src/utils/weather';
 
 interface SeedState {
@@ -9,6 +9,7 @@ interface SeedState {
   gene: Record<string, unknown>;
   weatherState: WeatherState;
   debugWeatherOverride?: Weather | null;
+  debugTimeOfDayOverride?: TimeOfDay | null;
   debugMode?: boolean;
 }
 
@@ -36,6 +37,7 @@ function createSeedState(options?: {
   weather?: Weather;
   lastChangeAt?: number;
   debugWeatherOverride?: Weather | null;
+  debugTimeOfDayOverride?: TimeOfDay | null;
   debugMode?: boolean;
   normalSeeds?: number;
 }): SeedState {
@@ -80,6 +82,7 @@ function createSeedState(options?: {
       rainyAftermathUntil: null,
     },
     debugWeatherOverride: options?.debugWeatherOverride,
+    debugTimeOfDayOverride: options?.debugTimeOfDayOverride,
     debugMode: options?.debugMode ?? false,
   };
 }
@@ -98,6 +101,12 @@ function seedInit(page: Page, state: SeedState) {
       localStorage.setItem('weatherDebugOverride', JSON.stringify(payload.debugWeatherOverride));
     } else {
       localStorage.removeItem('weatherDebugOverride');
+    }
+
+    if (payload.debugTimeOfDayOverride !== undefined) {
+      localStorage.setItem('debugTimeOfDayOverride', JSON.stringify(payload.debugTimeOfDayOverride));
+    } else {
+      localStorage.removeItem('debugTimeOfDayOverride');
     }
 
     if (payload.debugMode) {
@@ -128,6 +137,24 @@ async function expectOverlay(page: Page, fromWeather: Weather, toWeather: Weathe
 
   await expect.poll(async () => farmScene.getAttribute('data-last-transition-from'), { timeout: 3000 }).toBe(fromWeather);
   await expect.poll(async () => farmScene.getAttribute('data-last-transition-to'), { timeout: 3000 }).toBe(toWeather);
+  await expect.poll(async () => {
+    const token = await farmScene.getAttribute('data-last-transition-token');
+    const mountedToken = await farmScene.getAttribute('data-last-transition-mounted-token');
+    return token && token === mountedToken ? token : '';
+  }, { timeout: 3000 }).not.toBe('');
+
+  const transitionToken = await farmScene.getAttribute('data-last-transition-token');
+  expect(transitionToken).not.toBeNull();
+  return transitionToken ?? '0';
+}
+
+async function expectTimeOverlay(page: Page, fromTimeOfDay: TimeOfDay, toTimeOfDay: TimeOfDay): Promise<string> {
+  const farmScene = scene(page);
+
+  await expect.poll(async () => farmScene.getAttribute('data-last-transition-from-time-of-day'), { timeout: 3000 }).toBe(fromTimeOfDay);
+  await expect.poll(async () => farmScene.getAttribute('data-last-transition-to-time-of-day'), { timeout: 3000 }).toBe(toTimeOfDay);
+  await expect.poll(async () => overlay(page).getAttribute('data-from-time-of-day'), { timeout: 3000 }).toBe(fromTimeOfDay);
+  await expect.poll(async () => overlay(page).getAttribute('data-to-time-of-day'), { timeout: 3000 }).toBe(toTimeOfDay);
   await expect.poll(async () => {
     const token = await farmScene.getAttribute('data-last-transition-token');
     const mountedToken = await farmScene.getAttribute('data-last-transition-mounted-token');
@@ -173,7 +200,7 @@ test.describe('Farm V2 weather transitions', () => {
   test('desktop debug path reuses one overlay, clears cleanly, and never blocks plot clicks', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'desktop proof only');
 
-    await seedInit(page, createSeedState({ weather: 'sunny', debugMode: true, normalSeeds: 1 }));
+    await seedInit(page, createSeedState({ weather: 'sunny', debugTimeOfDayOverride: 'day', debugMode: true, normalSeeds: 1 }));
     await goToFarm(page);
 
     await expect(scene(page)).toHaveAttribute('data-transition-active', 'false');
@@ -196,6 +223,12 @@ test.describe('Farm V2 weather transitions', () => {
     await captureProof(page, testInfo, 'desktop-transition-rainy-sunny.png');
     await waitForOverlayToClear(page, clearTransitionToken);
     await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('weatherDebugOverride') ?? 'null'))).toBe(null);
+
+    await page.getByRole('button', { name: '切换昼夜' }).click();
+    const nightTransitionToken = await expectTimeOverlay(page, 'day', 'night');
+    await expect(scene(page)).toHaveAttribute('data-time-of-day', 'night');
+    await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('debugTimeOfDayOverride') ?? 'null'))).toBe('night');
+    await waitForOverlayToClear(page, nightTransitionToken);
   });
 
   test('desktop real weather rotation uses the same scene overlay trigger', async ({ page }, testInfo) => {
@@ -220,7 +253,7 @@ test.describe('Farm V2 weather transitions', () => {
   test('mobile rainy and rainbow decor stay above the board after transitions settle', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile proof only');
 
-    await seedInit(page, createSeedState({ weather: 'sunny', debugMode: true }));
+    await seedInit(page, createSeedState({ weather: 'sunny', debugTimeOfDayOverride: 'day', debugMode: true }));
     await goToFarm(page);
 
     await page.getByRole('button', { name: '切换天气' }).click();
@@ -253,13 +286,14 @@ test.describe('Farm V2 weather transitions', () => {
     await waitForOverlayToClear(page, rainyAgainTransitionToken);
 
     await page.getByRole('button', { name: '切换天气' }).click();
-    const nightTransitionToken = await expectOverlay(page, 'rainy', 'night');
-    await waitForOverlayToClear(page, nightTransitionToken);
-
-    await page.getByRole('button', { name: '切换天气' }).click();
-    const rainbowTransitionToken = await expectOverlay(page, 'night', 'rainbow');
+    const rainbowTransitionToken = await expectOverlay(page, 'rainy', 'rainbow');
     await waitForOverlayToClear(page, rainbowTransitionToken);
     await captureProof(page, testInfo, 'mobile-transition-rainbow.png');
+
+    await page.getByRole('button', { name: '切换昼夜' }).click();
+    const moonbowTransitionToken = await expectTimeOverlay(page, 'day', 'night');
+    await waitForOverlayToClear(page, moonbowTransitionToken);
+    await captureProof(page, testInfo, 'mobile-transition-moonbow.png');
 
     const rainbowBoardBox = await page.locator('[data-testid="farm-plot-board-v2"]').boundingBox();
     expect(rainbowBoardBox).not.toBeNull();

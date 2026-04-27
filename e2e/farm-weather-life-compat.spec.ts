@@ -1,16 +1,22 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
+  createInitialWeatherState,
+  isProductionWeather,
   migrateWeatherDebugOverride,
   migrateWeatherState,
+  PRODUCTION_WEATHER_TYPES,
   RAINY_AFTERMATH_DURATION_MS,
+  rollWeather,
   rotateWeatherState,
   WEATHER_SWITCH_INTERVAL_MS,
 } from '../src/utils/weather';
+import { getLocalTimeOfDay, getMsUntilNextTimeOfDayBoundary, migrateLegacyWeatherDebugOverrideToTimeOfDay } from '../src/utils/timeOfDay';
 import type {
   AlienVisit,
   Creature,
   CreatureType,
   Plot,
+  TimeOfDay,
   Weather,
   WeatherState,
 } from '../src/types/farm';
@@ -22,12 +28,13 @@ interface DebugState {
   gene: Record<string, unknown>;
   weatherState?: unknown;
   debugWeatherOverride?: unknown;
+  debugTimeOfDayOverride?: unknown;
   creatures?: Creature[];
   alienVisit?: AlienVisit;
   debugMode?: boolean;
 }
 
-const WEATHER_TYPES: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow'];
+const WEATHER_TYPES: readonly Weather[] = PRODUCTION_WEATHER_TYPES;
 const CREATURE_TYPES: CreatureType[] = ['bee', 'butterfly', 'ladybug', 'bird'];
 
 function sequenceRandom(values: number[]): () => number {
@@ -95,6 +102,7 @@ function createSeedPayload(options?: {
   shedOverrides?: Record<string, unknown>;
   weatherState?: unknown;
   debugWeatherOverride?: unknown;
+  debugTimeOfDayOverride?: unknown;
   creatures?: Creature[];
   alienVisit?: AlienVisit;
   debugMode?: boolean;
@@ -135,6 +143,7 @@ function createSeedPayload(options?: {
     },
     weatherState: options?.weatherState,
     debugWeatherOverride: options?.debugWeatherOverride,
+    debugTimeOfDayOverride: options?.debugTimeOfDayOverride,
     creatures: options?.creatures,
     alienVisit: options?.alienVisit,
     debugMode: options?.debugMode ?? false,
@@ -181,6 +190,12 @@ function seedInit(
       localStorage.removeItem('weatherDebugOverride');
     }
 
+    if (state.debugTimeOfDayOverride !== undefined) {
+      localStorage.setItem('debugTimeOfDayOverride', JSON.stringify(state.debugTimeOfDayOverride));
+    } else {
+      localStorage.removeItem('debugTimeOfDayOverride');
+    }
+
     if (state.creatures !== undefined) {
       localStorage.setItem('creatures', JSON.stringify(state.creatures));
     } else {
@@ -225,6 +240,28 @@ async function goToFarm(page: Page) {
 }
 
 test.describe('Farm weather/life compatibility coverage', () => {
+  test('time-of-day utilities use local 06:00/18:00 boundaries while production weather never rolls night', () => {
+    expect(getLocalTimeOfDay(new Date(2026, 3, 21, 5, 59, 0))).toBe('night');
+    expect(getLocalTimeOfDay(new Date(2026, 3, 21, 6, 0, 0))).toBe('day');
+    expect(getLocalTimeOfDay(new Date(2026, 3, 21, 17, 59, 0))).toBe('day');
+    expect(getLocalTimeOfDay(new Date(2026, 3, 21, 18, 0, 0))).toBe('night');
+    expect(getMsUntilNextTimeOfDayBoundary(new Date(2026, 3, 21, 17, 59, 30))).toBe(30_000);
+    expect(migrateLegacyWeatherDebugOverrideToTimeOfDay('night')).toBe('night');
+
+    const rolls = [0, 0.39, 0.4, 0.69, 0.7, 0.99].map((roll) => rollWeather('sunny', () => roll));
+    const rainyRolls = [0, 0.049, 0.05, 0.44, 0.45, 0.69, 0.7, 0.99].map((roll) => rollWeather('rainy', () => roll));
+    const initial = createInitialWeatherState(Date.UTC(2026, 3, 21, 12, 0, 0), sequenceRandom([0, 0.99]));
+    const caughtUp = rotateWeatherState(
+      createWeatherState({ current: 'sunny', next: 'rainy', lastChangeAt: Date.UTC(2026, 3, 20, 0, 0, 0) }),
+      Date.UTC(2026, 3, 21, 12, 0, 0),
+      sequenceRandom([0, 0.99, 0.5, 0.7, 0.2, 0.8]),
+    );
+
+    for (const weather of [...rolls, ...rainyRolls, initial.current, initial.next, caughtUp.current, caughtUp.next]) {
+      expect(isProductionWeather(weather)).toBeTruthy();
+      expect(weather).not.toBe('night');
+    }
+  });
   test('compat: weatherState initializes into the canonical storage shape', async ({ page }) => {
     await seedInit(page, createSeedPayload());
     await goToFarm(page);
@@ -395,6 +432,43 @@ test.describe('Farm weather/life compatibility coverage', () => {
     }).toBe(now);
   });
 
+  test('compat: legacy night weather state migrates out of production and previousWeather', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 20, 12, 0, 0);
+
+    expect(migrateWeatherState({
+      current: 'night',
+      next: 'night',
+      previousWeather: 'night',
+      lastChangeAt: now,
+    }, now, sequenceRandom([0.1]))).toMatchObject({
+      current: 'sunny',
+      next: 'sunny',
+      previousWeather: null,
+      lastChangeAt: now,
+      nextChangeAt: now + WEATHER_SWITCH_INTERVAL_MS,
+    });
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: {
+        current: 'night',
+        next: 'night',
+        previousWeather: 'night',
+        lastChangeAt: now,
+      },
+    }), {
+      now,
+      randomSequence: [0.1],
+    });
+
+    await page.goto('/');
+
+    await expect.poll(async () => {
+      const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
+      return `${state?.current ?? ''}/${state?.next ?? ''}/${state?.previousWeather ?? 'null'}`;
+    }).toBe('sunny/sunny/null');
+  });
+
   test('compat: non-rainy production weather cannot rotate directly into rainbow', async ({ page }) => {
     const now = Date.UTC(2026, 3, 20, 18, 0, 0);
     const lastChangeAt = now - WEATHER_SWITCH_INTERVAL_MS - 1;
@@ -441,11 +515,39 @@ test.describe('Farm weather/life compatibility coverage', () => {
     expect(state.lastChangeAt).toBe(lastChangeAt + (WEATHER_SWITCH_INTERVAL_MS * 2));
   });
 
-  test('compat: debug override stays separate from production truth', async ({ page }) => {
+  test('time-of-day updates while the app stays open across the 18:00 local boundary without layout jump', async ({ page }) => {
+    await page.clock.install({ time: new Date(2026, 3, 21, 17, 59, 50) });
+    await seedInit(page, createSeedPayload({
+      weatherState: createWeatherState({
+        current: 'sunny',
+        next: 'cloudy',
+        lastChangeAt: Date.UTC(2026, 3, 21, 6, 0, 0),
+      }),
+    }));
+
+    await goToFarm(page);
+
+    const scene = page.locator('[data-testid="farm-v2-scene"]');
+    const board = page.locator('[data-testid="farm-plot-board-v2"]');
+    await expect(scene).toHaveAttribute('data-time-of-day', 'day');
+    const beforeBox = await board.boundingBox();
+
+    await page.clock.fastForward(15_000);
+
+    await expect(scene).toHaveAttribute('data-time-of-day', 'night');
+    const afterBox = await board.boundingBox();
+    expect(beforeBox).not.toBeNull();
+    expect(afterBox).not.toBeNull();
+    expect(Math.abs((afterBox?.y ?? 0) - (beforeBox?.y ?? 0))).toBeLessThanOrEqual(1);
+  });
+
+  test('compat: legacy debugWeatherOverride night migrates to time-of-day override only', async ({ page }) => {
     const now = Date.UTC(2026, 3, 21, 0, 0, 0);
 
     expect(migrateWeatherDebugOverride('snowy')).toBe('cloudy');
     expect(migrateWeatherDebugOverride('stormy')).toBe('rainy');
+    expect(migrateWeatherDebugOverride('night')).toBe(null);
+    expect(migrateLegacyWeatherDebugOverrideToTimeOfDay('night')).toBe('night');
 
     await seedInit(page, createSeedPayload({
       now,
@@ -458,18 +560,51 @@ test.describe('Farm weather/life compatibility coverage', () => {
       debugMode: true,
     }), { now });
 
-    await page.goto('/');
+    await goToFarm(page);
     await expect(page.getByText('🧪 Debug Toolbar')).toBeVisible();
 
     await expect.poll(async () => {
       const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
       return state?.current ?? null;
     }).toBe('rainbow');
-    await expect.poll(async () => readStorage<Weather | null>(page, 'weatherDebugOverride', null)).toBe('night');
+    await expect.poll(async () => readStorage<Weather | null>(page, 'weatherDebugOverride', null)).toBe(null);
+    await expect.poll(async () => readStorage<TimeOfDay | null>(page, 'debugTimeOfDayOverride', null)).toBe('night');
+
+    await expect(page.locator('[data-testid="farm-v2-scene"]')).toHaveAttribute('data-current-weather', 'rainbow');
+    await expect(page.locator('[data-testid="farm-v2-scene"]')).toHaveAttribute('data-time-of-day', 'night');
+  });
+
+  test('compat: debug overrides stay separate from production truth', async ({ page }) => {
+    const now = Date.UTC(2026, 3, 21, 0, 0, 0);
+
+    await seedInit(page, createSeedPayload({
+      now,
+      weatherState: createWeatherState({
+        current: 'rainbow',
+        next: 'cloudy',
+        lastChangeAt: now,
+      }),
+      debugWeatherOverride: 'cloudy',
+      debugTimeOfDayOverride: 'night',
+      debugMode: true,
+    }), { now });
+
+    await goToFarm(page);
+
+    const scene = page.locator('[data-testid="farm-v2-scene"]');
+    await expect(scene).toHaveAttribute('data-current-weather', 'cloudy');
+    await expect(scene).toHaveAttribute('data-effective-weather', 'cloudy');
+    await expect(scene).toHaveAttribute('data-time-of-day', 'night');
+    await expect(scene).toHaveAttribute('data-production-current-weather', 'rainbow');
+    await expect(scene).toHaveAttribute('data-production-next-weather', 'cloudy');
+    await expect.poll(async () => readStorage<Weather | null>(page, 'weatherDebugOverride', null)).toBe('cloudy');
+    await expect.poll(async () => readStorage<TimeOfDay | null>(page, 'debugTimeOfDayOverride', null)).toBe('night');
 
     await page.getByRole('button', { name: '清除天气' }).click();
+    await page.getByRole('button', { name: '清除昼夜' }).click();
 
     await expect.poll(async () => readStorage<Weather | null>(page, 'weatherDebugOverride', null)).toBe(null);
+    await expect.poll(async () => readStorage<TimeOfDay | null>(page, 'debugTimeOfDayOverride', null)).toBe(null);
     await expect.poll(async () => {
       const state = await readStorage<WeatherState | null>(page, 'weatherState', null);
       return state?.current ?? null;
@@ -486,7 +621,8 @@ test.describe('Farm weather/life compatibility coverage', () => {
         next: 'rainbow',
         lastChangeAt: now,
       }),
-      debugWeatherOverride: 'night',
+      debugWeatherOverride: 'cloudy',
+      debugTimeOfDayOverride: 'night',
       debugMode: true,
     }), { now });
 
@@ -495,13 +631,16 @@ test.describe('Farm weather/life compatibility coverage', () => {
     const scene = page.locator('[data-testid="farm-v2-scene"]');
     const forecast = page.locator('[data-testid="farm-v2-weather-forecast"]');
 
-    await expect(scene).toHaveAttribute('data-current-weather', 'night');
+    await expect(scene).toHaveAttribute('data-current-weather', 'cloudy');
+    await expect(scene).toHaveAttribute('data-effective-weather', 'cloudy');
+    await expect(scene).toHaveAttribute('data-time-of-day', 'night');
     await expect(scene).toHaveAttribute('data-production-current-weather', 'rainy');
     await expect(scene).toHaveAttribute('data-production-next-weather', 'rainbow');
-    await expect(scene).toHaveAttribute('data-wetness-mode', 'night-clean');
+    await expect(scene).toHaveAttribute('data-wetness-mode', 'dry');
     await expect(forecast).toHaveAttribute('data-current-weather', 'rainy');
     await expect(forecast).toHaveAttribute('data-next-weather', 'rainbow');
     await expect(forecast).toContainText('雨后彩虹');
+    await expect(forecast).not.toContainText('夜晚');
 
     const forecastText = await forecast.textContent();
 

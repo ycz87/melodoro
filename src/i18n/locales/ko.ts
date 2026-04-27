@@ -596,9 +596,12 @@ export const ko: Messages = {
     sunny: '맑음',
     cloudy: '흐림',
     rainy: '비',
-    night: '밤',
     rainbow: '무지개',
   }[weather] ?? weather),
+  farmTimeOfDayName: (timeOfDay) => ({
+    day: '낮',
+    night: '밤',
+  }[timeOfDay] ?? timeOfDay),
   farmWeatherForecast: (current, next) => {
     if (current === 'rainy' && next === 'sunny') return '비 온 뒤: 맑음';
     if (current === 'rainy' && next === 'rainbow') return '비 온 뒤: 무지개';
@@ -606,7 +609,6 @@ export const ko: Messages = {
       sunny: '맑음',
       cloudy: '흐림',
       rainy: '비',
-      night: '밤',
       rainbow: '무지개',
     }[next] ?? next)}`;
   },

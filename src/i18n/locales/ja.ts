@@ -596,9 +596,12 @@ export const ja: Messages = {
     sunny: '晴れ',
     cloudy: 'くもり',
     rainy: '雨',
-    night: '夜',
     rainbow: '虹',
   }[weather] ?? weather),
+  farmTimeOfDayName: (timeOfDay) => ({
+    day: '昼',
+    night: '夜',
+  }[timeOfDay] ?? timeOfDay),
   farmWeatherForecast: (current, next) => {
     if (current === 'rainy' && next === 'sunny') return '雨上がり：晴れ';
     if (current === 'rainy' && next === 'rainbow') return '雨上がり：虹';
@@ -606,7 +609,6 @@ export const ja: Messages = {
       sunny: '晴れ',
       cloudy: 'くもり',
       rainy: '雨',
-      night: '夜',
       rainbow: '虹',
     }[next] ?? next)}`;
   },

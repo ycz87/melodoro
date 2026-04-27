@@ -6,6 +6,7 @@
 import { useCallback, useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { WEATHER_ICON_MAP } from '../utils/weather';
+import { TIME_OF_DAY_ICON_MAP } from '../utils/timeOfDay';
 import { VARIETY_DEFS } from '../types/farm';
 
 interface DebugToolbarProps {
@@ -24,9 +25,13 @@ interface DebugToolbarProps {
   addFarmItem: (itemId: 'mutation-gun' | 'guardian-barrier' | 'moon-dew', count: number) => void;
   // Weather
   weather: import('../types/farm').Weather;
+  timeOfDay: import('../types/farm').TimeOfDay;
   cycleWeather: () => void;
   clearWeather: () => void;
   isWeatherOverridden: boolean;
+  cycleTimeOfDay: () => void;
+  clearTimeOfDay: () => void;
+  isTimeOfDayOverridden: boolean;
   // Achievements
   achievementUnlockedCount: number;
   unlockAllAchievements: () => void;
@@ -97,9 +102,13 @@ export function DebugToolbar({
   resetCoins,
   addFarmItem,
   weather,
+  timeOfDay,
   cycleWeather,
   clearWeather,
   isWeatherOverridden,
+  cycleTimeOfDay,
+  clearTimeOfDay,
+  isTimeOfDayOverridden,
   achievementUnlockedCount,
   unlockAllAchievements,
   resetAchievements,
@@ -115,6 +124,7 @@ export function DebugToolbar({
   const toolbarBg = withOpacity(theme.surface, 0.95);
   const actionBtnClass = 'text-[11px] rounded-[var(--radius-sm)] px-2 py-1 cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed';
   const weatherLabel = `${WEATHER_ICON_MAP[weather]} ${weather}${isWeatherOverridden ? ' (override)' : ''}`;
+  const timeOfDayLabel = `${TIME_OF_DAY_ICON_MAP[timeOfDay]} ${timeOfDay}${isTimeOfDayOverridden ? ' (override)' : ''}`;
 
   const handleInstantMature = useCallback(() => {
     const nowTimestamp = Date.now();
@@ -370,6 +380,25 @@ export function DebugToolbar({
                     style={{ backgroundColor: 'rgba(239,68,68,0.18)', color: '#ef4444' }}
                   >
                     清除天气
+                  </button>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span style={{ color: theme.textMuted }}>{`昼夜: ${timeOfDayLabel}`}</span>
+                  <button
+                    type="button"
+                    onClick={cycleTimeOfDay}
+                    className={actionBtnClass}
+                    style={{ backgroundColor: theme.inputBg, color: theme.text }}
+                  >
+                    切换昼夜
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearTimeOfDay}
+                    className={actionBtnClass}
+                    style={{ backgroundColor: 'rgba(239,68,68,0.18)', color: '#ef4444' }}
+                  >
+                    清除昼夜
                   </button>
                 </div>
               </section>

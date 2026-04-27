@@ -59,6 +59,7 @@ import { ThemeProvider } from './hooks/useTheme';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useDragScroll } from './hooks/useDragScroll';
 import { useWeather } from './hooks/useWeather';
+import { useTimeOfDay } from './hooks/useTimeOfDay';
 import { useAlienVisit } from './hooks/useAlienVisit';
 import { withOpacity } from './utils/color';
 import {
@@ -69,6 +70,7 @@ import {
 } from './audio';
 import { getTodayKey } from './utils/time';
 import { DEBUG_WEATHER_ORDER } from './utils/weather';
+import { DEBUG_TIME_OF_DAY_ORDER } from './utils/timeOfDay';
 import { getStreak, getDayMinutes } from './utils/stats';
 import {
   applyGrowthWithMutation as applyGrowthWithMutationEngine,
@@ -267,6 +269,12 @@ function App() {
     debugWeatherOverride,
     setDebugWeatherOverride,
   } = useWeather();
+  const {
+    localTimeOfDay,
+    effectiveTimeOfDay,
+    debugTimeOfDayOverride,
+    setDebugTimeOfDayOverride,
+  } = useTimeOfDay();
   const currentProductionWeather = weatherState.current;
   const handleGrantWeeklyItem = useCallback((item: WeeklyItem) => {
     if (item.type === 'rare-gene-fragment') {
@@ -1366,6 +1374,19 @@ function App() {
     setDebugWeatherOverride(null);
   }, [setDebugWeatherOverride]);
 
+  const handleDebugCycleTimeOfDay = useCallback(() => {
+    setDebugTimeOfDayOverride((prev) => {
+      const currentTimeOfDay = prev ?? localTimeOfDay;
+      const currentIndex = DEBUG_TIME_OF_DAY_ORDER.indexOf(currentTimeOfDay);
+      const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % DEBUG_TIME_OF_DAY_ORDER.length;
+      return DEBUG_TIME_OF_DAY_ORDER[nextIndex];
+    });
+  }, [localTimeOfDay, setDebugTimeOfDayOverride]);
+
+  const handleDebugClearTimeOfDay = useCallback(() => {
+    setDebugTimeOfDayOverride(null);
+  }, [setDebugTimeOfDayOverride]);
+
   // Modal states
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showProjectExit, setShowProjectExit] = useState(false);
@@ -2104,7 +2125,10 @@ function App() {
             darkMatterSeeds={shed.darkMatterSeeds}
             pendingRevealedNormalSeed={shed.pendingRevealedNormalSeed}
             weather={effectiveWeather}
+            timeOfDay={effectiveTimeOfDay}
             productionWeatherState={weatherState}
+            debugWeatherOverride={debugWeatherOverride}
+            debugTimeOfDayOverride={debugTimeOfDayOverride}
             todayFocusMinutes={todayFocusMinutes}
             todayKey={todayKey}
             activeAlienVisit={alienVisit.current}
@@ -2309,9 +2333,13 @@ function App() {
             resetCoins={handleDebugResetCoins}
             addFarmItem={handleDebugAddFarmItem}
             weather={effectiveWeather}
+            timeOfDay={effectiveTimeOfDay}
             cycleWeather={handleDebugCycleWeather}
             clearWeather={handleDebugClearWeather}
             isWeatherOverridden={debugWeatherOverride !== null}
+            cycleTimeOfDay={handleDebugCycleTimeOfDay}
+            clearTimeOfDay={handleDebugClearTimeOfDay}
+            isTimeOfDayOverridden={debugTimeOfDayOverride !== null}
             achievementUnlockedCount={Object.keys(achievements.data.unlocked).length}
             unlockAllAchievements={achievements.unlockAll}
             resetAchievements={achievements.resetAll}
