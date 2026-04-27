@@ -611,8 +611,9 @@ test.describe('Farm weather/life compatibility coverage', () => {
     }).toBe('rainbow');
   });
 
-  test('forecast UI reads the persisted production plan and survives reload under debug override', async ({ page }) => {
+  test('weather badge keeps production plan metadata without visible forecast copy under debug override', async ({ page }) => {
     const now = Date.UTC(2026, 3, 21, 6, 0, 0);
+    const nextChangeAt = now + WEATHER_SWITCH_INTERVAL_MS;
 
     await seedInit(page, createSeedPayload({
       now,
@@ -629,7 +630,7 @@ test.describe('Farm weather/life compatibility coverage', () => {
     await goToFarm(page);
 
     const scene = page.locator('[data-testid="farm-v2-scene"]');
-    const forecast = page.locator('[data-testid="farm-v2-weather-forecast"]');
+    const weatherBadge = page.locator('[data-testid="farm-v2-weather-badge"]');
 
     await expect(scene).toHaveAttribute('data-current-weather', 'cloudy');
     await expect(scene).toHaveAttribute('data-effective-weather', 'cloudy');
@@ -637,18 +638,25 @@ test.describe('Farm weather/life compatibility coverage', () => {
     await expect(scene).toHaveAttribute('data-production-current-weather', 'rainy');
     await expect(scene).toHaveAttribute('data-production-next-weather', 'rainbow');
     await expect(scene).toHaveAttribute('data-wetness-mode', 'dry');
-    await expect(forecast).toHaveAttribute('data-current-weather', 'rainy');
-    await expect(forecast).toHaveAttribute('data-next-weather', 'rainbow');
-    await expect(forecast).toContainText('雨后彩虹');
-    await expect(forecast).not.toContainText('夜晚');
-
-    const forecastText = await forecast.textContent();
+    await expect(weatherBadge).toHaveAttribute('data-current-weather', 'rainy');
+    await expect(weatherBadge).toHaveAttribute('data-next-weather', 'rainbow');
+    await expect(weatherBadge).toHaveAttribute('data-next-change-at', String(nextChangeAt));
+    await expect(weatherBadge).toHaveAttribute('data-debug-weather-override', 'cloudy');
+    await expect(weatherBadge).toHaveAttribute('data-debug-time-of-day-override', 'night');
+    await expect(weatherBadge).toContainText('多云 · 夜晚');
+    await expect(weatherBadge).not.toContainText('雨后彩虹');
+    await expect(page.locator('[data-testid="farm-v2-weather-forecast"]')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(/接下来|雨后放晴|雨后彩虹/);
 
     await page.reload();
     await goToFarm(page);
 
-    await expect(page.locator('[data-testid="farm-v2-weather-forecast"]')).toHaveAttribute('data-next-weather', 'rainbow');
-    expect(await page.locator('[data-testid="farm-v2-weather-forecast"]').textContent()).toBe(forecastText);
+    const reloadedBadge = page.locator('[data-testid="farm-v2-weather-badge"]');
+    await expect(reloadedBadge).toHaveAttribute('data-next-weather', 'rainbow');
+    await expect(reloadedBadge).toHaveAttribute('data-next-change-at', String(nextChangeAt));
+    await expect(reloadedBadge).toContainText('多云 · 夜晚');
+    await expect(page.locator('[data-testid="farm-v2-weather-forecast"]')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(/接下来|雨后放晴|雨后彩虹/);
   });
 
   test('rainy aftermath wetness persists through reload while active and expires in production state', async ({ page }) => {
