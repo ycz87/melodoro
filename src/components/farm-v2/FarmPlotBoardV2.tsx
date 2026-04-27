@@ -1218,7 +1218,7 @@ function FarmBackdropV2({
       leftTreeTop: '28.5%',
       cottageTop: '29.2%',
       rightTreeTop: '28.6%',
-      fenceTop: '35.1%',
+      fenceTop: '37.4%',
       foregroundTop: '40.8%',
     }
     : null;
@@ -1548,32 +1548,33 @@ function FarmBackdropV2({
 
       <div
         data-testid="farm-v2-fence"
-        className="absolute left-[7%] right-[7%] z-[8]"
+        className="absolute left-[9%] right-[9%] z-[6]"
         style={{
           top: compactMode
             ? useCompactMobilePolish
-              ? '35.6%'
-              : '39.3%'
+              ? '37.8%'
+              : '41.5%'
             : useTightBackdrop
-              ? (tightBackdropMetrics?.fenceTop ?? '38.2%')
-              : '38.2%',
-          height: compactMode ? '14px' : '15px',
+              ? (tightBackdropMetrics?.fenceTop ?? '40.4%')
+              : '40.4%',
+          height: compactMode ? '12px' : '13px',
+          opacity: isNight ? 0.72 : 0.82,
         }}
       >
         <div
-          className="absolute left-0 right-0 top-[1px] h-[3px] rounded-full"
-          style={{ backgroundColor: 'rgba(128,73,43,0.9)' }}
+          className="absolute left-0 right-0 top-[1px] h-[2px] rounded-full"
+          style={{ backgroundColor: 'rgba(128,73,43,0.68)' }}
         />
         <div
-          className="absolute left-0 right-0 top-[7px] h-[3px] rounded-full"
-          style={{ backgroundColor: 'rgba(128,73,43,0.9)' }}
+          className="absolute left-0 right-0 top-[6px] h-[2px] rounded-full"
+          style={{ backgroundColor: 'rgba(128,73,43,0.62)' }}
         />
         <div
           className="absolute left-0 right-0 top-0 h-full"
           style={{
-            opacity: 0.74,
+            opacity: 0.5,
             background:
-              'repeating-linear-gradient(90deg, rgba(122,69,40,0.9) 0px, rgba(122,69,40,0.9) 3px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 12px)',
+              'repeating-linear-gradient(90deg, rgba(122,69,40,0.68) 0px, rgba(122,69,40,0.68) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 13px)',
           }}
         />
       </div>
