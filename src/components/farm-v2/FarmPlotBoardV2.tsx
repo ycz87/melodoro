@@ -1861,6 +1861,13 @@ export function FarmPlotBoardV2({
       ? 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
       : 'clamp(18px, 2.5vh, 28px)';
   const hudWeatherBadgeOffset = useTightMobileSpacing ? 24 : compactMode ? 30 : 24;
+  const boardVerticalOffsetPx = compactMode
+    ? useCompactMobilePolish
+      ? 22
+      : 26
+    : useTightMobileSpacing
+      ? 24
+      : 32;
   const backdropVisuals = getWeatherBackdropVisuals(weather, timeOfDay);
   const [weatherNow, setWeatherNow] = useState(() => Date.now());
   const wetnessState = useMemo(
@@ -1991,7 +1998,7 @@ export function FarmPlotBoardV2({
       <div
         className={`relative z-20 mx-auto flex w-full justify-center ${useTightMobileSpacing ? 'px-2 sm:px-2' : 'px-0 sm:px-2'}`}
         style={{
-          paddingTop: `calc(${boardPaddingTop} + ${hudWeatherBadgeOffset}px)`,
+          paddingTop: `calc(${boardPaddingTop} + ${hudWeatherBadgeOffset}px + ${boardVerticalOffsetPx}px)`,
           paddingBottom: boardPaddingBottom,
         }}
       >
