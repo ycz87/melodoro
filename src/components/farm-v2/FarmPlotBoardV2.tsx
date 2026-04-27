@@ -73,6 +73,46 @@ interface RainbowSpec {
   rotation?: string;
 }
 
+interface TerrainBackdropVisuals {
+  distantRidgeGradient: string;
+  distantRidgeHighlight: string;
+  distantRidgeShadow: string;
+  backHillTexture: string;
+  backHillHighlight: string;
+  backHillShadow: string;
+  frontHillTexture: string;
+  frontHillHighlight: string;
+  frontHillShadow: string;
+  horizonMist: string;
+  horizonMistOpacity: number;
+  pathGradient: string;
+  pathEdge: string;
+  pathTexture: string;
+}
+
+interface CottageBackdropVisuals {
+  groundShadow: string;
+  path: string;
+  pathEdge: string;
+  shrub: string;
+  shrubShadow: string;
+  roof: string;
+  roofShade: string;
+  roofHighlight: string;
+  roofTrim: string;
+  wall: string;
+  wallShade: string;
+  wallTrim: string;
+  door: string;
+  doorGlow: string;
+  window: string;
+  windowGlow: string;
+  windowFrame: string;
+  chimney: string;
+  smoke: string;
+  filter?: string;
+}
+
 interface WeatherBackdropVisuals {
   sceneBackground: string;
   skyGradient: string;
@@ -92,6 +132,8 @@ interface WeatherBackdropVisuals {
   cloudSpecs: CloudSpec[];
   rainLayers: RainLayerSpec[];
   rainbow: RainbowSpec | null;
+  terrain?: TerrainBackdropVisuals;
+  cottage?: CottageBackdropVisuals;
 }
 
 const GRID_SIDE = 3;
@@ -432,8 +474,224 @@ function getNightWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisual
   return nightBase;
 }
 
+function getTerrainBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): TerrainBackdropVisuals {
+  if (timeOfDay === 'night') {
+    if (weather === 'rainy') {
+      return {
+        distantRidgeGradient: 'linear-gradient(180deg, rgba(73,94,102,0.78) 0%, rgba(61,87,79,0.86) 56%, rgba(45,69,53,0.94) 100%)',
+        distantRidgeHighlight: 'linear-gradient(116deg, rgba(177,202,219,0.12) 0%, rgba(177,202,219,0.05) 26%, rgba(177,202,219,0) 54%)',
+        distantRidgeShadow: 'radial-gradient(ellipse at 72% 68%, rgba(12,22,28,0.28) 0%, rgba(12,22,28,0.12) 42%, rgba(12,22,28,0) 72%)',
+        backHillTexture: 'radial-gradient(ellipse at 24% 30%, rgba(149,179,150,0.1) 0%, rgba(149,179,150,0) 34%), repeating-linear-gradient(118deg, rgba(182,207,190,0.06) 0px, rgba(182,207,190,0.06) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 20px)',
+        backHillHighlight: 'linear-gradient(112deg, rgba(197,216,213,0.12) 0%, rgba(197,216,213,0.04) 30%, rgba(197,216,213,0) 58%)',
+        backHillShadow: 'radial-gradient(ellipse at 78% 74%, rgba(9,20,20,0.26) 0%, rgba(9,20,20,0.12) 45%, rgba(9,20,20,0) 74%)',
+        frontHillTexture: 'radial-gradient(ellipse at 32% 20%, rgba(160,190,152,0.12) 0%, rgba(160,190,152,0) 34%), repeating-linear-gradient(106deg, rgba(204,224,196,0.06) 0px, rgba(204,224,196,0.06) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+        frontHillHighlight: 'linear-gradient(105deg, rgba(195,218,198,0.14) 0%, rgba(195,218,198,0.05) 32%, rgba(195,218,198,0) 62%)',
+        frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(10,25,18,0.25) 0%, rgba(10,25,18,0.12) 46%, rgba(10,25,18,0) 75%)',
+        horizonMist: 'linear-gradient(90deg, rgba(168,194,205,0) 0%, rgba(168,194,205,0.34) 24%, rgba(122,154,170,0.28) 58%, rgba(168,194,205,0) 100%)',
+        horizonMistOpacity: 0.66,
+        pathGradient: 'linear-gradient(180deg, rgba(173,151,121,0.62) 0%, rgba(121,103,82,0.72) 100%)',
+        pathEdge: 'rgba(196,214,174,0.18)',
+        pathTexture: 'radial-gradient(circle at 28% 34%, rgba(238,236,208,0.16) 0 1px, rgba(238,236,208,0) 2px), radial-gradient(circle at 64% 64%, rgba(115,89,68,0.14) 0 1px, rgba(115,89,68,0) 2px)',
+      };
+    }
+
+    if (weather === 'rainbow') {
+      return {
+        distantRidgeGradient: 'linear-gradient(180deg, rgba(84,113,126,0.8) 0%, rgba(70,105,94,0.88) 56%, rgba(55,88,62,0.95) 100%)',
+        distantRidgeHighlight: 'linear-gradient(112deg, rgba(180,218,255,0.17) 0%, rgba(180,218,255,0.07) 34%, rgba(180,218,255,0) 62%)',
+        distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(12,25,34,0.22) 0%, rgba(12,25,34,0.1) 46%, rgba(12,25,34,0) 76%)',
+        backHillTexture: 'radial-gradient(ellipse at 22% 26%, rgba(170,212,178,0.12) 0%, rgba(170,212,178,0) 36%), repeating-linear-gradient(118deg, rgba(186,219,208,0.07) 0px, rgba(186,219,208,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+        backHillHighlight: 'linear-gradient(112deg, rgba(187,223,224,0.14) 0%, rgba(187,223,224,0.06) 32%, rgba(187,223,224,0) 62%)',
+        backHillShadow: 'radial-gradient(ellipse at 76% 74%, rgba(13,32,30,0.22) 0%, rgba(13,32,30,0.1) 44%, rgba(13,32,30,0) 74%)',
+        frontHillTexture: 'radial-gradient(ellipse at 35% 18%, rgba(172,221,158,0.14) 0%, rgba(172,221,158,0) 36%), repeating-linear-gradient(106deg, rgba(206,232,202,0.07) 0px, rgba(206,232,202,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+        frontHillHighlight: 'linear-gradient(105deg, rgba(207,235,206,0.16) 0%, rgba(207,235,206,0.06) 34%, rgba(207,235,206,0) 64%)',
+        frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(15,37,22,0.2) 0%, rgba(15,37,22,0.1) 48%, rgba(15,37,22,0) 76%)',
+        horizonMist: 'linear-gradient(90deg, rgba(184,218,238,0) 0%, rgba(184,218,238,0.32) 24%, rgba(182,202,236,0.24) 56%, rgba(184,218,238,0) 100%)',
+        horizonMistOpacity: 0.48,
+        pathGradient: 'linear-gradient(180deg, rgba(185,165,119,0.64) 0%, rgba(132,112,82,0.7) 100%)',
+        pathEdge: 'rgba(214,236,185,0.18)',
+        pathTexture: 'radial-gradient(circle at 30% 36%, rgba(247,239,194,0.18) 0 1px, rgba(247,239,194,0) 2px), radial-gradient(circle at 66% 62%, rgba(120,92,70,0.12) 0 1px, rgba(120,92,70,0) 2px)',
+      };
+    }
+
+    return {
+      distantRidgeGradient: 'linear-gradient(180deg, rgba(76,105,119,0.82) 0%, rgba(66,103,91,0.88) 56%, rgba(51,85,58,0.95) 100%)',
+      distantRidgeHighlight: 'linear-gradient(112deg, rgba(190,217,243,0.14) 0%, rgba(190,217,243,0.06) 32%, rgba(190,217,243,0) 62%)',
+      distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(10,24,32,0.22) 0%, rgba(10,24,32,0.1) 46%, rgba(10,24,32,0) 76%)',
+      backHillTexture: 'radial-gradient(ellipse at 22% 26%, rgba(161,198,166,0.12) 0%, rgba(161,198,166,0) 36%), repeating-linear-gradient(118deg, rgba(186,214,200,0.07) 0px, rgba(186,214,200,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillHighlight: 'linear-gradient(112deg, rgba(190,220,217,0.14) 0%, rgba(190,220,217,0.06) 32%, rgba(190,220,217,0) 62%)',
+      backHillShadow: 'radial-gradient(ellipse at 76% 74%, rgba(13,30,28,0.22) 0%, rgba(13,30,28,0.1) 44%, rgba(13,30,28,0) 74%)',
+      frontHillTexture: 'radial-gradient(ellipse at 35% 18%, rgba(168,211,157,0.14) 0%, rgba(168,211,157,0) 36%), repeating-linear-gradient(106deg, rgba(206,231,199,0.07) 0px, rgba(206,231,199,0.07) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillHighlight: 'linear-gradient(105deg, rgba(204,232,205,0.16) 0%, rgba(204,232,205,0.06) 34%, rgba(204,232,205,0) 64%)',
+      frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(15,35,22,0.2) 0%, rgba(15,35,22,0.1) 48%, rgba(15,35,22,0) 76%)',
+      horizonMist: 'linear-gradient(90deg, rgba(188,214,232,0) 0%, rgba(188,214,232,0.28) 24%, rgba(166,197,220,0.2) 58%, rgba(188,214,232,0) 100%)',
+      horizonMistOpacity: 0.42,
+      pathGradient: 'linear-gradient(180deg, rgba(181,158,111,0.62) 0%, rgba(128,104,74,0.68) 100%)',
+      pathEdge: 'rgba(208,229,179,0.18)',
+      pathTexture: 'radial-gradient(circle at 30% 36%, rgba(242,234,188,0.18) 0 1px, rgba(242,234,188,0) 2px), radial-gradient(circle at 66% 62%, rgba(119,91,68,0.12) 0 1px, rgba(119,91,68,0) 2px)',
+    };
+  }
+
+  if (weather === 'rainy') {
+    return {
+      distantRidgeGradient: 'linear-gradient(180deg, rgba(186,205,195,0.86) 0%, rgba(144,177,137,0.9) 56%, rgba(113,154,100,0.96) 100%)',
+      distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0) 58%)',
+      distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(67,103,78,0.22) 0%, rgba(67,103,78,0.1) 46%, rgba(67,103,78,0) 76%)',
+      backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(221,235,210,0.14) 0%, rgba(221,235,210,0) 36%), repeating-linear-gradient(118deg, rgba(235,244,226,0.08) 0px, rgba(235,244,226,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillHighlight: 'linear-gradient(112deg, rgba(240,249,226,0.18) 0%, rgba(240,249,226,0.06) 34%, rgba(240,249,226,0) 62%)',
+      backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(66,111,69,0.22) 0%, rgba(66,111,69,0.1) 46%, rgba(66,111,69,0) 76%)',
+      frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(232,246,212,0.16) 0%, rgba(232,246,212,0) 36%), repeating-linear-gradient(106deg, rgba(238,247,220,0.08) 0px, rgba(238,247,220,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillHighlight: 'linear-gradient(105deg, rgba(235,248,218,0.2) 0%, rgba(235,248,218,0.06) 34%, rgba(235,248,218,0) 64%)',
+      frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(68,115,67,0.22) 0%, rgba(68,115,67,0.1) 48%, rgba(68,115,67,0) 76%)',
+      horizonMist: 'linear-gradient(90deg, rgba(221,235,239,0) 0%, rgba(221,235,239,0.46) 25%, rgba(188,209,216,0.34) 58%, rgba(221,235,239,0) 100%)',
+      horizonMistOpacity: 0.74,
+      pathGradient: 'linear-gradient(180deg, rgba(193,169,126,0.62) 0%, rgba(139,113,84,0.72) 100%)',
+      pathEdge: 'rgba(214,230,194,0.2)',
+      pathTexture: 'radial-gradient(circle at 28% 34%, rgba(241,236,200,0.16) 0 1px, rgba(241,236,200,0) 2px), radial-gradient(circle at 64% 62%, rgba(111,84,64,0.14) 0 1px, rgba(111,84,64,0) 2px), linear-gradient(180deg, rgba(210,232,237,0.16), rgba(210,232,237,0))',
+    };
+  }
+
+  if (weather === 'cloudy') {
+    return {
+      distantRidgeGradient: 'linear-gradient(180deg, rgba(204,222,208,0.88) 0%, rgba(164,196,151,0.92) 56%, rgba(130,173,111,0.96) 100%)',
+      distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 30%, rgba(255,255,255,0) 58%)',
+      distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(71,113,75,0.18) 0%, rgba(71,113,75,0.08) 46%, rgba(71,113,75,0) 76%)',
+      backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(235,246,222,0.14) 0%, rgba(235,246,222,0) 36%), repeating-linear-gradient(118deg, rgba(246,251,233,0.08) 0px, rgba(246,251,233,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillHighlight: 'linear-gradient(112deg, rgba(247,252,231,0.18) 0%, rgba(247,252,231,0.06) 34%, rgba(247,252,231,0) 62%)',
+      backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(69,119,72,0.18) 0%, rgba(69,119,72,0.08) 46%, rgba(69,119,72,0) 76%)',
+      frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(244,251,224,0.16) 0%, rgba(244,251,224,0) 36%), repeating-linear-gradient(106deg, rgba(248,253,230,0.08) 0px, rgba(248,253,230,0.08) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillHighlight: 'linear-gradient(105deg, rgba(247,253,229,0.2) 0%, rgba(247,253,229,0.06) 34%, rgba(247,253,229,0) 64%)',
+      frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(70,123,73,0.18) 0%, rgba(70,123,73,0.08) 48%, rgba(70,123,73,0) 76%)',
+      horizonMist: 'linear-gradient(90deg, rgba(232,240,239,0) 0%, rgba(232,240,239,0.4) 26%, rgba(205,221,220,0.28) 60%, rgba(232,240,239,0) 100%)',
+      horizonMistOpacity: 0.58,
+      pathGradient: 'linear-gradient(180deg, rgba(206,181,129,0.66) 0%, rgba(149,118,83,0.72) 100%)',
+      pathEdge: 'rgba(217,235,190,0.2)',
+      pathTexture: 'radial-gradient(circle at 30% 36%, rgba(248,239,193,0.18) 0 1px, rgba(248,239,193,0) 2px), radial-gradient(circle at 66% 62%, rgba(123,93,67,0.12) 0 1px, rgba(123,93,67,0) 2px)',
+    };
+  }
+
+  if (weather === 'rainbow') {
+    return {
+      distantRidgeGradient: 'linear-gradient(180deg, rgba(219,245,212,0.9) 0%, rgba(176,224,151,0.94) 56%, rgba(137,202,105,0.98) 100%)',
+      distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.1) 32%, rgba(255,255,255,0) 62%)',
+      distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(72,132,68,0.16) 0%, rgba(72,132,68,0.08) 46%, rgba(72,132,68,0) 76%)',
+      backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(255,255,224,0.22) 0%, rgba(255,255,224,0) 36%), repeating-linear-gradient(118deg, rgba(255,255,238,0.1) 0px, rgba(255,255,238,0.1) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+      backHillHighlight: 'linear-gradient(112deg, rgba(255,255,226,0.25) 0%, rgba(255,255,226,0.08) 34%, rgba(255,255,226,0) 62%)',
+      backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(71,135,68,0.16) 0%, rgba(71,135,68,0.08) 46%, rgba(71,135,68,0) 76%)',
+      frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(255,255,222,0.22) 0%, rgba(255,255,222,0) 36%), repeating-linear-gradient(106deg, rgba(255,255,236,0.1) 0px, rgba(255,255,236,0.1) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+      frontHillHighlight: 'linear-gradient(105deg, rgba(255,255,225,0.28) 0%, rgba(255,255,225,0.08) 34%, rgba(255,255,225,0) 64%)',
+      frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(72,139,68,0.16) 0%, rgba(72,139,68,0.08) 48%, rgba(72,139,68,0) 76%)',
+      horizonMist: 'linear-gradient(90deg, rgba(241,255,246,0) 0%, rgba(241,255,246,0.42) 23%, rgba(217,240,255,0.34) 58%, rgba(241,255,246,0) 100%)',
+      horizonMistOpacity: 0.62,
+      pathGradient: 'linear-gradient(180deg, rgba(222,189,123,0.7) 0%, rgba(159,123,77,0.74) 100%)',
+      pathEdge: 'rgba(229,247,196,0.24)',
+      pathTexture: 'radial-gradient(circle at 30% 36%, rgba(255,246,196,0.2) 0 1px, rgba(255,246,196,0) 2px), radial-gradient(circle at 66% 62%, rgba(128,95,62,0.12) 0 1px, rgba(128,95,62,0) 2px)',
+    };
+  }
+
+  return {
+    distantRidgeGradient: 'linear-gradient(180deg, rgba(216,241,211,0.9) 0%, rgba(174,219,150,0.94) 56%, rgba(135,197,104,0.98) 100%)',
+    distantRidgeHighlight: 'linear-gradient(112deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.09) 30%, rgba(255,255,255,0) 60%)',
+    distantRidgeShadow: 'radial-gradient(ellipse at 72% 70%, rgba(69,128,65,0.16) 0%, rgba(69,128,65,0.08) 46%, rgba(69,128,65,0) 76%)',
+    backHillTexture: 'radial-gradient(ellipse at 24% 26%, rgba(255,255,222,0.18) 0%, rgba(255,255,222,0) 36%), repeating-linear-gradient(118deg, rgba(255,255,236,0.09) 0px, rgba(255,255,236,0.09) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 21px)',
+    backHillHighlight: 'linear-gradient(112deg, rgba(255,255,226,0.22) 0%, rgba(255,255,226,0.08) 34%, rgba(255,255,226,0) 62%)',
+    backHillShadow: 'radial-gradient(ellipse at 78% 76%, rgba(69,128,65,0.16) 0%, rgba(69,128,65,0.08) 46%, rgba(69,128,65,0) 76%)',
+    frontHillTexture: 'radial-gradient(ellipse at 34% 20%, rgba(255,255,222,0.2) 0%, rgba(255,255,222,0) 36%), repeating-linear-gradient(106deg, rgba(255,255,236,0.09) 0px, rgba(255,255,236,0.09) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 18px)',
+    frontHillHighlight: 'linear-gradient(105deg, rgba(255,255,225,0.24) 0%, rgba(255,255,225,0.08) 34%, rgba(255,255,225,0) 64%)',
+    frontHillShadow: 'radial-gradient(ellipse at 78% 78%, rgba(70,132,66,0.16) 0%, rgba(70,132,66,0.08) 48%, rgba(70,132,66,0) 76%)',
+    horizonMist: 'linear-gradient(90deg, rgba(238,253,255,0) 0%, rgba(238,253,255,0.36) 23%, rgba(214,242,235,0.24) 58%, rgba(238,253,255,0) 100%)',
+    horizonMistOpacity: 0.5,
+    pathGradient: 'linear-gradient(180deg, rgba(218,187,122,0.7) 0%, rgba(157,121,76,0.72) 100%)',
+    pathEdge: 'rgba(226,246,194,0.22)',
+    pathTexture: 'radial-gradient(circle at 30% 36%, rgba(255,246,196,0.2) 0 1px, rgba(255,246,196,0) 2px), radial-gradient(circle at 66% 62%, rgba(128,95,62,0.12) 0 1px, rgba(128,95,62,0) 2px)',
+  };
+}
+
+function getCottageBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): CottageBackdropVisuals {
+  if (timeOfDay === 'night') {
+    const rainyFilter = weather === 'rainy' ? 'saturate(0.78) brightness(0.84)' : undefined;
+    const moonbowLift = weather === 'rainbow' ? 'drop-shadow(0 0 10px rgba(173,215,255,0.18))' : undefined;
+
+    return {
+      groundShadow: 'radial-gradient(ellipse at center, rgba(11,28,22,0.46) 0%, rgba(11,28,22,0.22) 58%, rgba(0,0,0,0) 100%)',
+      path: 'linear-gradient(180deg, rgba(143,116,82,0.62) 0%, rgba(91,74,57,0.74) 100%)',
+      pathEdge: 'rgba(171,196,146,0.18)',
+      shrub: 'radial-gradient(circle at 36% 28%, #6a9464 0%, #416b4e 72%, #2e4f3b 100%)',
+      shrubShadow: 'rgba(20,45,31,0.28)',
+      roof: 'linear-gradient(180deg, #9c5d4e 0%, #703e39 66%, #5b302f 100%)',
+      roofShade: 'linear-gradient(90deg, rgba(255,218,169,0.1) 0%, rgba(60,25,24,0.18) 100%), repeating-linear-gradient(118deg, rgba(255,226,183,0.12) 0px, rgba(255,226,183,0.12) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 9px)',
+      roofHighlight: 'rgba(255,218,164,0.2)',
+      roofTrim: 'linear-gradient(180deg, #c18a69 0%, #8a5a45 100%)',
+      wall: 'linear-gradient(180deg, #c9af88 0%, #9f825e 100%)',
+      wallShade: 'linear-gradient(90deg, rgba(255,236,187,0.12) 0%, rgba(79,46,31,0.22) 100%)',
+      wallTrim: 'rgba(82,54,36,0.5)',
+      door: 'linear-gradient(180deg, #8f5b3a 0%, #623d2d 100%)',
+      doorGlow: 'rgba(255,188,88,0.32)',
+      window: 'linear-gradient(180deg, #ffe79f 0%, #ffb95f 100%)',
+      windowGlow: '0 0 11px rgba(255,181,83,0.66), inset 0 0 5px rgba(255,247,184,0.74)',
+      windowFrame: 'rgba(94,58,37,0.86)',
+      chimney: 'linear-gradient(180deg, #8d5549 0%, #5f3835 100%)',
+      smoke: 'rgba(201,217,221,0.2)',
+      filter: rainyFilter ?? moonbowLift,
+    };
+  }
+
+  if (weather === 'rainy' || weather === 'cloudy') {
+    return {
+      groundShadow: 'radial-gradient(ellipse at center, rgba(71,111,62,0.36) 0%, rgba(71,111,62,0.16) 58%, rgba(0,0,0,0) 100%)',
+      path: 'linear-gradient(180deg, rgba(210,174,119,0.66) 0%, rgba(148,113,79,0.78) 100%)',
+      pathEdge: 'rgba(215,232,185,0.26)',
+      shrub: 'radial-gradient(circle at 34% 26%, #a1cc79 0%, #6aa655 70%, #4d8244 100%)',
+      shrubShadow: 'rgba(63,115,58,0.22)',
+      roof: 'linear-gradient(180deg, #c57554 0%, #9e573e 66%, #7b3f35 100%)',
+      roofShade: 'linear-gradient(90deg, rgba(255,219,171,0.16) 0%, rgba(99,42,33,0.18) 100%), repeating-linear-gradient(118deg, rgba(255,229,190,0.14) 0px, rgba(255,229,190,0.14) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 9px)',
+      roofHighlight: 'rgba(255,227,183,0.26)',
+      roofTrim: 'linear-gradient(180deg, #dfaa78 0%, #aa704f 100%)',
+      wall: 'linear-gradient(180deg, #ecd3a8 0%, #d3a978 100%)',
+      wallShade: 'linear-gradient(90deg, rgba(255,244,204,0.2) 0%, rgba(135,83,51,0.18) 100%)',
+      wallTrim: 'rgba(130,82,50,0.52)',
+      door: 'linear-gradient(180deg, #9a603e 0%, #6e432e 100%)',
+      doorGlow: 'rgba(255,190,94,0.22)',
+      window: 'linear-gradient(180deg, #d9eff6 0%, #93bfd4 100%)',
+      windowGlow: 'inset 0 0 5px rgba(255,255,255,0.4)',
+      windowFrame: 'rgba(113,70,43,0.8)',
+      chimney: 'linear-gradient(180deg, #a2604c 0%, #794437 100%)',
+      smoke: 'rgba(217,229,226,0.22)',
+      filter: weather === 'rainy' ? 'saturate(0.9) brightness(0.94)' : undefined,
+    };
+  }
+
+  return {
+    groundShadow: 'radial-gradient(ellipse at center, rgba(89,132,66,0.34) 0%, rgba(89,132,66,0.14) 58%, rgba(0,0,0,0) 100%)',
+    path: 'linear-gradient(180deg, rgba(224,185,116,0.7) 0%, rgba(160,121,72,0.74) 100%)',
+    pathEdge: 'rgba(230,247,190,0.28)',
+    shrub: weather === 'rainbow' ? 'radial-gradient(circle at 34% 26%, #b8e383 0%, #78bf58 70%, #589447 100%)' : 'radial-gradient(circle at 34% 26%, #aee07a 0%, #74b94f 70%, #538d40 100%)',
+    shrubShadow: 'rgba(74,125,55,0.2)',
+    roof: weather === 'rainbow' ? 'linear-gradient(180deg, #dd8758 0%, #b8643d 66%, #934737 100%)' : 'linear-gradient(180deg, #d47d55 0%, #ad603b 66%, #884336 100%)',
+    roofShade: 'linear-gradient(90deg, rgba(255,232,176,0.22) 0%, rgba(116,49,34,0.16) 100%), repeating-linear-gradient(118deg, rgba(255,235,194,0.16) 0px, rgba(255,235,194,0.16) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 9px)',
+    roofHighlight: 'rgba(255,237,188,0.34)',
+    roofTrim: 'linear-gradient(180deg, #ebb06f 0%, #b7744d 100%)',
+    wall: weather === 'rainbow' ? 'linear-gradient(180deg, #f7deb1 0%, #e2b87f 100%)' : 'linear-gradient(180deg, #f1d7ab 0%, #ddb682 100%)',
+    wallShade: 'linear-gradient(90deg, rgba(255,249,213,0.26) 0%, rgba(139,84,50,0.16) 100%)',
+    wallTrim: 'rgba(128,78,47,0.5)',
+    door: 'linear-gradient(180deg, #a16742 0%, #74472e 100%)',
+    doorGlow: 'rgba(255,196,99,0.18)',
+    window: 'linear-gradient(180deg, #d9f3ff 0%, #9fd5ef 100%)',
+    windowGlow: 'inset 0 0 5px rgba(255,255,255,0.48)',
+    windowFrame: 'rgba(118,73,43,0.82)',
+    chimney: 'linear-gradient(180deg, #ad694d 0%, #81483a 100%)',
+    smoke: 'rgba(232,242,235,0.2)',
+  };
+}
+
 function getWeatherBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): WeatherBackdropVisuals {
-  return timeOfDay === 'night' ? getNightWeatherBackdropVisuals(weather) : getDayWeatherBackdropVisuals(weather);
+  const visuals = timeOfDay === 'night' ? getNightWeatherBackdropVisuals(weather) : getDayWeatherBackdropVisuals(weather);
+
+  return {
+    ...visuals,
+    terrain: getTerrainBackdropVisuals(weather, timeOfDay),
+    cottage: getCottageBackdropVisuals(weather, timeOfDay),
+  };
 }
 
 function mapPlotStateToTileState(plot: Plot | null) {
@@ -807,29 +1065,125 @@ function FruitTree({
   );
 }
 
-function Cottage({ left, top }: { left: string; top: string }) {
+function Cottage({
+  left,
+  top,
+  visuals,
+}: {
+  left: string;
+  top: string;
+  visuals: CottageBackdropVisuals;
+}) {
+  const windowStyle = {
+    background: visuals.window,
+    border: `1px solid ${visuals.windowFrame}`,
+    boxShadow: visuals.windowGlow,
+  };
+
   return (
-    <div className="pointer-events-none absolute z-[7]" data-testid="farm-v2-cottage" style={{ left, top, width: '58px', height: '54px' }}>
+    <div
+      className="pointer-events-none absolute z-[7]"
+      data-testid="farm-v2-cottage"
+      style={{ left, top, width: '64px', height: '60px', filter: visuals.filter }}
+    >
       <div
-        className="absolute left-1/2 bottom-[1px] h-[7px] w-[28px] -translate-x-1/2 rounded-full"
+        className="absolute left-1/2 bottom-[-2px] h-[18px] w-[42px] -translate-x-1/2"
         style={{
-          background: 'radial-gradient(circle at center, rgba(97,136,67,0.58) 0%, rgba(97,136,67,0.2) 60%, rgba(0,0,0,0) 100%)',
+          clipPath: 'polygon(45% 0%, 55% 0%, 76% 100%, 24% 100%)',
+          background: visuals.path,
         }}
       />
       <div
-        className="absolute left-1/2 top-0 h-[20px] w-[40px] -translate-x-1/2"
+        className="absolute left-1/2 bottom-[-1px] h-[18px] w-[48px] -translate-x-1/2"
+        style={{
+          clipPath: 'polygon(40% 0%, 60% 0%, 86% 100%, 14% 100%)',
+          background: `linear-gradient(90deg, ${visuals.pathEdge} 0%, rgba(255,255,255,0) 18%, rgba(255,255,255,0) 82%, ${visuals.pathEdge} 100%)`,
+          opacity: 0.84,
+        }}
+      />
+      <div
+        className="absolute left-[1px] bottom-[5px] h-[17px] w-[22px] rounded-full"
+        style={{ background: visuals.shrub, boxShadow: `0 5px 0 ${visuals.shrubShadow}` }}
+      />
+      <div
+        className="absolute right-[1px] bottom-[4px] h-[18px] w-[23px] rounded-full"
+        style={{ background: visuals.shrub, boxShadow: `0 5px 0 ${visuals.shrubShadow}` }}
+      />
+      <div
+        className="absolute left-1/2 bottom-[1px] h-[9px] w-[46px] -translate-x-1/2 rounded-full"
+        style={{ background: visuals.groundShadow }}
+      />
+      <div
+        className="absolute left-[42px] top-[6px] h-[19px] w-[8px] rounded-t-[3px]"
+        style={{ background: visuals.chimney, border: '1px solid rgba(75,44,34,0.28)' }}
+      />
+      <div className="absolute left-[43px] top-[3px] h-[5px] w-[11px] rounded-[3px]" style={{ background: visuals.chimney }} />
+      <div
+        className="absolute left-[47px] top-[-2px] h-[10px] w-[15px] rounded-full"
+        style={{ background: visuals.smoke, filter: 'blur(3px)', opacity: 0.84 }}
+      />
+      <div
+        className="absolute left-1/2 top-[1px] h-[24px] w-[48px] -translate-x-1/2 drop-shadow-[0_2px_1px_rgba(91,51,35,0.18)]"
+        style={{
+          clipPath: 'polygon(0% 96%, 50% 0%, 100% 96%, 92% 100%, 50% 18%, 8% 100%)',
+          background: visuals.roofShade,
+        }}
+      />
+      <div
+        className="absolute left-1/2 top-[2px] h-[24px] w-[50px] -translate-x-1/2"
         style={{
           clipPath: 'polygon(0% 100%, 50% 0%, 100% 100%)',
-          background: 'linear-gradient(180deg, #cb7f53 0%, #a85f38 100%)',
+          background: visuals.roof,
+          borderBottom: '1px solid rgba(98,52,35,0.36)',
         }}
       />
       <div
-        className="absolute bottom-0 left-1/2 h-[34px] w-[44px] -translate-x-1/2 rounded-[7px]"
-        style={{ background: 'linear-gradient(180deg, #efd6ae 0%, #ddb682 100%)', border: '1px solid rgba(135,86,54,0.55)' }}
+        className="absolute left-1/2 top-[18px] h-[6px] w-[54px] -translate-x-1/2 rounded-full"
+        style={{ background: visuals.roofTrim, boxShadow: '0 2px 2px rgba(92,49,31,0.2)' }}
       />
-      <div className="absolute bottom-[2px] left-1/2 h-[16px] w-[10px] -translate-x-1/2 rounded-[4px] bg-[#9a663f]" />
-      <div className="absolute left-[13px] top-[24px] h-[8px] w-[8px] rounded-[3px] bg-[#a8d8f7]" />
-      <div className="absolute right-[13px] top-[24px] h-[8px] w-[8px] rounded-[3px] bg-[#a8d8f7]" />
+      <div
+        className="absolute left-[18px] top-[8px] h-[15px] w-[2px] rotate-[33deg] rounded-full"
+        style={{ background: visuals.roofHighlight }}
+      />
+      <div
+        className="absolute right-[18px] top-[8px] h-[15px] w-[2px] -rotate-[33deg] rounded-full"
+        style={{ background: 'rgba(91,45,30,0.18)' }}
+      />
+      <div
+        className="absolute bottom-[3px] left-1/2 h-[36px] w-[46px] -translate-x-1/2 overflow-hidden rounded-[8px]"
+        style={{ background: visuals.wall, border: `1px solid ${visuals.wallTrim}` }}
+      >
+        <div className="absolute inset-0" style={{ background: visuals.wallShade }} />
+        <div
+          className="absolute inset-x-[5px] top-[6px] h-[1px]"
+          style={{ background: 'rgba(255,255,255,0.24)' }}
+        />
+        <div
+          className="absolute left-[7px] top-[9px] h-[10px] w-[10px] rounded-[3px]"
+          style={windowStyle}
+        >
+          <div className="absolute left-1/2 top-0 h-full w-[1px] -translate-x-1/2" style={{ background: visuals.windowFrame }} />
+          <div className="absolute inset-x-0 top-1/2 h-[1px] -translate-y-1/2" style={{ background: visuals.windowFrame }} />
+        </div>
+        <div
+          className="absolute right-[7px] top-[9px] h-[10px] w-[10px] rounded-[3px]"
+          style={windowStyle}
+        >
+          <div className="absolute left-1/2 top-0 h-full w-[1px] -translate-x-1/2" style={{ background: visuals.windowFrame }} />
+          <div className="absolute inset-x-0 top-1/2 h-[1px] -translate-y-1/2" style={{ background: visuals.windowFrame }} />
+        </div>
+        <div
+          className="absolute bottom-[1px] left-1/2 h-[18px] w-[11px] -translate-x-1/2 rounded-t-[5px]"
+          style={{ background: visuals.door, border: `1px solid ${visuals.wallTrim}`, boxShadow: `0 0 9px ${visuals.doorGlow}` }}
+        >
+          <div className="absolute right-[2px] top-[8px] h-[2px] w-[2px] rounded-full bg-[#f8cf80]" />
+          <div className="absolute inset-x-[2px] top-[4px] h-[1px] rounded-full bg-[rgba(255,232,176,0.22)]" />
+        </div>
+        <div
+          className="absolute inset-x-[5px] bottom-[1px] h-[3px] rounded-full"
+          style={{ background: 'rgba(102,69,43,0.22)' }}
+        />
+      </div>
     </div>
   );
 }
@@ -875,6 +1229,58 @@ function FarmBackdropV2({
     : useTightBackdrop
       ? (tightBackdropMetrics?.skyHeight ?? '18.8%')
       : '27%';
+  const terrain = visuals.terrain ?? getTerrainBackdropVisuals(weather, timeOfDay);
+  const cottage = visuals.cottage ?? getCottageBackdropVisuals(weather, timeOfDay);
+  const hillTop = compactMode
+    ? useCompactMobilePolish
+      ? '23.8%'
+      : '28%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.hillTop ?? '27%')
+      : '27%';
+  const hillHeight = compactMode
+    ? '16%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.hillHeight ?? '16%')
+      : '16%';
+  const backHillTop = compactMode
+    ? useCompactMobilePolish
+      ? '24.6%'
+      : '28.8%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.backHillTop ?? '28%')
+      : '28%';
+  const backHillHeight = compactMode
+    ? '17.6%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.backHillHeight ?? '13.9%')
+      : '17.2%';
+  const frontHillTop = compactMode
+    ? useCompactMobilePolish
+      ? '26.2%'
+      : '30.2%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.frontHillTop ?? '29.5%')
+      : '29.5%';
+  const frontHillHeight = compactMode
+    ? '13.6%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.frontHillHeight ?? '10.6%')
+      : '13.2%';
+  const pathTop = compactMode
+    ? useCompactMobilePolish
+      ? '26.4%'
+      : '30.8%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.pathTop ?? '29.8%')
+      : '29.8%';
+  const grassTop = compactMode
+    ? useCompactMobilePolish
+      ? '39.2%'
+      : '44%'
+    : useTightBackdrop
+      ? (tightBackdropMetrics?.grassTop ?? '43%')
+      : '43%';
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -899,75 +1305,103 @@ function FarmBackdropV2({
       <div
         className="absolute inset-x-0 z-[2]"
         style={{
-          top: compactMode
-            ? useCompactMobilePolish
-              ? '23.8%'
-              : '28%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.hillTop ?? '27%')
-              : '27%',
-          height: compactMode
-            ? '16%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.hillHeight ?? '16%')
-              : '16%',
+          top: hillTop,
+          height: hillHeight,
           background: visuals.hillGradient,
         }}
       />
 
       <div
-        className="absolute z-[4]"
+        data-testid={getBackdropTestId(testIdPrefix, 'distant-ridge')}
+        className="absolute z-[3] overflow-hidden"
+        style={{
+          left: compactMode ? '-13%' : '-10%',
+          right: compactMode ? '-13%' : '-10%',
+          top: hillTop,
+          height: compactMode ? '14.8%' : useTightBackdrop ? '11.2%' : '14.2%',
+          clipPath: compactMode
+            ? 'polygon(0% 58%, 9% 42%, 18% 56%, 28% 30%, 39% 54%, 51% 32%, 62% 57%, 74% 38%, 86% 56%, 100% 43%, 100% 100%, 0% 100%)'
+            : 'polygon(0% 60%, 8% 43%, 17% 54%, 29% 28%, 42% 55%, 53% 31%, 65% 58%, 77% 40%, 90% 55%, 100% 44%, 100% 100%, 0% 100%)',
+          background: terrain.distantRidgeGradient,
+        }}
+      >
+        <div className="absolute inset-0" style={{ background: terrain.distantRidgeHighlight }} />
+        <div className="absolute inset-0" style={{ background: terrain.distantRidgeShadow }} />
+        <div
+          className="absolute inset-x-[7%] top-[28%] h-[2px] rounded-full"
+          style={{ background: 'rgba(255,255,255,0.18)', filter: 'blur(0.2px)', opacity: isNight ? 0.32 : 0.58 }}
+        />
+      </div>
+
+      <div
+        className="absolute z-[4] overflow-hidden"
         style={{
           left: compactMode ? '-8%' : '-6%',
           right: compactMode ? '-8%' : '-6%',
-          top: compactMode
-            ? useCompactMobilePolish
-              ? '24.6%'
-              : '28.8%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.backHillTop ?? '28%')
-              : '28%',
-          height: compactMode
-            ? '17.6%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.backHillHeight ?? '13.9%')
-              : '17.2%',
+          top: backHillTop,
+          height: backHillHeight,
           borderRadius: '50% 50% 0 0 / 78% 78% 0 0',
           background: visuals.backHillGradient,
         }}
-      />
+      >
+        <div className="absolute inset-0" style={{ background: terrain.backHillTexture }} />
+        <div className="absolute inset-0" style={{ background: terrain.backHillHighlight }} />
+        <div className="absolute inset-0" style={{ background: terrain.backHillShadow }} />
+        <div
+          className="absolute left-[16%] top-[14%] h-[2px] w-[38%] rounded-full"
+          style={{ background: 'rgba(255,255,255,0.2)', transform: 'rotate(-7deg)', opacity: isNight ? 0.24 : 0.5 }}
+        />
+        <div
+          className="absolute right-[18%] top-[32%] h-[2px] w-[30%] rounded-full"
+          style={{ background: 'rgba(55,105,60,0.16)', transform: 'rotate(5deg)', opacity: isNight ? 0.3 : 0.44 }}
+        />
+      </div>
       <div
-        className="absolute z-[5]"
+        className="absolute z-[5] overflow-hidden"
         style={{
           left: compactMode ? '10%' : '13%',
           width: compactMode ? '76%' : '70%',
-          top: compactMode
-            ? useCompactMobilePolish
-              ? '26.2%'
-              : '30.2%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.frontHillTop ?? '29.5%')
-              : '29.5%',
-          height: compactMode
-            ? '13.6%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.frontHillHeight ?? '10.6%')
-              : '13.2%',
+          top: frontHillTop,
+          height: frontHillHeight,
           borderRadius: '54% 46% 0 0 / 100% 100% 0 0',
           background: visuals.frontHillGradient,
+        }}
+      >
+        <div className="absolute inset-0" style={{ background: terrain.frontHillTexture }} />
+        <div className="absolute inset-0" style={{ background: terrain.frontHillHighlight }} />
+        <div className="absolute inset-0" style={{ background: terrain.frontHillShadow }} />
+        <div
+          className="absolute left-[10%] top-[18%] h-[2px] w-[42%] rounded-full"
+          style={{ background: 'rgba(255,255,255,0.22)', transform: 'rotate(-5deg)', opacity: isNight ? 0.26 : 0.54 }}
+        />
+        <div
+          className="absolute right-[12%] top-[40%] h-[2px] w-[32%] rounded-full"
+          style={{ background: 'rgba(58,116,62,0.16)', transform: 'rotate(6deg)', opacity: isNight ? 0.32 : 0.42 }}
+        />
+      </div>
+
+      <div
+        data-testid={getBackdropTestId(testIdPrefix, 'horizon-mist')}
+        className="absolute inset-x-[-8%] z-[6] rounded-full"
+        style={{
+          top: compactMode
+            ? useCompactMobilePolish
+              ? '31.2%'
+              : '35.4%'
+            : useTightBackdrop
+              ? '29.6%'
+              : '34.2%',
+          height: compactMode ? '8.8%' : useTightBackdrop ? '6.2%' : '8.4%',
+          opacity: terrain.horizonMistOpacity,
+          background: terrain.horizonMist,
+          filter: 'blur(8px)',
         }}
       />
 
       <div
         className="absolute inset-x-0 bottom-0 z-[1]"
         style={{
-          top: compactMode
-            ? useCompactMobilePolish
-              ? '39.2%'
-              : '44%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.grassTop ?? '43%')
-              : '43%',
+          top: grassTop,
           background: visuals.grassGradient,
         }}
       />
@@ -1053,23 +1487,28 @@ function FarmBackdropV2({
       ))}
 
       <div
-        className="absolute z-[6]"
+        className="absolute z-[6] overflow-hidden"
         style={{
-          top: compactMode
-            ? useCompactMobilePolish
-              ? '26.4%'
-              : '30.8%'
-            : useTightBackdrop
-              ? (tightBackdropMetrics?.pathTop ?? '29.8%')
-              : '29.8%',
+          top: pathTop,
           left: '50%',
           width: compactMode ? '38%' : '28%',
           height: compactMode ? '11.5%' : '10.8%',
           transform: 'translateX(-50%)',
-          clipPath: 'polygon(46% 0%, 54% 0%, 76% 100%, 24% 100%)',
-          background: 'linear-gradient(180deg, rgba(232,207,148,0.78) 0%, rgba(193,149,100,0.82) 100%)',
+          clipPath: 'polygon(45% 0%, 55% 0%, 78% 100%, 22% 100%)',
+          background: terrain.pathGradient,
+          boxShadow: `inset 9px 0 10px -12px ${terrain.pathEdge}, inset -9px 0 10px -12px ${terrain.pathEdge}`,
         }}
-      />
+      >
+        <div className="absolute inset-0" style={{ background: terrain.pathTexture, opacity: isNight ? 0.58 : 0.82 }} />
+        <div
+          className="absolute inset-y-0 left-[18%] w-[2px] rounded-full"
+          style={{ background: terrain.pathEdge, transform: 'rotate(-8deg)', opacity: 0.72 }}
+        />
+        <div
+          className="absolute inset-y-0 right-[18%] w-[2px] rounded-full"
+          style={{ background: terrain.pathEdge, transform: 'rotate(8deg)', opacity: 0.72 }}
+        />
+      </div>
 
       <FruitTree
         left={compactMode ? '8.2%' : useTightBackdrop ? '8%' : '9.2%'}
@@ -1092,6 +1531,7 @@ function FarmBackdropV2({
           : useTightBackdrop
             ? (tightBackdropMetrics?.cottageTop ?? '30.2%')
             : '30.2%'}
+        visuals={cottage}
       />
       <FruitTree
         right={compactMode ? '7.8%' : useTightBackdrop ? '7.2%' : '8.8%'}
