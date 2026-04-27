@@ -599,6 +599,17 @@ export const ja: Messages = {
     night: '夜',
     rainbow: '虹',
   }[weather] ?? weather),
+  farmWeatherForecast: (current, next) => {
+    if (current === 'rainy' && next === 'sunny') return '雨上がり：晴れ';
+    if (current === 'rainy' && next === 'rainbow') return '雨上がり：虹';
+    return `次：${({
+      sunny: '晴れ',
+      cloudy: 'くもり',
+      rainy: '雨',
+      night: '夜',
+      rainbow: '虹',
+    }[next] ?? next)}`;
+  },
   farmReveal: 'ピン！正体は——',
   farmNewVariety: '新品種！',
   farmNewFlash: 'NEW',

@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Plot, Weather } from '../../types/farm';
-import { WEATHER_ICON_MAP } from '../../utils/weather';
+import type { Plot, Weather, WeatherState } from '../../types/farm';
+import { getWeatherContinuityPhase, getWeatherWetnessState, WEATHER_ICON_MAP } from '../../utils/weather';
 import { FarmPlotTileV2 } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
   weather: Weather;
+  weatherState: WeatherState;
   weatherLabel: string;
+  forecastLabel: string;
   compactMode?: boolean;
   todayFocusMinutes: number;
   coinBalance: number;
@@ -357,7 +359,9 @@ function FarmHudV2({
   compactMode,
   useTightMobileSpacing,
   weather,
+  weatherState,
   weatherLabel,
+  forecastLabel,
   todayFocusMinutes,
   coinBalance,
   plantableSeedCount,
@@ -366,7 +370,9 @@ function FarmHudV2({
   compactMode: boolean;
   useTightMobileSpacing: boolean;
   weather: Weather;
+  weatherState: WeatherState;
   weatherLabel: string;
+  forecastLabel: string;
   todayFocusMinutes: number;
   coinBalance: number;
   plantableSeedCount: number;
@@ -422,6 +428,25 @@ function FarmHudV2({
           >
             <span aria-hidden="true">{WEATHER_ICON_MAP[weather]}</span>
             <span>{weatherLabel}</span>
+          </div>
+        </div>
+
+        <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-0.5' : 'mt-1'}`}>
+          <div
+            data-testid="farm-v2-weather-forecast"
+            data-current-weather={weatherState.current}
+            data-next-weather={weatherState.next}
+            data-next-change-at={String(weatherState.nextChangeAt)}
+            className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-2 py-[2px] text-[9px] sm:text-[10px]' : 'gap-1 px-2.5 py-[3px] text-[10px] sm:text-[11px]'}`}
+            style={{
+              borderColor: 'rgba(88, 125, 155, 0.26)',
+              color: '#2f5168',
+              background: 'linear-gradient(180deg, rgba(241,250,255,0.9) 0%, rgba(224,240,250,0.82) 100%)',
+              boxShadow: '0 1px 0 rgba(255,255,255,0.38) inset',
+            }}
+          >
+            <span aria-hidden="true">{WEATHER_ICON_MAP[weatherState.next]}</span>
+            <span>{forecastLabel}</span>
           </div>
         </div>
       </div>
@@ -1077,6 +1102,74 @@ function FarmWeatherTransitionOverlay({
   );
 }
 
+function FarmWeatherContinuityLayer({
+  weather,
+  weatherState,
+  now,
+}: {
+  weather: Weather;
+  weatherState: WeatherState;
+  now: number;
+}) {
+  const wetness = getWeatherWetnessState(weatherState, weather, now);
+  const phase = getWeatherContinuityPhase(weatherState, weather, now);
+  const showForecastShade = phase === 'sunny-to-cloudy' || phase === 'cloudy-to-rainy';
+  const showWetness = wetness.isWet && wetness.visualMode !== 'night-clean';
+  const showAftermathGlow = wetness.visualMode === 'aftermath' && (weather === 'sunny' || weather === 'rainbow');
+
+  return (
+    <div
+      data-testid="farm-v2-weather-continuity"
+      data-production-current-weather={weatherState.current}
+      data-production-next-weather={weatherState.next}
+      data-visual-weather={weather}
+      data-continuity-phase={phase}
+      data-wetness-mode={wetness.visualMode}
+      className="pointer-events-none absolute inset-0 z-[11] overflow-hidden"
+    >
+      {showForecastShade && (
+        <div
+          data-testid="farm-v2-continuity-haze"
+          className="pointer-events-none absolute inset-x-0 top-0"
+          style={{
+            height: '43%',
+            background: phase === 'cloudy-to-rainy'
+              ? 'linear-gradient(180deg, rgba(88,117,139,0.22) 0%, rgba(118,149,163,0.12) 52%, rgba(118,149,163,0) 100%)'
+              : 'linear-gradient(180deg, rgba(207,224,232,0.18) 0%, rgba(218,231,235,0.09) 56%, rgba(218,231,235,0) 100%)',
+          }}
+        />
+      )}
+
+      {showWetness && (
+        <div
+          data-testid="farm-v2-wetness-layer"
+          data-wetness-kind={wetness.visualMode}
+          className="pointer-events-none absolute inset-x-0 bottom-0"
+          style={{
+            height: '48%',
+            opacity: wetness.visualMode === 'rainy' ? 0.82 : 0.58,
+            background: wetness.visualMode === 'rainy'
+              ? 'radial-gradient(ellipse at 50% 72%, rgba(181,222,239,0.34) 0%, rgba(181,222,239,0.16) 32%, rgba(181,222,239,0) 68%), linear-gradient(180deg, rgba(98,128,107,0) 0%, rgba(89,121,104,0.2) 70%, rgba(67,105,91,0.26) 100%)'
+              : 'radial-gradient(ellipse at 48% 70%, rgba(235,255,237,0.35) 0%, rgba(169,221,189,0.18) 34%, rgba(169,221,189,0) 70%), linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(161,214,180,0.14) 72%, rgba(115,178,145,0.18) 100%)',
+          }}
+        />
+      )}
+
+      {showAftermathGlow && (
+        <div
+          data-testid="farm-v2-rainy-aftermath-glow"
+          className="pointer-events-none absolute inset-x-0 bottom-[12%] mx-auto h-[26%] w-full"
+          style={{
+            background: weather === 'rainbow'
+              ? 'radial-gradient(ellipse at 48% 45%, rgba(255,250,178,0.22) 0%, rgba(167,222,255,0.18) 34%, rgba(167,222,255,0) 70%)'
+              : 'radial-gradient(ellipse at 50% 48%, rgba(245,255,226,0.2) 0%, rgba(182,231,194,0.14) 38%, rgba(182,231,194,0) 72%)',
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 function FarmBoardSceneDecorV2({
   compactMode,
   useTightMobileSpacing,
@@ -1104,7 +1197,9 @@ function FarmBoardSceneDecorV2({
 export function FarmPlotBoardV2({
   plots,
   weather,
+  weatherState,
   weatherLabel,
+  forecastLabel,
   compactMode = false,
   todayFocusMinutes,
   coinBalance,
@@ -1172,8 +1267,17 @@ export function FarmPlotBoardV2({
     : useTightMobileSpacing
       ? 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
       : 'clamp(18px, 2.5vh, 28px)';
-  const hudWeatherBadgeOffset = useTightMobileSpacing ? 28 : compactMode ? 38 : 34;
+  const hudWeatherBadgeOffset = useTightMobileSpacing ? 48 : compactMode ? 58 : 54;
   const backdropVisuals = getWeatherBackdropVisuals(weather);
+  const [weatherNow, setWeatherNow] = useState(() => Date.now());
+  const wetnessState = useMemo(
+    () => getWeatherWetnessState(weatherState, weather, weatherNow),
+    [weather, weatherNow, weatherState],
+  );
+  const continuityPhase = useMemo(
+    () => getWeatherContinuityPhase(weatherState, weather, weatherNow),
+    [weather, weatherNow, weatherState],
+  );
 
   useEffect(() => {
     if (!hasMountedRef.current) {
@@ -1220,10 +1324,25 @@ export function FarmPlotBoardV2({
     };
   }, [transitionOverlay]);
 
+  useEffect(() => {
+    if (weatherState.current !== 'rainy' && !weatherState.rainyAftermathUntil) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => setWeatherNow(Date.now()), 60 * 1000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [weatherState]);
+
   return (
     <div
       data-testid="farm-v2-scene"
       data-current-weather={weather}
+      data-production-current-weather={weatherState.current}
+      data-production-next-weather={weatherState.next}
+      data-weather-continuity-phase={continuityPhase}
+      data-wetness-mode={wetnessState.visualMode}
       data-transition-active={transitionOverlay ? 'true' : 'false'}
       data-last-transition-from={lastTransitionMeta?.previousWeather ?? ''}
       data-last-transition-to={lastTransitionMeta?.nextWeather ?? ''}
@@ -1239,6 +1358,7 @@ export function FarmPlotBoardV2({
       }}
     >
       <FarmBackdropV2 compactMode={compactMode} weather={weather} />
+      <FarmWeatherContinuityLayer weather={weather} weatherState={weatherState} now={weatherNow} />
       {transitionOverlay && (
         <FarmWeatherTransitionOverlay
           key={transitionOverlay.token}
@@ -1252,7 +1372,9 @@ export function FarmPlotBoardV2({
         compactMode={compactMode}
         useTightMobileSpacing={useTightMobileSpacing}
         weather={weather}
+        weatherState={weatherState}
         weatherLabel={weatherLabel}
+        forecastLabel={forecastLabel}
         todayFocusMinutes={todayFocusMinutes}
         coinBalance={coinBalance}
         plantableSeedCount={plantableSeedCount}

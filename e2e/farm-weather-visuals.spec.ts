@@ -72,7 +72,12 @@ function createSeedState(weather: Weather, now: number = Date.now()): SeedState 
     },
     weatherState: {
       current: weather,
+      next: weather === 'rainy' ? 'sunny' : 'cloudy',
       lastChangeAt: now,
+      nextChangeAt: now + 6 * 60 * 60 * 1000,
+      previousWeather: null,
+      changedAt: null,
+      rainyAftermathUntil: null,
     },
   };
 }

@@ -599,6 +599,17 @@ export const en: Messages = {
     night: 'Night',
     rainbow: 'Rainbow',
   }[weather] ?? weather),
+  farmWeatherForecast: (current, next) => {
+    if (current === 'rainy' && next === 'sunny') return 'Rain clears soon';
+    if (current === 'rainy' && next === 'rainbow') return 'Rainbow after rain';
+    return `Next up: ${({
+      sunny: 'Sunny',
+      cloudy: 'Cloudy',
+      rainy: 'Rainy',
+      night: 'Night',
+      rainbow: 'Rainbow',
+    }[next] ?? next)}`;
+  },
   farmReveal: 'Ding! It\'s—',
   farmNewVariety: 'New Variety!',
   farmNewFlash: 'NEW',

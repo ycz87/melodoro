@@ -18,6 +18,7 @@ import type {
   StolenRecord,
   FusionHistory,
   Weather,
+  WeatherState,
 } from '../types/farm';
 import type { GeneInventory } from '../types/gene';
 import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from '../types/gene';
@@ -72,6 +73,7 @@ interface FarmPageProps {
   darkMatterSeeds: DarkMatterSeed[];
   pendingRevealedNormalSeed: PendingRevealedNormalSeed | null;
   weather: Weather;
+  productionWeatherState: WeatherState;
   todayFocusMinutes: number;
   todayKey: string;
   activeAlienVisit: AlienAppearance | null;
@@ -173,6 +175,7 @@ export function FarmPage({
   darkMatterSeeds,
   pendingRevealedNormalSeed,
   weather,
+  productionWeatherState,
   todayFocusMinutes,
   todayKey,
   activeAlienVisit,
@@ -694,7 +697,9 @@ export function FarmPage({
               compactMode={compactShell}
               plots={farm.plots}
               weather={weather}
+              weatherState={productionWeatherState}
               weatherLabel={t.farmWeatherName(weather)}
+              forecastLabel={t.farmWeatherForecast(productionWeatherState.current, productionWeatherState.next)}
               todayFocusMinutes={todayFocusMinutes}
               coinBalance={coinBalance}
               plantableSeedCount={totalPlantableSeeds}

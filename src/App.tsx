@@ -2104,6 +2104,7 @@ function App() {
             darkMatterSeeds={shed.darkMatterSeeds}
             pendingRevealedNormalSeed={shed.pendingRevealedNormalSeed}
             weather={effectiveWeather}
+            productionWeatherState={weatherState}
             todayFocusMinutes={todayFocusMinutes}
             todayKey={todayKey}
             activeAlienVisit={alienVisit.current}

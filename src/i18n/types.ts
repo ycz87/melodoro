@@ -396,6 +396,7 @@ export interface Messages {
   farmNoSeeds: string;
   farmGoSlice: string;
   farmWeatherName: (weather: string) => string;
+  farmWeatherForecast: (current: string, next: string) => string;
   farmReveal: string;
   farmNewVariety: string;
   farmNewFlash: string;
