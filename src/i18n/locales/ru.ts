@@ -66,9 +66,12 @@ export const ru: Messages = {
     sunny: 'Солнечно',
     cloudy: 'Облачно',
     rainy: 'Дождь',
-    night: 'Ночь',
     rainbow: 'Радуга',
   }[weather] ?? weather),
+  farmTimeOfDayName: (timeOfDay) => ({
+    day: 'День',
+    night: 'Ночь',
+  }[timeOfDay] ?? timeOfDay),
   farmWeatherForecast: (current, next) => {
     if (current === 'rainy' && next === 'sunny') return 'После дождя: ясно';
     if (current === 'rainy' && next === 'rainbow') return 'Радуга после дождя';
@@ -76,7 +79,6 @@ export const ru: Messages = {
       sunny: 'Солнечно',
       cloudy: 'Облачно',
       rainy: 'Дождь',
-      night: 'Ночь',
       rainbow: 'Радуга',
     }[next] ?? next)}`;
   },

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Plot, Weather, WeatherState } from '../../types/farm';
+import type { Plot, TimeOfDay, TimeOfDayDebugOverride, Weather, WeatherDebugOverride, WeatherState } from '../../types/farm';
 import { getWeatherContinuityPhase, getWeatherWetnessState, WEATHER_ICON_MAP } from '../../utils/weather';
 import { FarmPlotTileV2 } from './FarmPlotTileV2';
 
 interface FarmPlotBoardV2Props {
   plots: Plot[];
   weather: Weather;
+  timeOfDay: TimeOfDay;
   weatherState: WeatherState;
+  debugWeatherOverride: WeatherDebugOverride;
+  debugTimeOfDayOverride: TimeOfDayDebugOverride;
   weatherLabel: string;
   forecastLabel: string;
   compactMode?: boolean;
@@ -99,6 +102,8 @@ const WEATHER_TRANSITION_MS = 320;
 interface WeatherTransitionOverlayState {
   previousWeather: Weather;
   nextWeather: Weather;
+  previousTimeOfDay: TimeOfDay;
+  nextTimeOfDay: TimeOfDay;
   token: number;
 }
 
@@ -178,7 +183,7 @@ const RAINBOW_CLOUDS: CloudSpec[] = [
   { top: '11%', right: '32%', width: '18%', height: '9%', opacity: 0.66, duration: '17s', delay: '-2.6s', filter: 'grayscale(0.05) brightness(1.05)' },
 ];
 
-function getWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisuals {
+function getDayWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisuals {
   switch (weather) {
     case 'cloudy':
       return {
@@ -267,27 +272,6 @@ function getWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisuals {
         ],
         rainbow: null,
       };
-    case 'night':
-      return {
-        sceneBackground: 'linear-gradient(180deg, #16314f 0%, #355374 38%, #56714e 58%, #638853 80%, #5d7f4c 100%)',
-        skyGradient: 'linear-gradient(180deg, #112845 0%, #23486a 56%, #486987 100%)',
-        skyGradientTight: 'linear-gradient(180deg, #132845 0%, #264669 50%, #456685 100%)',
-        skyOverlay: 'linear-gradient(180deg, rgba(16,24,45,0.28) 0%, rgba(16,24,45,0.08) 65%, rgba(16,24,45,0) 100%)',
-        hillGradient: 'linear-gradient(180deg, #6f8c7b 0%, #668773 42%, #557058 100%)',
-        backHillGradient: 'linear-gradient(180deg, rgba(87,126,92,0.88) 0%, rgba(63,94,68,0.92) 100%)',
-        frontHillGradient: 'linear-gradient(180deg, rgba(101,147,103,0.8) 0%, rgba(70,110,73,0.86) 100%)',
-        grassGradient: 'linear-gradient(180deg, #6f9c67 0%, #5f8c57 45%, #507949 100%)',
-        foregroundGradient: 'linear-gradient(180deg, rgba(77,111,82,0.22) 0%, rgba(52,76,54,0.42) 100%), repeating-linear-gradient(0deg, rgba(83,122,67,0.08) 0px, rgba(83,122,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
-        celestialKind: 'moon',
-        celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(238,245,255,0.2) 0%, rgba(215,229,255,0.38) 44%, rgba(186,204,236,0) 100%)',
-        celestialBody: 'radial-gradient(circle at 35% 30%, #fcfdff 0%, #e6efff 58%, #b8cae3 100%)',
-        celestialShadow: '0 0 0 2px rgba(233,242,255,0.34), 0 0 24px rgba(211,224,249,0.42)',
-        celestialOpacity: 1,
-        haloOpacity: 1,
-        cloudSpecs: NIGHT_CLOUDS,
-        rainLayers: [],
-        rainbow: null,
-      };
     case 'rainbow':
       return {
         sceneBackground: 'linear-gradient(180deg, #89d6fb 0%, #d7f2ff 38%, #c7ecb7 58%, #a9dd85 80%, #92cf6a 100%)',
@@ -348,6 +332,110 @@ function getWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisuals {
   }
 }
 
+function getNightWeatherBackdropVisuals(weather: Weather): WeatherBackdropVisuals {
+  const dayVisuals = getDayWeatherBackdropVisuals(weather);
+  const nightBase: WeatherBackdropVisuals = {
+    ...dayVisuals,
+    sceneBackground: 'linear-gradient(180deg, #132844 0%, #294967 38%, #4a665c 58%, #526f4e 80%, #476541 100%)',
+    skyGradient: 'linear-gradient(180deg, #0f243f 0%, #203f61 56%, #3d5d78 100%)',
+    skyGradientTight: 'linear-gradient(180deg, #112540 0%, #213d5f 50%, #395a76 100%)',
+    skyOverlay: 'radial-gradient(circle at 78% 18%, rgba(218,231,255,0.18) 0%, rgba(218,231,255,0.08) 22%, rgba(218,231,255,0) 44%), linear-gradient(180deg, rgba(9,16,34,0.34) 0%, rgba(9,16,34,0.12) 66%, rgba(9,16,34,0) 100%)',
+    hillGradient: 'linear-gradient(180deg, #607f73 0%, #5a7b6c 42%, #4b6750 100%)',
+    backHillGradient: 'linear-gradient(180deg, rgba(76,112,88,0.9) 0%, rgba(54,82,61,0.94) 100%)',
+    frontHillGradient: 'linear-gradient(180deg, rgba(87,126,94,0.82) 0%, rgba(58,94,66,0.88) 100%)',
+    grassGradient: 'linear-gradient(180deg, #638f62 0%, #527d52 45%, #466b45 100%)',
+    foregroundGradient: 'linear-gradient(180deg, rgba(66,98,76,0.26) 0%, rgba(40,64,48,0.48) 100%), repeating-linear-gradient(0deg, rgba(74,106,67,0.08) 0px, rgba(74,106,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+    celestialKind: 'moon',
+    celestialHalo: 'radial-gradient(circle at 50% 50%, rgba(238,245,255,0.18) 0%, rgba(205,222,252,0.34) 44%, rgba(186,204,236,0) 100%)',
+    celestialBody: 'radial-gradient(circle at 35% 30%, #f8fbff 0%, #e1ebfb 58%, #aebfd8 100%)',
+    celestialShadow: '0 0 0 2px rgba(233,242,255,0.26), 0 0 24px rgba(198,216,248,0.34)',
+    celestialOpacity: 0.92,
+    haloOpacity: 0.78,
+    cloudSpecs: weather === 'rainy'
+      ? RAINY_CLOUDS.map((cloud) => ({
+        ...cloud,
+        top: `calc(${cloud.top} + 1.4%)`,
+        opacity: Math.min(0.92, cloud.opacity * 0.82),
+        filter: 'grayscale(0.72) brightness(0.48) saturate(0.72)',
+      }))
+      : NIGHT_CLOUDS,
+    rainLayers: dayVisuals.rainLayers.map((layer, index) => ({
+      ...layer,
+      opacity: layer.opacity * (index === 0 ? 0.58 : 0.52),
+      tint: index === 0 ? 'rgba(165, 190, 220, 0.42)' : 'rgba(124, 154, 190, 0.34)',
+      blur: index === 0 ? '0.7px' : '1px',
+      duration: index === 0 ? '1.45s' : '1.9s',
+    })),
+    rainbow: null,
+  };
+
+  if (weather === 'rainy') {
+    return {
+      ...nightBase,
+      sceneBackground: 'linear-gradient(180deg, #0f2239 0%, #203952 34%, #3f5558 56%, #455f48 79%, #3d573c 100%)',
+      skyGradient: 'linear-gradient(180deg, #0c1e35 0%, #1f354d 52%, #3a4f61 100%)',
+      skyGradientTight: 'linear-gradient(180deg, #0e1f35 0%, #1e334b 50%, #354b5f 100%)',
+      skyOverlay: 'linear-gradient(180deg, rgba(6,12,25,0.38) 0%, rgba(35,52,68,0.2) 52%, rgba(35,52,68,0.04) 100%)',
+      hillGradient: 'linear-gradient(180deg, #596c67 0%, #50675e 44%, #425846 100%)',
+      grassGradient: 'linear-gradient(180deg, #557958 0%, #486c49 45%, #3d5d3d 100%)',
+      foregroundGradient: 'linear-gradient(180deg, rgba(49,70,62,0.38) 0%, rgba(33,52,44,0.62) 100%), repeating-linear-gradient(0deg, rgba(55,83,61,0.08) 0px, rgba(55,83,61,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px)',
+      celestialOpacity: 0.48,
+      haloOpacity: 0.34,
+    };
+  }
+
+  if (weather === 'rainbow') {
+    return {
+      ...nightBase,
+      sceneBackground: 'linear-gradient(180deg, #142844 0%, #284666 38%, #4b6468 58%, #557854 80%, #4a6a45 100%)',
+      skyGradient: 'linear-gradient(180deg, #102641 0%, #244565 58%, #466479 100%)',
+      skyOverlay: 'radial-gradient(circle at 28% 30%, rgba(184,219,255,0.12) 0%, rgba(184,219,255,0.04) 34%, rgba(184,219,255,0) 58%), linear-gradient(180deg, rgba(13,23,43,0.3) 0%, rgba(13,23,43,0.1) 68%, rgba(13,23,43,0) 100%)',
+      cloudSpecs: RAINBOW_CLOUDS.map((cloud) => ({
+        ...cloud,
+        opacity: cloud.opacity * 0.66,
+        filter: 'grayscale(0.35) brightness(0.58) saturate(0.68)',
+      })),
+      celestialOpacity: 0.88,
+      haloOpacity: 0.72,
+      rainbow: {
+        top: '8%',
+        topCompact: '9%',
+        topTight: '10%',
+        left: '7%',
+        leftCompact: '5%',
+        leftTight: '2%',
+        width: '45%',
+        widthCompact: '45%',
+        widthTight: '50%',
+        height: '25%',
+        heightCompact: '21%',
+        heightTight: '19%',
+        opacity: 0.42,
+        rotation: '-5deg',
+      },
+    };
+  }
+
+  if (weather === 'cloudy') {
+    return {
+      ...nightBase,
+      cloudSpecs: CLOUDY_CLOUDS.map((cloud) => ({
+        ...cloud,
+        opacity: cloud.opacity * 0.7,
+        filter: 'grayscale(0.5) brightness(0.55) saturate(0.62)',
+      })),
+      celestialOpacity: 0.68,
+      haloOpacity: 0.5,
+    };
+  }
+
+  return nightBase;
+}
+
+function getWeatherBackdropVisuals(weather: Weather, timeOfDay: TimeOfDay): WeatherBackdropVisuals {
+  return timeOfDay === 'night' ? getNightWeatherBackdropVisuals(weather) : getDayWeatherBackdropVisuals(weather);
+}
+
 function mapPlotStateToTileState(plot: Plot | null) {
   if (!plot) return 'locked' as const;
   if (plot.state === 'mature') return 'mature' as const;
@@ -359,7 +447,10 @@ function FarmHudV2({
   compactMode,
   useTightMobileSpacing,
   weather,
+  timeOfDay,
   weatherState,
+  debugWeatherOverride,
+  debugTimeOfDayOverride,
   weatherLabel,
   forecastLabel,
   todayFocusMinutes,
@@ -370,7 +461,10 @@ function FarmHudV2({
   compactMode: boolean;
   useTightMobileSpacing: boolean;
   weather: Weather;
+  timeOfDay: TimeOfDay;
   weatherState: WeatherState;
+  debugWeatherOverride: WeatherDebugOverride;
+  debugTimeOfDayOverride: TimeOfDayDebugOverride;
   weatherLabel: string;
   forecastLabel: string;
   todayFocusMinutes: number;
@@ -418,6 +512,12 @@ function FarmHudV2({
         <div className={`flex justify-center ${useTightMobileSpacing ? 'mt-1' : 'mt-1.5'}`}>
           <div
             data-testid="farm-v2-weather-badge"
+            data-production-current-weather={weatherState.current}
+            data-production-next-weather={weatherState.next}
+            data-effective-weather={weather}
+            data-time-of-day={timeOfDay}
+            data-debug-weather-override={debugWeatherOverride ?? ''}
+            data-debug-time-of-day-override={debugTimeOfDayOverride ?? ''}
             className={`flex items-center whitespace-nowrap rounded-full border font-semibold ${useTightMobileSpacing ? 'gap-1 px-2.5 py-[3px] text-[10px] sm:gap-1.5 sm:px-3.5 sm:text-[11px]' : 'gap-1.5 px-3 py-1 text-[11px] sm:gap-2 sm:px-3.5 sm:text-xs'}`}
             style={{
               borderColor: 'rgba(91, 146, 128, 0.32)',
@@ -470,7 +570,7 @@ function CloudCluster({
   return (
     <div
       data-testid={testId}
-      className={`absolute ${MOTION_CLASS}`}
+      className={`pointer-events-none absolute ${MOTION_CLASS}`}
       style={{
         top,
         left,
@@ -526,7 +626,7 @@ function RainLayer({
   return (
     <div
       data-testid={testId}
-      className="absolute z-[7] overflow-hidden"
+      className="pointer-events-none absolute z-[7] overflow-hidden"
       style={{
         top,
         left,
@@ -593,7 +693,7 @@ function RainbowArc({
   return (
     <div
       data-testid={testId}
-      className="absolute z-[6] overflow-hidden"
+      className="pointer-events-none absolute z-[6] overflow-hidden"
       style={{
         top,
         left,
@@ -650,7 +750,7 @@ function FruitTree({
   };
 
   return (
-    <div className="absolute z-[7]" data-testid={testId} style={wrapperStyle}>
+    <div className="pointer-events-none absolute z-[7]" data-testid={testId} style={wrapperStyle}>
       <div
         className="absolute left-1/2 bottom-[2px] -translate-x-1/2 rounded-full"
         style={{
@@ -709,7 +809,7 @@ function FruitTree({
 
 function Cottage({ left, top }: { left: string; top: string }) {
   return (
-    <div className="absolute z-[7]" data-testid="farm-v2-cottage" style={{ left, top, width: '58px', height: '54px' }}>
+    <div className="pointer-events-none absolute z-[7]" data-testid="farm-v2-cottage" style={{ left, top, width: '58px', height: '54px' }}>
       <div
         className="absolute left-1/2 bottom-[1px] h-[7px] w-[28px] -translate-x-1/2 rounded-full"
         style={{
@@ -737,16 +837,18 @@ function Cottage({ left, top }: { left: string; top: string }) {
 function FarmBackdropV2({
   compactMode,
   weather,
+  timeOfDay,
   testIdPrefix = 'farm-v2',
 }: {
   compactMode: boolean;
   weather: Weather;
+  timeOfDay: TimeOfDay;
   testIdPrefix?: string;
 }) {
   const isNarrowScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const useCompactMobilePolish = isNarrowScreen && compactMode;
   const useTightBackdrop = isNarrowScreen && !compactMode;
-  const visuals = getWeatherBackdropVisuals(weather);
+  const visuals = getWeatherBackdropVisuals(weather, timeOfDay);
   const isNight = visuals.celestialKind === 'moon';
   const tightBackdropMetrics = useTightBackdrop
     ? {
@@ -935,7 +1037,7 @@ function FarmBackdropV2({
 
       {visuals.cloudSpecs.map((cloud, index) => (
         <CloudCluster
-          key={`farm-v2-cloud-${weather}-${index}`}
+          key={`farm-v2-cloud-${weather}-${timeOfDay}-${index}`}
           {...cloud}
           testId={getBackdropTestId(testIdPrefix, 'cloud-cluster')}
         />
@@ -1062,14 +1164,18 @@ function FarmWeatherTransitionOverlay({
   compactMode,
   previousWeather,
   nextWeather,
+  previousTimeOfDay,
+  nextTimeOfDay,
   token,
 }: {
   compactMode: boolean;
   previousWeather: Weather;
   nextWeather: Weather;
+  previousTimeOfDay: TimeOfDay;
+  nextTimeOfDay: TimeOfDay;
   token: number;
 }) {
-  const previousVisuals = getWeatherBackdropVisuals(previousWeather);
+  const previousVisuals = getWeatherBackdropVisuals(previousWeather, previousTimeOfDay);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -1087,6 +1193,8 @@ function FarmWeatherTransitionOverlay({
       data-testid="farm-v2-weather-transition-overlay"
       data-from-weather={previousWeather}
       data-to-weather={nextWeather}
+      data-from-time-of-day={previousTimeOfDay}
+      data-to-time-of-day={nextTimeOfDay}
       data-transition-token={String(token)}
       data-transition-ms={String(WEATHER_TRANSITION_MS)}
       className="pointer-events-none absolute inset-0 z-[12] overflow-hidden"
@@ -1097,24 +1205,26 @@ function FarmWeatherTransitionOverlay({
         willChange: 'opacity',
       }}
     >
-      <FarmBackdropV2 compactMode={compactMode} weather={previousWeather} testIdPrefix="farm-v2-transition" />
+      <FarmBackdropV2 compactMode={compactMode} weather={previousWeather} timeOfDay={previousTimeOfDay} testIdPrefix="farm-v2-transition" />
     </div>
   );
 }
 
 function FarmWeatherContinuityLayer({
   weather,
+  timeOfDay,
   weatherState,
   now,
 }: {
   weather: Weather;
+  timeOfDay: TimeOfDay;
   weatherState: WeatherState;
   now: number;
 }) {
   const wetness = getWeatherWetnessState(weatherState, weather, now);
   const phase = getWeatherContinuityPhase(weatherState, weather, now);
   const showForecastShade = phase === 'sunny-to-cloudy' || phase === 'cloudy-to-rainy';
-  const showWetness = wetness.isWet && wetness.visualMode !== 'night-clean';
+  const showWetness = wetness.isWet;
   const showAftermathGlow = wetness.visualMode === 'aftermath' && (weather === 'sunny' || weather === 'rainbow');
 
   return (
@@ -1123,6 +1233,7 @@ function FarmWeatherContinuityLayer({
       data-production-current-weather={weatherState.current}
       data-production-next-weather={weatherState.next}
       data-visual-weather={weather}
+      data-time-of-day={timeOfDay}
       data-continuity-phase={phase}
       data-wetness-mode={wetness.visualMode}
       className="pointer-events-none absolute inset-0 z-[11] overflow-hidden"
@@ -1141,18 +1252,67 @@ function FarmWeatherContinuityLayer({
       )}
 
       {showWetness && (
-        <div
-          data-testid="farm-v2-wetness-layer"
-          data-wetness-kind={wetness.visualMode}
-          className="pointer-events-none absolute inset-x-0 bottom-0"
-          style={{
-            height: '48%',
-            opacity: wetness.visualMode === 'rainy' ? 0.82 : 0.58,
-            background: wetness.visualMode === 'rainy'
-              ? 'radial-gradient(ellipse at 50% 72%, rgba(181,222,239,0.34) 0%, rgba(181,222,239,0.16) 32%, rgba(181,222,239,0) 68%), linear-gradient(180deg, rgba(98,128,107,0) 0%, rgba(89,121,104,0.2) 70%, rgba(67,105,91,0.26) 100%)'
-              : 'radial-gradient(ellipse at 48% 70%, rgba(235,255,237,0.35) 0%, rgba(169,221,189,0.18) 34%, rgba(169,221,189,0) 70%), linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(161,214,180,0.14) 72%, rgba(115,178,145,0.18) 100%)',
-          }}
-        />
+        <>
+          <div
+            data-testid="farm-v2-wetness-layer"
+            data-wetness-kind={wetness.visualMode}
+            className="pointer-events-none absolute inset-x-0 bottom-0"
+            style={{
+              height: '48%',
+              opacity: wetness.visualMode === 'rainy' ? (timeOfDay === 'night' ? 0.52 : 0.82) : (timeOfDay === 'night' ? 0.4 : 0.58),
+              background: wetness.visualMode === 'rainy'
+                ? 'radial-gradient(ellipse at 50% 72%, rgba(181,222,239,0.34) 0%, rgba(181,222,239,0.16) 32%, rgba(181,222,239,0) 68%), linear-gradient(180deg, rgba(98,128,107,0) 0%, rgba(89,121,104,0.2) 70%, rgba(67,105,91,0.26) 100%)'
+                : 'radial-gradient(ellipse at 48% 70%, rgba(235,255,237,0.35) 0%, rgba(169,221,189,0.18) 34%, rgba(169,221,189,0) 70%), linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(161,214,180,0.14) 72%, rgba(115,178,145,0.18) 100%)',
+              filter: timeOfDay === 'night' ? 'saturate(0.72) brightness(0.72)' : undefined,
+            }}
+          />
+          <div
+            data-testid="farm-v2-puddle-layer"
+            data-wetness-kind={wetness.visualMode}
+            className="pointer-events-none absolute inset-x-[8%] bottom-[4%] z-[1]"
+            style={{
+              height: '28%',
+              opacity: wetness.visualMode === 'rainy' ? (timeOfDay === 'night' ? 0.42 : 0.7) : (timeOfDay === 'night' ? 0.24 : 0.38),
+              background: 'radial-gradient(ellipse at 22% 74%, rgba(170,213,230,0.42) 0%, rgba(118,171,191,0.18) 34%, rgba(118,171,191,0) 62%), radial-gradient(ellipse at 68% 66%, rgba(187,229,240,0.36) 0%, rgba(126,176,193,0.16) 32%, rgba(126,176,193,0) 60%), radial-gradient(ellipse at 47% 86%, rgba(144,196,211,0.28) 0%, rgba(117,166,183,0.12) 36%, rgba(117,166,183,0) 66%)',
+              filter: timeOfDay === 'night' ? 'saturate(0.62) brightness(0.62)' : undefined,
+            }}
+          />
+          <div
+            data-testid="farm-v2-rain-ripple-layer"
+            data-wetness-kind={wetness.visualMode}
+            className={`pointer-events-none absolute inset-x-[10%] bottom-[5%] z-[2] ${MOTION_CLASS}`}
+            style={{
+              height: '24%',
+              opacity: wetness.visualMode === 'rainy' ? (timeOfDay === 'night' ? 0.38 : 0.62) : (timeOfDay === 'night' ? 0.18 : 0.28),
+              background: 'radial-gradient(ellipse at 24% 78%, rgba(236,249,255,0) 0%, rgba(236,249,255,0) 52%, rgba(236,249,255,0.46) 56%, rgba(236,249,255,0) 64%), radial-gradient(ellipse at 66% 68%, rgba(236,249,255,0) 0%, rgba(236,249,255,0) 50%, rgba(236,249,255,0.38) 54%, rgba(236,249,255,0) 63%), radial-gradient(ellipse at 46% 88%, rgba(236,249,255,0) 0%, rgba(236,249,255,0) 50%, rgba(236,249,255,0.3) 55%, rgba(236,249,255,0) 64%)',
+              animation: 'farmV2RainRipple 2.6s ease-in-out -0.4s infinite',
+              filter: timeOfDay === 'night' ? 'brightness(0.68)' : undefined,
+            }}
+          />
+          <div
+            data-testid="farm-v2-rain-mist-layer"
+            className={`pointer-events-none absolute inset-x-0 bottom-[32%] z-[1] ${MOTION_CLASS}`}
+            style={{
+              height: '18%',
+              opacity: wetness.visualMode === 'rainy' ? (timeOfDay === 'night' ? 0.22 : 0.36) : (timeOfDay === 'night' ? 0.12 : 0.2),
+              background: 'linear-gradient(90deg, rgba(216,236,239,0) 0%, rgba(216,236,239,0.36) 26%, rgba(216,236,239,0.18) 58%, rgba(216,236,239,0) 100%)',
+              filter: 'blur(10px)',
+              animation: 'farmV2MistDrift 8s ease-in-out -1.2s infinite',
+            }}
+          />
+          {wetness.visualMode === 'rainy' && (
+            <div
+              data-testid="farm-v2-rain-splash-layer"
+              className={`pointer-events-none absolute inset-x-[12%] bottom-[8%] z-[3] ${MOTION_CLASS}`}
+              style={{
+                height: '20%',
+                opacity: timeOfDay === 'night' ? 0.22 : 0.36,
+                background: 'radial-gradient(circle at 18% 82%, rgba(229,245,255,0.64) 0 1px, rgba(229,245,255,0) 2px), radial-gradient(circle at 42% 74%, rgba(229,245,255,0.58) 0 1px, rgba(229,245,255,0) 2px), radial-gradient(circle at 68% 88%, rgba(229,245,255,0.5) 0 1px, rgba(229,245,255,0) 2px), radial-gradient(circle at 82% 66%, rgba(229,245,255,0.46) 0 1px, rgba(229,245,255,0) 2px)',
+                animation: 'skyRainSplash 1.8s ease-out -0.35s infinite',
+              }}
+            />
+          )}
+        </>
       )}
 
       {showAftermathGlow && (
@@ -1197,9 +1357,12 @@ function FarmBoardSceneDecorV2({
 export function FarmPlotBoardV2({
   plots,
   weather,
+  timeOfDay,
   weatherState,
   weatherLabel,
   forecastLabel,
+  debugWeatherOverride,
+  debugTimeOfDayOverride,
   compactMode = false,
   todayFocusMinutes,
   coinBalance,
@@ -1208,6 +1371,7 @@ export function FarmPlotBoardV2({
   onPlotClick,
 }: FarmPlotBoardV2Props) {
   const previousWeatherRef = useRef(weather);
+  const previousTimeOfDayRef = useRef(timeOfDay);
   const hasMountedRef = useRef(false);
   const transitionTokenRef = useRef(0);
   const activeTransitionTokenRef = useRef(0);
@@ -1268,7 +1432,7 @@ export function FarmPlotBoardV2({
       ? 'calc(env(safe-area-inset-bottom, 0px) + 8px)'
       : 'clamp(18px, 2.5vh, 28px)';
   const hudWeatherBadgeOffset = useTightMobileSpacing ? 48 : compactMode ? 58 : 54;
-  const backdropVisuals = getWeatherBackdropVisuals(weather);
+  const backdropVisuals = getWeatherBackdropVisuals(weather, timeOfDay);
   const [weatherNow, setWeatherNow] = useState(() => Date.now());
   const wetnessState = useMemo(
     () => getWeatherWetnessState(weatherState, weather, weatherNow),
@@ -1283,10 +1447,11 @@ export function FarmPlotBoardV2({
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
       previousWeatherRef.current = weather;
+      previousTimeOfDayRef.current = timeOfDay;
       return;
     }
 
-    if (previousWeatherRef.current === weather) {
+    if (previousWeatherRef.current === weather && previousTimeOfDayRef.current === timeOfDay) {
       return;
     }
 
@@ -1294,6 +1459,8 @@ export function FarmPlotBoardV2({
     const nextTransition = {
       previousWeather: previousWeatherRef.current,
       nextWeather: weather,
+      previousTimeOfDay: previousTimeOfDayRef.current,
+      nextTimeOfDay: timeOfDay,
       token: transitionTokenRef.current,
     };
     setTransitionOverlay(nextTransition);
@@ -1301,7 +1468,8 @@ export function FarmPlotBoardV2({
     setMountedTransitionToken(nextTransition.token);
     activeTransitionTokenRef.current = nextTransition.token;
     previousWeatherRef.current = weather;
-  }, [weather]);
+    previousTimeOfDayRef.current = timeOfDay;
+  }, [timeOfDay, weather]);
 
   useEffect(() => {
     if (!transitionOverlay) {
@@ -1339,6 +1507,10 @@ export function FarmPlotBoardV2({
     <div
       data-testid="farm-v2-scene"
       data-current-weather={weather}
+      data-effective-weather={weather}
+      data-time-of-day={timeOfDay}
+      data-debug-weather-override={debugWeatherOverride ?? ''}
+      data-debug-time-of-day-override={debugTimeOfDayOverride ?? ''}
       data-production-current-weather={weatherState.current}
       data-production-next-weather={weatherState.next}
       data-weather-continuity-phase={continuityPhase}
@@ -1346,6 +1518,8 @@ export function FarmPlotBoardV2({
       data-transition-active={transitionOverlay ? 'true' : 'false'}
       data-last-transition-from={lastTransitionMeta?.previousWeather ?? ''}
       data-last-transition-to={lastTransitionMeta?.nextWeather ?? ''}
+      data-last-transition-from-time-of-day={lastTransitionMeta?.previousTimeOfDay ?? ''}
+      data-last-transition-to-time-of-day={lastTransitionMeta?.nextTimeOfDay ?? ''}
       data-last-transition-token={lastTransitionMeta ? String(lastTransitionMeta.token) : '0'}
       data-last-transition-mounted-token={String(mountedTransitionToken)}
       data-last-transition-cleared-token={String(clearedTransitionToken)}
@@ -1357,14 +1531,16 @@ export function FarmPlotBoardV2({
         background: backdropVisuals.sceneBackground,
       }}
     >
-      <FarmBackdropV2 compactMode={compactMode} weather={weather} />
-      <FarmWeatherContinuityLayer weather={weather} weatherState={weatherState} now={weatherNow} />
+      <FarmBackdropV2 compactMode={compactMode} weather={weather} timeOfDay={timeOfDay} />
+      <FarmWeatherContinuityLayer weather={weather} timeOfDay={timeOfDay} weatherState={weatherState} now={weatherNow} />
       {transitionOverlay && (
         <FarmWeatherTransitionOverlay
           key={transitionOverlay.token}
           compactMode={compactMode}
           previousWeather={transitionOverlay.previousWeather}
           nextWeather={transitionOverlay.nextWeather}
+          previousTimeOfDay={transitionOverlay.previousTimeOfDay}
+          nextTimeOfDay={transitionOverlay.nextTimeOfDay}
           token={transitionOverlay.token}
         />
       )}
@@ -1372,7 +1548,10 @@ export function FarmPlotBoardV2({
         compactMode={compactMode}
         useTightMobileSpacing={useTightMobileSpacing}
         weather={weather}
+        timeOfDay={timeOfDay}
         weatherState={weatherState}
+        debugWeatherOverride={debugWeatherOverride}
+        debugTimeOfDayOverride={debugTimeOfDayOverride}
         weatherLabel={weatherLabel}
         forecastLabel={forecastLabel}
         todayFocusMinutes={todayFocusMinutes}

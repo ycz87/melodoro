@@ -598,9 +598,12 @@ export const zhTW: Messages = {
     sunny: '晴天',
     cloudy: '多雲',
     rainy: '雨天',
-    night: '夜晚',
     rainbow: '彩虹',
   }[weather] ?? weather),
+  farmTimeOfDayName: (timeOfDay) => ({
+    day: '白天',
+    night: '夜晚',
+  }[timeOfDay] ?? timeOfDay),
   farmWeatherForecast: (current, next) => {
     if (current === 'rainy' && next === 'sunny') return '雨後放晴';
     if (current === 'rainy' && next === 'rainbow') return '雨後彩虹';
@@ -608,7 +611,6 @@ export const zhTW: Messages = {
       sunny: '晴天',
       cloudy: '多雲',
       rainy: '雨天',
-      night: '夜晚',
       rainbow: '彩虹',
     }[next] ?? next)}`;
   },

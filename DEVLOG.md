@@ -2,6 +2,23 @@
 
 ---
 
+## v0.61.24 — 农场天气昼夜拆分与雨天真实感重做
+日期：2026-04-27
+
+### 本次改动
+- 将 `night` 从 production `Weather` 中移除，`rollWeather` / initial / rotate / catch-up / forecast 只产出 `sunny` / `cloudy` / `rainy` / `rainbow`。
+- 新增 `TimeOfDay`、`useTimeOfDay` 与 local 06:00/18:00 边界刷新；旧 `weatherState` / `previousWeather` / `debugWeatherOverride` 中的 `night` 迁移为安全天气或独立 `debugTimeOfDayOverride`。
+- `App -> FarmPage -> FarmPlotBoardV2/SimpleFarmGrid` 接入 `effectiveTimeOfDay`；DebugToolbar 拆成天气与昼夜两组控制，二者只影响视觉层，不污染 production `weatherState`。
+- HUD/badge 展示“天气 · 昼夜”，forecast 仅展示下一段气象天气；scene/HUD data attrs 暴露 production current/next、effective weather、timeOfDay 和 debug override 状态。
+- `FarmPlotBoardV2` 重做 day/night/rainy/rainbow 视觉：夜间月亮与低亮度天空、厚云和低暗云层、双层雨线、湿地/水洼/ripple/mist/splash、60 分钟雨后残留，以及夜间克制 moonbow。
+- 扩展 transition overlay 同时记录 weather 与 timeOfDay 变化，保持 `pointer-events: none` 与移动端首屏布局稳定。
+
+### 验证
+- `npm run lint`
+- `npm run build`
+- `npx playwright test e2e/farm-weather-life-compat.spec.ts e2e/farm-weather-badge.spec.ts e2e/farm-weather-transition.spec.ts e2e/farm-weather-visuals.spec.ts --project=desktop --project=mobile --reporter=line`
+- `git diff --check`
+
 ## v0.61.23 — 农场天气 2.0 真实感链路与环境反馈
 日期：2026-04-26
 

@@ -7,7 +7,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import { useI18n } from '../../i18n';
 import type { ThemeColors } from '../../types';
-import type { Plot, StolenRecord, Weather } from '../../types/farm';
+import type { Plot, StolenRecord, TimeOfDay, Weather } from '../../types/farm';
 import { PlotCard } from '../FarmPage';
 import { FarmDecorations } from './FarmDecorations';
 import { IsometricPlotShell } from './IsometricPlotShell';
@@ -15,6 +15,7 @@ import { IsometricPlotShell } from './IsometricPlotShell';
 interface SimpleFarmGridProps {
   plots: Plot[];
   weather: Weather;
+  timeOfDay: TimeOfDay;
   nowTimestamp: number;
   activeTooltipPlotId: number | null;
   stolenRecordByPlotId?: Map<number, StolenRecord>;
@@ -210,6 +211,7 @@ function LockedPlotCard() {
 export function SimpleFarmGrid({
   plots,
   weather,
+  timeOfDay,
   nowTimestamp,
   activeTooltipPlotId,
   stolenRecordByPlotId,
@@ -251,7 +253,7 @@ export function SimpleFarmGrid({
 
   const layout = useMemo(() => getGridLayout(viewportWidth), [viewportWidth]);
   const scenePalette = useMemo(() => buildScenePalette(theme), [theme]);
-  const isNight = weather === 'night';
+  const isNight = timeOfDay === 'night';
   const isCompactMobile = viewportWidth < SMALL_MOBILE_BREAKPOINT;
   const isMobile = viewportWidth < MOBILE_BREAKPOINT;
 

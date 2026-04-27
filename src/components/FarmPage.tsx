@@ -19,6 +19,9 @@ import type {
   FusionHistory,
   Weather,
   WeatherState,
+  WeatherDebugOverride,
+  TimeOfDay,
+  TimeOfDayDebugOverride,
 } from '../types/farm';
 import type { GeneInventory } from '../types/gene';
 import type { DarkMatterFusion, DarkMatterFusionType, FusionResult } from '../types/gene';
@@ -46,14 +49,22 @@ import { GeneLabPage } from './GeneLabPage';
 import { SimpleFarmGrid } from './farm/SimpleFarmGrid';
 import { FarmPlotBoardV2 } from './farm-v2/FarmPlotBoardV2';
 
-function getFarmShellBackground(weather: Weather) {
+function getFarmShellBackground(weather: Weather, timeOfDay: TimeOfDay) {
+  if (timeOfDay === 'night') {
+    if (weather === 'rainy') {
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 56%, rgba(52,72,70,0.28) 56%, rgba(35,52,48,0.48) 100%), repeating-linear-gradient(0deg, rgba(73,104,78,0.08) 0px, rgba(73,104,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #102640 0%, #223d5a 34%, #485e62 56%, #526f52 79%, #486444 100%)';
+    }
+    if (weather === 'rainbow') {
+      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(66,93,85,0.22) 58%, rgba(47,70,58,0.42) 100%), repeating-linear-gradient(0deg, rgba(83,122,67,0.08) 0px, rgba(83,122,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #132747 0%, #2c4668 38%, #50696f 58%, #5c805a 80%, #526f4a 100%)';
+    }
+    return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(77,111,82,0.18) 58%, rgba(52,76,54,0.42) 100%), repeating-linear-gradient(0deg, rgba(83,122,67,0.08) 0px, rgba(83,122,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #16314f 0%, #355374 38%, #56714e 58%, #5a8350 80%, #507949 100%)';
+  }
+
   switch (weather) {
     case 'cloudy':
       return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(150,194,125,0.26) 58%, rgba(118,172,89,0.48) 100%), repeating-linear-gradient(0deg, rgba(116,164,78,0.08) 0px, rgba(116,164,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #7fb3cf 0%, #bfd4df 36%, #b5d0b1 58%, #8eb770 80%, #7eb75c 100%)';
     case 'rainy':
       return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 56%, rgba(126,154,109,0.32) 56%, rgba(102,133,82,0.56) 100%), repeating-linear-gradient(0deg, rgba(104,144,72,0.08) 0px, rgba(104,144,72,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #68879d 0%, #93a9b8 34%, #afc1b1 56%, #83a65f 79%, #739f55 100%)';
-    case 'night':
-      return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(77,111,82,0.18) 58%, rgba(52,76,54,0.42) 100%), repeating-linear-gradient(0deg, rgba(83,122,67,0.08) 0px, rgba(83,122,67,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #16314f 0%, #355374 38%, #56714e 58%, #5a8350 80%, #507949 100%)';
     case 'rainbow':
       return 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(171,223,151,0.3) 58%, rgba(136,197,96,0.54) 100%), repeating-linear-gradient(0deg, rgba(123,182,78,0.08) 0px, rgba(123,182,78,0.08) 22px, rgba(0,0,0,0) 22px, rgba(0,0,0,0) 56px), linear-gradient(180deg, #89d6fb 0%, #d7f2ff 38%, #c7ecb7 58%, #98d66d 80%, #8ccf67 100%)';
     default:
@@ -73,7 +84,10 @@ interface FarmPageProps {
   darkMatterSeeds: DarkMatterSeed[];
   pendingRevealedNormalSeed: PendingRevealedNormalSeed | null;
   weather: Weather;
+  timeOfDay: TimeOfDay;
   productionWeatherState: WeatherState;
+  debugWeatherOverride: WeatherDebugOverride;
+  debugTimeOfDayOverride: TimeOfDayDebugOverride;
   todayFocusMinutes: number;
   todayKey: string;
   activeAlienVisit: AlienAppearance | null;
@@ -175,7 +189,10 @@ export function FarmPage({
   darkMatterSeeds,
   pendingRevealedNormalSeed,
   weather,
+  timeOfDay,
   productionWeatherState,
+  debugWeatherOverride,
+  debugTimeOfDayOverride,
   todayFocusMinutes,
   todayKey,
   activeAlienVisit,
@@ -226,7 +243,7 @@ export function FarmPage({
   }, []);
   const gentleV2Layout = useFarmPlotBoardV2 && !compactShell;
   const useTightMobileFarmShell = gentleV2Layout && typeof window !== 'undefined' && window.innerWidth < 640;
-  const gentleV2Background = gentleV2Layout ? getFarmShellBackground(weather) : undefined;
+  const gentleV2Background = gentleV2Layout ? getFarmShellBackground(weather, timeOfDay) : undefined;
 
   // 追踪已揭晓的地块（避免重复触发动画）
   const revealedRef = useRef<Set<number>>(new Set());
@@ -697,9 +714,12 @@ export function FarmPage({
               compactMode={compactShell}
               plots={farm.plots}
               weather={weather}
+              timeOfDay={timeOfDay}
               weatherState={productionWeatherState}
-              weatherLabel={t.farmWeatherName(weather)}
+              weatherLabel={`${t.farmWeatherName(weather)} · ${t.farmTimeOfDayName(timeOfDay)}`}
               forecastLabel={t.farmWeatherForecast(productionWeatherState.current, productionWeatherState.next)}
+              debugWeatherOverride={debugWeatherOverride}
+              debugTimeOfDayOverride={debugTimeOfDayOverride}
               todayFocusMinutes={todayFocusMinutes}
               coinBalance={coinBalance}
               plantableSeedCount={totalPlantableSeeds}
@@ -721,6 +741,7 @@ export function FarmPage({
               compactMode={compactShell}
               plots={farm.plots}
               weather={weather}
+              timeOfDay={timeOfDay}
               nowTimestamp={nowTimestamp}
               activeTooltipPlotId={effectiveActiveTooltipPlotId}
               stolenRecordByPlotId={latestStolenRecordByPlotId}

@@ -4,6 +4,16 @@
 
 ---
 
+## [0.61.24] - 2026-04-27
+
+### Changed
+- 🌦️ 农场 production weather 拆出 `night`，气象只保留 `sunny` / `cloudy` / `rainy` / `rainbow`，旧夜晚天气与 debug override 自动迁移到安全状态。
+- 🕕 农场昼夜改由用户本地时间实时计算，Debug 工具独立提供天气与昼夜覆盖，HUD 显示“天气 · 昼夜”组合态且 forecast 只预报气象天气。
+- 🌧️ 重做雨天/夜雨/雨后/彩虹视觉：厚云、双层雨线、湿地/水洼/ripple/mist/splash 与夜间 moonbow，保持覆盖层点击穿透和移动端无横向溢出。
+
+### Testing
+- ✅ 扩展 weather/time-of-day E2E，覆盖 production 不产出 `night`、旧数据迁移、跨 18:00 自动更新、debug 隔离、badge/forecast、点击穿透与移动端 proof 截图。
+
 ## [0.61.23] - 2026-04-26
 
 ### Added

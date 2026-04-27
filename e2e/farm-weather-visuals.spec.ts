@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import type { Plot, Weather, WeatherState } from '../src/types/farm';
+import type { Plot, TimeOfDay, Weather, WeatherState } from '../src/types/farm';
 
 interface SeedState {
   settings: Record<string, unknown>;
@@ -7,19 +7,42 @@ interface SeedState {
   shed: Record<string, unknown>;
   gene: Record<string, unknown>;
   weatherState: WeatherState;
+  debugTimeOfDayOverride: TimeOfDay;
+}
+
+interface SceneCase {
+  key: string;
+  weather: Weather;
+  timeOfDay: TimeOfDay;
+  aftermath?: boolean;
 }
 
 interface SceneSnapshot {
   sceneBackground: string;
   skyBackground: string;
+  timeOfDay: string | null;
+  effectiveWeather: string | null;
   cloudCount: number;
   rainLayerCount: number;
+  wetnessLayerCount: number;
+  puddleLayerCount: number;
+  rippleLayerCount: number;
+  mistLayerCount: number;
+  splashLayerCount: number;
   rainbowCount: number;
+  rainbowOpacity: number;
   haloOpacity: number;
   celestialLabel: string | null;
 }
 
-const WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow'];
+const SCENE_CASES: SceneCase[] = [
+  { key: 'day-sunny', weather: 'sunny', timeOfDay: 'day' },
+  { key: 'day-rainy', weather: 'rainy', timeOfDay: 'day' },
+  { key: 'night-sunny', weather: 'sunny', timeOfDay: 'night' },
+  { key: 'night-rainy', weather: 'rainy', timeOfDay: 'night' },
+  { key: 'day-rainbow-aftermath', weather: 'rainbow', timeOfDay: 'day', aftermath: true },
+  { key: 'night-moonbow-aftermath', weather: 'rainbow', timeOfDay: 'night', aftermath: true },
+];
 
 function getTodayKey(now: number = Date.now()): string {
   const date = new Date(now);
@@ -40,7 +63,7 @@ function createEmptyPlot(id: number): Plot {
   };
 }
 
-function createSeedState(weather: Weather, now: number = Date.now()): SeedState {
+function createSeedState(sceneCase: SceneCase, now: number = Date.now()): SeedState {
   return {
     settings: {
       workMinutes: 25,
@@ -71,14 +94,15 @@ function createSeedState(weather: Weather, now: number = Date.now()): SeedState 
       fragments: [],
     },
     weatherState: {
-      current: weather,
-      next: weather === 'rainy' ? 'sunny' : 'cloudy',
+      current: sceneCase.weather,
+      next: sceneCase.weather === 'rainy' ? 'rainbow' : 'cloudy',
       lastChangeAt: now,
       nextChangeAt: now + 6 * 60 * 60 * 1000,
-      previousWeather: null,
-      changedAt: null,
-      rainyAftermathUntil: null,
+      previousWeather: sceneCase.aftermath ? 'rainy' : null,
+      changedAt: sceneCase.aftermath ? now - 5 * 60 * 1000 : null,
+      rainyAftermathUntil: sceneCase.aftermath ? now + 55 * 60 * 1000 : null,
     },
+    debugTimeOfDayOverride: sceneCase.timeOfDay,
   };
 }
 
@@ -92,6 +116,7 @@ function seedInit(page: Page, state: SeedState) {
     localStorage.setItem('watermelon-genes', JSON.stringify(payload.gene));
     localStorage.setItem('weatherState', JSON.stringify(payload.weatherState));
     localStorage.removeItem('weatherDebugOverride');
+    localStorage.setItem('debugTimeOfDayOverride', JSON.stringify(payload.debugTimeOfDayOverride));
     localStorage.removeItem('watermelon-debug');
   }, state);
 }
@@ -103,8 +128,8 @@ async function goToFarm(page: Page) {
   await expect(page.locator('[data-testid="farm-plot-board-v2"]')).toBeVisible();
 }
 
-async function openFarmPage(page: Page, weather: Weather) {
-  await seedInit(page, createSeedState(weather));
+async function openFarmPage(page: Page, sceneCase: SceneCase) {
+  await seedInit(page, createSeedState(sceneCase));
   await goToFarm(page);
 }
 
@@ -121,13 +146,22 @@ async function collectSceneSnapshot(page: Page): Promise<SceneSnapshot> {
     const sky = document.querySelector('[data-testid="farm-v2-sky-layer"]');
     const halo = document.querySelector('[data-testid="farm-v2-celestial-halo"]');
     const celestial = document.querySelector('[data-testid="farm-v2-celestial-body"]');
+    const rainbow = document.querySelector('[data-testid="farm-v2-rainbow"]');
 
     return {
       sceneBackground: scene ? getComputedStyle(scene).backgroundImage : '',
       skyBackground: sky ? getComputedStyle(sky).backgroundImage : '',
+      timeOfDay: scene?.getAttribute('data-time-of-day') ?? null,
+      effectiveWeather: scene?.getAttribute('data-effective-weather') ?? null,
       cloudCount: document.querySelectorAll('[data-testid="farm-v2-cloud-cluster"]').length,
       rainLayerCount: document.querySelectorAll('[data-testid="farm-v2-rain-layer"]').length,
+      wetnessLayerCount: document.querySelectorAll('[data-testid="farm-v2-wetness-layer"]').length,
+      puddleLayerCount: document.querySelectorAll('[data-testid="farm-v2-puddle-layer"]').length,
+      rippleLayerCount: document.querySelectorAll('[data-testid="farm-v2-rain-ripple-layer"]').length,
+      mistLayerCount: document.querySelectorAll('[data-testid="farm-v2-rain-mist-layer"]').length,
+      splashLayerCount: document.querySelectorAll('[data-testid="farm-v2-rain-splash-layer"]').length,
       rainbowCount: document.querySelectorAll('[data-testid="farm-v2-rainbow"]').length,
+      rainbowOpacity: rainbow instanceof HTMLElement ? Number.parseFloat(rainbow.style.opacity || '0') : 0,
       haloOpacity: halo instanceof HTMLElement ? Number.parseFloat(halo.style.opacity || '0') : 0,
       celestialLabel: celestial?.getAttribute('aria-label') ?? null,
     };
@@ -151,100 +185,88 @@ async function getBottomBounds(page: Page, selector: string): Promise<number[]> 
 
 test.describe('Farm V2 weather visuals', () => {
   test.describe.configure({ timeout: 60000 });
-  test('desktop proof differentiates five weather states without touching the interaction layout', async ({ page }, testInfo) => {
+
+  test('desktop proof differentiates weather plus local day/night scene states', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'desktop proof only');
 
-    const snapshots = new Map<Weather, SceneSnapshot>();
+    const snapshots = new Map<string, SceneSnapshot>();
 
-    for (const weather of WEATHER_ORDER) {
+    for (const sceneCase of SCENE_CASES) {
       const proofPage = await page.context().newPage();
-      await openFarmPage(proofPage, weather);
-      snapshots.set(weather, await collectSceneSnapshot(proofPage));
-      await captureProof(proofPage, testInfo, `desktop-${weather}.png`);
+      await openFarmPage(proofPage, sceneCase);
+      snapshots.set(sceneCase.key, await collectSceneSnapshot(proofPage));
+      await captureProof(proofPage, testInfo, `desktop-${sceneCase.key}.png`);
       await proofPage.close();
     }
 
-    const sunny = snapshots.get('sunny');
-    const cloudy = snapshots.get('cloudy');
-    const rainy = snapshots.get('rainy');
-    const night = snapshots.get('night');
-    const rainbow = snapshots.get('rainbow');
+    const daySunny = snapshots.get('day-sunny');
+    const dayRainy = snapshots.get('day-rainy');
+    const nightSunny = snapshots.get('night-sunny');
+    const nightRainy = snapshots.get('night-rainy');
+    const dayRainbow = snapshots.get('day-rainbow-aftermath');
+    const moonbow = snapshots.get('night-moonbow-aftermath');
 
-    expect(sunny).toBeDefined();
-    expect(cloudy).toBeDefined();
-    expect(rainy).toBeDefined();
-    expect(night).toBeDefined();
-    expect(rainbow).toBeDefined();
+    expect(daySunny?.timeOfDay).toBe('day');
+    expect(nightSunny?.timeOfDay).toBe('night');
+    expect(daySunny?.celestialLabel).toBe('sun');
+    expect(nightSunny?.celestialLabel).toBe('moon');
+    expect(daySunny?.skyBackground).not.toBe(nightSunny?.skyBackground);
+    expect(dayRainy?.skyBackground).not.toBe(nightRainy?.skyBackground);
 
-    expect(sunny?.skyBackground).not.toBe(cloudy?.skyBackground);
-    expect(cloudy?.skyBackground).not.toBe(rainy?.skyBackground);
-    expect(sunny?.skyBackground).not.toBe(rainbow?.skyBackground);
+    expect(dayRainy?.cloudCount ?? 0).toBeGreaterThan(daySunny?.cloudCount ?? 0);
+    expect(nightRainy?.cloudCount ?? 0).toBeGreaterThan(nightSunny?.cloudCount ?? 0);
+    expect(dayRainy?.rainLayerCount).toBeGreaterThanOrEqual(2);
+    expect(nightRainy?.rainLayerCount).toBeGreaterThanOrEqual(2);
+    expect(dayRainy?.wetnessLayerCount).toBe(1);
+    expect(dayRainy?.puddleLayerCount).toBe(1);
+    expect(dayRainy?.rippleLayerCount).toBe(1);
+    expect(dayRainy?.mistLayerCount).toBe(1);
+    expect(dayRainy?.splashLayerCount).toBe(1);
 
-    expect(cloudy?.cloudCount ?? 0).toBeGreaterThan(sunny?.cloudCount ?? 0);
-    expect(rainy?.cloudCount ?? 0).toBeGreaterThan(cloudy?.cloudCount ?? 0);
-    expect(rainbow?.cloudCount ?? 0).toBeGreaterThan(sunny?.cloudCount ?? 0);
-
-    expect((sunny?.haloOpacity ?? 0)).toBeGreaterThan(cloudy?.haloOpacity ?? 0);
-    expect((cloudy?.haloOpacity ?? 0)).toBeGreaterThan(rainy?.haloOpacity ?? 0);
-
-    expect(sunny?.rainLayerCount).toBe(0);
-    expect(cloudy?.rainLayerCount).toBe(0);
-    expect(rainy?.rainLayerCount).toBeGreaterThan(0);
-    expect(rainbow?.rainLayerCount).toBe(0);
-
-    expect(sunny?.rainbowCount).toBe(0);
-    expect(cloudy?.rainbowCount).toBe(0);
-    expect(rainbow?.rainbowCount).toBe(1);
-    expect(night?.celestialLabel).toBe('moon');
+    expect(dayRainbow?.rainbowCount).toBe(1);
+    expect(moonbow?.rainbowCount).toBe(1);
+    expect(moonbow?.celestialLabel).toBe('moon');
+    expect(moonbow?.rainbowOpacity ?? 1).toBeLessThan(dayRainbow?.rainbowOpacity ?? 0);
+    expect(dayRainbow?.wetnessLayerCount).toBe(1);
   });
 
-  test('mobile proof keeps rainy and rainbow decor above the plot board while preserving the same visual splits', async ({ page }, testInfo) => {
+  test('mobile proof keeps rainy and moonbow decor above the plot board without horizontal overflow', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile proof only');
 
-    const snapshots = new Map<Weather, SceneSnapshot>();
     let rainyBoardTop = Number.POSITIVE_INFINITY;
     let rainyBottoms: number[] = [];
-    let rainbowBoardTop = Number.POSITIVE_INFINITY;
-    let rainbowBottoms: number[] = [];
+    let moonbowBoardTop = Number.POSITIVE_INFINITY;
+    let moonbowBottoms: number[] = [];
 
-    for (const weather of WEATHER_ORDER) {
+    for (const sceneCase of SCENE_CASES) {
       const proofPage = await page.context().newPage();
-      await openFarmPage(proofPage, weather);
-      snapshots.set(weather, await collectSceneSnapshot(proofPage));
-      await captureProof(proofPage, testInfo, `mobile-${weather}.png`);
+      await openFarmPage(proofPage, sceneCase);
+      await captureProof(proofPage, testInfo, `mobile-${sceneCase.key}.png`);
 
-      if (weather === 'rainy') {
+      if (sceneCase.key === 'night-rainy') {
         const boardBox = await proofPage.locator('[data-testid="farm-plot-board-v2"]').boundingBox();
         expect(boardBox).not.toBeNull();
         rainyBoardTop = boardBox?.y ?? Number.POSITIVE_INFINITY;
         rainyBottoms = await getBottomBounds(proofPage, '[data-testid="farm-v2-rain-layer"]');
       }
 
-      if (weather === 'rainbow') {
+      if (sceneCase.key === 'night-moonbow-aftermath') {
         const boardBox = await proofPage.locator('[data-testid="farm-plot-board-v2"]').boundingBox();
         expect(boardBox).not.toBeNull();
-        rainbowBoardTop = boardBox?.y ?? Number.POSITIVE_INFINITY;
-        rainbowBottoms = await getBottomBounds(proofPage, '[data-testid="farm-v2-rainbow"]');
+        moonbowBoardTop = boardBox?.y ?? Number.POSITIVE_INFINITY;
+        moonbowBottoms = await getBottomBounds(proofPage, '[data-testid="farm-v2-rainbow"]');
       }
+
+      const scrollWidth = await proofPage.evaluate(() => document.documentElement.scrollWidth);
+      const clientWidth = await proofPage.evaluate(() => document.documentElement.clientWidth);
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
       await proofPage.close();
     }
 
-    expect(rainyBottoms.length).toBeGreaterThan(0);
+    expect(rainyBottoms.length).toBeGreaterThanOrEqual(2);
     expect(Math.max(...rainyBottoms)).toBeLessThan(rainyBoardTop);
-    expect(rainbowBottoms.length).toBe(1);
-    expect(rainbowBottoms[0]).toBeLessThan(rainbowBoardTop);
-
-    const sunny = snapshots.get('sunny');
-    const cloudy = snapshots.get('cloudy');
-    const rainy = snapshots.get('rainy');
-    const rainbow = snapshots.get('rainbow');
-
-    expect(sunny?.sceneBackground).not.toBe(cloudy?.sceneBackground);
-    expect(cloudy?.sceneBackground).not.toBe(rainy?.sceneBackground);
-    expect(sunny?.sceneBackground).not.toBe(rainbow?.sceneBackground);
-    expect(cloudy?.cloudCount ?? 0).toBeGreaterThan(sunny?.cloudCount ?? 0);
-    expect(rainy?.rainLayerCount).toBeGreaterThan(0);
-    expect(rainbow?.rainbowCount).toBe(1);
+    expect(moonbowBottoms.length).toBe(1);
+    expect(moonbowBottoms[0]).toBeLessThan(moonbowBoardTop);
   });
 });

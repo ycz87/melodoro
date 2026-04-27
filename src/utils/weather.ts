@@ -2,12 +2,12 @@ import type { Weather, WeatherClimateProfile, WeatherDebugOverride, WeatherState
 
 export const WEATHER_SWITCH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 export const RAINY_AFTERMATH_DURATION_MS = 60 * 60 * 1000;
-export const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'night', 'rainbow'];
+export const PRODUCTION_WEATHER_TYPES: readonly Weather[] = ['sunny', 'cloudy', 'rainy', 'rainbow'];
+export const DEBUG_WEATHER_ORDER: Weather[] = ['sunny', 'cloudy', 'rainy', 'rainbow'];
 export const WEATHER_ICON_MAP: Record<Weather, string> = {
   sunny: '☀️',
   cloudy: '☁️',
   rainy: '🌧️',
-  night: '🌙',
   rainbow: '🌈',
 };
 
@@ -39,7 +39,7 @@ export interface WeatherWetnessState {
   isAftermathActive: boolean;
   isWet: boolean;
   aftermathMsRemaining: number;
-  visualMode: 'dry' | 'rainy' | 'aftermath' | 'night-clean';
+  visualMode: 'dry' | 'rainy' | 'aftermath';
 }
 
 export function resolveWeatherProfile(input: ResolveWeatherProfileInput = { activePlanet: null }): WeatherClimateProfile {
@@ -47,12 +47,12 @@ export function resolveWeatherProfile(input: ResolveWeatherProfileInput = { acti
   return GLOBAL_WEATHER_PROFILE;
 }
 
-function isWeather(value: unknown): value is Weather {
-  return typeof value === 'string' && DEBUG_WEATHER_ORDER.includes(value as Weather);
+export function isProductionWeather(value: unknown): value is Weather {
+  return typeof value === 'string' && PRODUCTION_WEATHER_TYPES.includes(value as Weather);
 }
 
-function repairWeather(value: unknown, fallbackWeather: Weather = DEFAULT_WEATHER): Weather {
-  if (isWeather(value)) {
+export function migrateWeather(value: unknown, fallbackWeather: Weather = DEFAULT_WEATHER): Weather {
+  if (isProductionWeather(value)) {
     return value;
   }
   if (value === 'snowy') {
@@ -61,7 +61,17 @@ function repairWeather(value: unknown, fallbackWeather: Weather = DEFAULT_WEATHE
   if (value === 'stormy') {
     return 'rainy';
   }
+  if (value === 'night') {
+    return fallbackWeather;
+  }
   return fallbackWeather;
+}
+
+function repairPreviousWeather(value: unknown): Weather | null {
+  if (value === null || typeof value === 'undefined' || value === 'night') {
+    return null;
+  }
+  return migrateWeather(value, DEFAULT_WEATHER);
 }
 
 function normalizeLastChangeAt(value: unknown, now: number): number {
@@ -97,15 +107,13 @@ function normalizeWeatherState(
   now: number,
   randomFn: () => number,
 ): NormalizedWeatherPlan {
-  const current = repairWeather(state.current, DEFAULT_WEATHER);
-  const next = isWeather(state.next) || state.next === 'snowy' || state.next === 'stormy'
-    ? repairWeather(state.next, DEFAULT_WEATHER)
+  const current = migrateWeather(state.current, DEFAULT_WEATHER);
+  const next = isProductionWeather(state.next) || state.next === 'snowy' || state.next === 'stormy'
+    ? migrateWeather(state.next, DEFAULT_WEATHER)
     : rollWeather(current, randomFn);
   const lastChangeAt = normalizeLastChangeAt(state.lastChangeAt, now);
   const nextChangeAt = lastChangeAt + resolveWeatherProfile({ activePlanet: null }).switchIntervalMs;
-  const previousWeather = state.previousWeather === null || typeof state.previousWeather === 'undefined'
-    ? null
-    : repairWeather(state.previousWeather, DEFAULT_WEATHER);
+  const previousWeather = repairPreviousWeather(state.previousWeather);
   const changedAt = normalizeChangedAt(state.changedAt, now);
   const rainyAftermathUntil = cleanupRainyAftermath(state.rainyAftermathUntil ?? null, now);
 
@@ -127,14 +135,12 @@ export function rollWeather(previousWeather: Weather, randomFn: () => number = M
     if (roll < RAINBOW_CHANCE) return 'rainbow';
     if (roll < 0.45) return 'sunny';
     if (roll < 0.70) return 'cloudy';
-    if (roll < 0.85) return 'rainy';
-    return 'night';
+    return 'rainy';
   }
 
   if (roll < 0.40) return 'sunny';
-  if (roll < 0.65) return 'cloudy';
-  if (roll < 0.85) return 'rainy';
-  return 'night';
+  if (roll < 0.70) return 'cloudy';
+  return 'rainy';
 }
 
 export function createInitialWeatherState(
@@ -165,14 +171,16 @@ export function migrateWeatherState(
   }
 
   const candidate = raw as Record<string, unknown>;
-  const current = isWeather(candidate.current)
+  const current = isProductionWeather(candidate.current)
     ? candidate.current
     : candidate.current === 'snowy'
       ? 'cloudy'
       : candidate.current === 'stormy'
         ? 'rainy'
-        : rollWeather(DEFAULT_WEATHER, randomFn);
-  const next = isWeather(candidate.next)
+        : candidate.current === 'night'
+          ? DEFAULT_WEATHER
+          : rollWeather(DEFAULT_WEATHER, randomFn);
+  const next = isProductionWeather(candidate.next)
     ? candidate.next
     : candidate.next === 'snowy'
       ? 'cloudy'
@@ -180,9 +188,7 @@ export function migrateWeatherState(
         ? 'rainy'
         : rollWeather(current, randomFn);
   const lastChangeAt = normalizeLastChangeAt(candidate.lastChangeAt, now);
-  const previousWeather = candidate.previousWeather === null || typeof candidate.previousWeather === 'undefined'
-    ? null
-    : repairWeather(candidate.previousWeather, DEFAULT_WEATHER);
+  const previousWeather = repairPreviousWeather(candidate.previousWeather);
 
   return {
     current,
@@ -199,13 +205,16 @@ export function migrateWeatherDebugOverride(raw: unknown): WeatherDebugOverride 
   if (raw === null || typeof raw === 'undefined') {
     return null;
   }
+  if (raw === 'night') {
+    return null;
+  }
   if (raw === 'snowy') {
     return 'cloudy';
   }
   if (raw === 'stormy') {
     return 'rainy';
   }
-  return isWeather(raw) ? raw : null;
+  return isProductionWeather(raw) ? raw : null;
 }
 
 export function rotateWeatherState(
@@ -282,19 +291,9 @@ export function getWeatherWetnessState(
   visualWeather: Weather = state.current,
   now: number = Date.now(),
 ): WeatherWetnessState {
-  const isRaining = state.current === 'rainy';
+  const isRaining = visualWeather === 'rainy';
   const aftermathMsRemaining = Math.max(0, (state.rainyAftermathUntil ?? 0) - now);
-  const isAftermathActive = aftermathMsRemaining > 0;
-
-  if (visualWeather === 'night') {
-    return {
-      isRaining,
-      isAftermathActive,
-      isWet: false,
-      aftermathMsRemaining,
-      visualMode: 'night-clean',
-    };
-  }
+  const isAftermathActive = !isRaining && aftermathMsRemaining > 0;
 
   if (isRaining) {
     return {
@@ -332,9 +331,6 @@ export function getWeatherContinuityPhase(
 ): string {
   const wetness = getWeatherWetnessState(state, visualWeather, now);
 
-  if (wetness.visualMode === 'night-clean') {
-    return 'night-clean';
-  }
   if (state.current === 'sunny' && state.next === 'cloudy') {
     return 'sunny-to-cloudy';
   }
